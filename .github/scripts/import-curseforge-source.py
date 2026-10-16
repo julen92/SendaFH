@@ -39,6 +39,10 @@ for rel,content in files.items():
 template=ROOT/'docs/sendafh/README-after-import.md'
 (ROOT/'README.md').write_bytes(template.read_bytes())
 template.unlink()
+for folder in sorted((ROOT/'addon').rglob('*'),key=lambda p:len(p.parts),reverse=True):
+    if folder.is_dir():
+        try:folder.rmdir()
+        except OSError:pass
 assert {p.name for p in (ROOT/'addon').iterdir() if p.is_dir()}==modules
 for name in modules:
     assert (ROOT/'addon'/name/(name+'.toc')).exists()
@@ -50,3 +54,4 @@ for rel,content in files.items():
 result={'version':'0.5.0-beta.1','installer_sha256':SHA256,'modules':sorted(modules),'runtime_files_verified':runtime_count,'editable_source_files':sum(not p.startswith('addon/') for p in files),'runtime_matches_submitted_zip':True}
 (ROOT/'docs/sendafh/SOURCE-PROVENANCE.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
 print(json.dumps(result))
+
