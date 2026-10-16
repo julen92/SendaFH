@@ -1,0 +1,45 @@
+name: "Traducción o texto en inglés"
+description: "Una frase que suena rara, un texto sin traducir o un nombre que no coincide con el juego."
+title: "[Traducción] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: "Versión de SendaFH"
+      placeholder: "0.5.0-test.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: idioma
+    attributes:
+      label: "Idioma del cliente"
+      options:
+        - "Español (España) — esES"
+        - "Español (Latinoamérica) — esMX"
+        - "Otro"
+    validations:
+      required: true
+  - type: textarea
+    id: texto
+    attributes:
+      label: "Texto que aparece"
+      description: "Cópialo tal cual o adjunta una captura."
+    validations:
+      required: true
+  - type: input
+    id: donde
+    attributes:
+      label: "Dónde aparece"
+      placeholder: "Guía y paso, menú, tooltip, ajustes…"
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: "Cómo lo dirías tú"
+      description: "Si es un nombre, indica cómo aparece en tu cliente. Preferimos vocabulario de WoW y conservar los nombres reales del juego."
+  - type: textarea
+    id: contexto
+    attributes:
+      label: "Informe, ID del NPC o más contexto"
+      description: "Si puedes, añade el informe de /senda report."

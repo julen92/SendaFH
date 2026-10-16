@@ -1,25 +1,22 @@
-name: Feature request
-description: Something Polestar does not do yet that would help you level.
-title: "Feature: "
-labels: ["enhancement"]
+name: "Proponer una mejora"
+description: "Una idea para que SendaFH ayude más mientras juegas."
+title: "[Mejora] "
 body:
   - type: textarea
-    id: idea
+    id: necesidad
     attributes:
-      label: What it would do
-      description: What you would see or press in the game, and what happens then.
-      placeholder: Warn me before I take a quest that closes another one for good.
+      label: "Qué te gustaría poder hacer"
+      description: "Cuéntanos en qué situación te vendría bien."
     validations:
       required: true
   - type: textarea
-    id: why
+    id: propuesta
     attributes:
-      label: When it would help
-      description: The moment in play where you missed it, and what you did instead.
+      label: "Tu propuesta"
+      description: "Cómo te gustaría que funcionase dentro del juego."
     validations:
       required: true
-  - type: input
-    id: discord
+  - type: textarea
+    id: ejemplos
     attributes:
-      label: Discord thread
-      description: If it was asked on the Polestar Discord first, a link to the message.
+      label: "Ejemplos o capturas"

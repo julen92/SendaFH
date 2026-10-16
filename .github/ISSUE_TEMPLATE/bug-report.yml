@@ -1,33 +1,50 @@
-name: Bug report
-description: A Lua error, or something in Polestar that does not work.
-title: "Bug: "
-labels: ["bug"]
+name: "Fallo del addon"
+description: "Un error Lua o algo de SendaFH que no funciona."
+title: "[Fallo] "
 body:
-  - type: textarea
-    id: error
-    attributes:
-      label: Lua error
-      description: Type `/console scriptErrors 1`, make the error happen again and paste the whole error text.
-      render: text
-  - type: textarea
-    id: steps
-    attributes:
-      label: Steps to reproduce
-      description: What you did, what you expected and what happened.
-      placeholder: |
-        1. Open the guide menu
-        2. ...
-    validations:
-      required: true
   - type: input
     id: version
     attributes:
-      label: Polestar version
-      description: Shown at the foot of the Options sidebar and in the game's AddOns list.
+      label: "Versión de SendaFH"
+      description: "Aparece en la lista de addons y en los ajustes de SendaFH."
+      placeholder: "0.5.0-test.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: idioma
+    attributes:
+      label: "Idioma del cliente"
+      options:
+        - "Español (España) — esES"
+        - "Español (Latinoamérica) — esMX"
+        - "Otro"
     validations:
       required: true
   - type: textarea
-    id: addons
+    id: problema
     attributes:
-      label: Other addons
-      description: The other addons you have turned on.
+      label: "Qué ha pasado"
+      description: "Cuenta qué esperabas y qué ha ocurrido."
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: "Cómo repetir el fallo"
+      placeholder: |
+        1. Abro la guía…
+        2. Pulso…
+        3. Aparece…
+    validations:
+      required: true
+  - type: textarea
+    id: informe
+    attributes:
+      label: "Informe de SendaFH o error Lua"
+      description: "Usa /senda report para copiar el informe. Si hay un error Lua, pega el texto completo."
+      render: text
+  - type: textarea
+    id: contexto
+    attributes:
+      label: "Capturas y otros addons"
+      description: "Puedes arrastrar una captura aquí y decir qué otros addons llevas activos."

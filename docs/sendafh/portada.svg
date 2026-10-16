@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="440" viewBox="0 0 1440 440" role="img" aria-labelledby="title desc">
+<title id="title">SendaFH · Forever Hispano</title>
+<desc id="desc">Tu próxima misión, en español. Portada de SendaFH, con una ruta de cobre sobre un fondo azul petróleo.</desc>
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1820"/><stop offset="1" stop-color="#152e36"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#d78151" stop-opacity=".16"/><stop offset="1" stop-color="#d78151" stop-opacity="0"/></radialGradient>
+ <pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse"><path d="M56 0H0V56" fill="none" stroke="#b8d5d6" stroke-opacity=".045"/></pattern>
+ <linearGradient id="trail" x2="1" y2="0"><stop stop-color="#477a7c"/><stop offset="1" stop-color="#f19a68"/></linearGradient>
+</defs>
+<rect x="1" y="1" width="1438" height="438" rx="24" fill="url(#bg)" stroke="#426067" stroke-opacity=".5"/>
+<rect x="2" y="2" width="1436" height="436" rx="24" fill="url(#grid)"/>
+<ellipse cx="1160" cy="216" rx="320" ry="280" fill="url(#glow)"/>
+<path d="M880 352C930 322 904 275 971 270S1006 195 1068 195 1093 124 1145 132 1195 87 1285 86" fill="none" stroke="#75969a" stroke-opacity=".11" stroke-width="36"/>
+<path d="M880 352C930 322 904 275 971 270S1006 195 1068 195 1093 124 1145 132 1195 87 1285 86" fill="none" stroke="url(#trail)" stroke-width="3" stroke-dasharray="4 12" stroke-linecap="round"/>
+<g fill="#142c34" stroke="#89acae" stroke-width="2"><circle cx="896" cy="340" r="8"/><circle cx="973" cy="269" r="8"/><circle cx="1068" cy="195" r="8"/><circle cx="1150" cy="132" r="8"/></g>
+<g transform="translate(1280 86)"><circle r="48" fill="#e89462" fill-opacity=".08"/><circle r="33" fill="#e89462" fill-opacity=".1" stroke="#ed9c6c" stroke-opacity=".3"/><path d="M0-23 19 20 0 11-19 20Z" fill="#f1a779"/><path d="M0-23V11L19 20Z" fill="#bd6c43"/></g>
+<path d="M1004 376 1058 315 1093 341 1140 278 1192 324 1242 247 1335 376" fill="none" stroke="#7aacae" stroke-opacity=".13" stroke-width="2"/>
+<g font-family="Segoe UI,Arial,sans-serif">
+ <rect x="64" y="51" width="222" height="34" rx="17" fill="#c8794e" fill-opacity=".12" stroke="#d78d62" stroke-opacity=".28"/>
+ <text x="84" y="74" fill="#e8aa82" font-size="14" font-weight="600" letter-spacing="2">FOREVER HISPANO</text>
+ <text x="58" y="213" fill="#f4eee4" font-size="114" font-weight="700" letter-spacing="-6">Senda<tspan fill="#ed9966">FH</tspan></text>
+ <text x="65" y="278" fill="#e8e2d8" font-size="34" font-weight="400">Tu próxima misión, en español.</text>
+ <text x="66" y="325" fill="#a4bdc1" font-size="20">Guías y rutas · World of Warcraft: Forever</text>
+ <path d="M66 365H114" stroke="#ed9966" stroke-width="3"/>
+ <text x="130" y="371" fill="#8da8ae" font-size="16">Adaptación de Polestar · Beta de la comunidad</text>
+</g></svg>

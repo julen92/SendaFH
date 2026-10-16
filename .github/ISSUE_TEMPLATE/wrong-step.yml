@@ -1,49 +1,43 @@
-name: Wrong step
-description: A guide step that is wrong, never checks off or sends you the long way.
-title: "Wrong step: <guide>, step <number>"
-labels: ["guide"]
+name: "Paso o ruta incorrectos"
+description: "Un objetivo que no cuenta, un NPC mal situado o una flecha que te manda por mal camino."
+title: "[Guía] "
 body:
-  - type: input
-    id: guide
-    attributes:
-      label: Guide
-      description: The guide's title as the guide window shows it.
-      placeholder: Westfall
-    validations:
-      required: true
-  - type: input
-    id: step
-    attributes:
-      label: Step
-      description: The step's number and text as the guide window shows them.
-      placeholder: "13: Accept The Defias Brotherhood"
-    validations:
-      required: true
-  - type: textarea
-    id: wrong
-    attributes:
-      label: What is wrong
-      description: What the step says, and what you found in the game.
-    validations:
-      required: true
-  - type: textarea
-    id: where
-    attributes:
-      label: The right spot
-      description: Stand where the step should send you, type `/polestar where` and paste what it prints.
-      render: text
-  - type: input
-    id: character
-    attributes:
-      label: Race, class and level
-      placeholder: Human Warrior, level 14
-    validations:
-      required: true
   - type: input
     id: version
     attributes:
-      label: Polestar version
-      description: Shown at the foot of the Options sidebar and in the game's AddOns list.
-      placeholder: 0.2.0
+      label: "Versión de SendaFH"
+      placeholder: "0.5.0-test.1"
     validations:
       required: true
+  - type: input
+    id: guia
+    attributes:
+      label: "Guía y número de paso"
+      placeholder: "Bosque de Elwynn, paso 4"
+    validations:
+      required: true
+  - type: input
+    id: personaje
+    attributes:
+      label: "Raza, clase y nivel"
+      placeholder: "Humano, cazador, nivel 8"
+    validations:
+      required: true
+  - type: textarea
+    id: problema
+    attributes:
+      label: "Qué indica la guía y qué has encontrado"
+      description: "Explica si falla el NPC, el objetivo, la entrega o el camino de la flecha."
+    validations:
+      required: true
+  - type: textarea
+    id: informe
+    attributes:
+      label: "Informe del paso"
+      description: "Con el paso en pantalla, usa /senda report y pega el informe."
+      render: text
+  - type: textarea
+    id: ubicacion
+    attributes:
+      label: "Ubicación correcta y capturas"
+      description: "Si conoces el sitio, usa /senda where allí y pega el resultado. Puedes adjuntar capturas."
