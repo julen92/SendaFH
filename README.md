@@ -43,6 +43,7 @@ Parte de la traducción está asistida por IA y necesita revisión jugando. Algu
 
 ## Pruebas y desarrollo
 
+- [Apúntate a la ronda de testers](https://discord.com/channels/1560465332907417712/1560697229977722990) o sigue los resultados en [GitHub #1](https://github.com/julen92/SendaFH/issues/1).
 - [Plan de pruebas de la beta](docs/sendafh/PRUEBAS-BETA.md): rutas, checklist y criterios para preparar una Release.
 - [Cómo contribuir y mantener las updates](CONTRIBUTING.md).
 - [Guion para grabar la demo dentro del juego](docs/sendafh/GRABAR-DEMO.md).

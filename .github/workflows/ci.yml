@@ -1,6 +1,15 @@
 name: SendaFH checks
 on:
   workflow_dispatch:
+  push:
+    branches: [sendafh]
+    paths:
+      - 'addon/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'locales/**'
+      - 'guides/**'
+      - 'package.json'
   pull_request:
 permissions:
   contents: read
@@ -31,4 +40,5 @@ jobs:
         run: node tools/senda-guide-audit.js
       - name: Navigation integrity
         run: node tools/sendafh.js nav check
+
 

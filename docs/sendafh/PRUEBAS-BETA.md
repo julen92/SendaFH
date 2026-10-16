@@ -5,9 +5,9 @@ Las pruebas automáticas no sustituyen estas comprobaciones en el cliente real d
 
 ## Apuntarse
 
-Comenta en el hilo de testers del [foro de Discord](https://discord.com/channels/1560465332907417712/1560472232990351391)
+Comenta en el hilo de testers del [hilo de testers de Discord](https://discord.com/channels/1560465332907417712/1560697229977722990)
 tu facción, raza, clase, nivel, idioma del cliente y qué zona puedes probar.
-El equipo anotará quién cubre cada ruta en la incidencia de seguimiento de GitHub.
+El equipo anotará quién cubre cada ruta en la [incidencia de seguimiento de GitHub](https://github.com/julen92/SendaFH/issues/1).
 No hace falta empezar un personaje nuevo si puedes cubrir otra zona.
 
 | Ruta inicial | Personajes sugeridos | Idioma | Estado |
