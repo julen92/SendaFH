@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/sendafh/portada.svg" alt="SendaFH · Tu próxima misión, en español · Forever Hispano" width="100%">
+  <img src="docs/sendafh/portada.png" alt="SendaFH · Tu próxima misión, en español · Forever Hispano" width="100%">
 </p>
 
 <p align="center">
