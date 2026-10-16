@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://discord.gg/qkW5Y8yzk6">Discord de Forever Hispano</a> ·
   <a href="https://github.com/julen92/SendaFH/issues/new/choose">Reportar un fallo</a> ·
-  <a href="https://github.com/julen92/SendaFH/releases">Versiones</a> ·
+  <a href="https://www.curseforge.com/wow/addons/sendafh">CurseForge</a> ·
   <a href="https://github.com/fitzforge/polestar">Polestar original</a>
 </p>
 
@@ -33,13 +33,11 @@ Las funciones de la base son trabajo de Polestar y de los proyectos que integra.
 
 ## Estado y descarga
 
-**Beta preparada: `0.5.0-test.1`, basada en Polestar `v0.2.5-test.1`.**
+**Versión enviada a CurseForge: `0.5.0-beta.1`, basada en Polestar `v0.2.5-test.1`.**
 
-Todavía no hay un instalable de SendaFH publicado en las Releases de este repositorio. Si quieres probar la beta que estamos preparando, entra en el [Discord de Forever Hispano](https://discord.gg/qkW5Y8yzk6) y pide el paquete de pruebas.
+La primera beta se ha enviado a CurseForge y está en procesamiento, antes de su revisión. **Aún debe aprobarla su equipo de moderación**; mientras tanto, la ficha puede no estar visible para otros usuarios. Cuando la aprueben, estará en **[SendaFH en CurseForge](https://www.curseforge.com/wow/addons/sendafh)**. Al estar clasificada como beta, puede requerir activar el filtro de archivos beta o entrar desde el enlace directo.
 
-Cuando publiquemos un instalable, estará en **[Releases](https://github.com/julen92/SendaFH/releases)**, identificado como beta y acompañado de su código fuente. **Code → Download ZIP descarga las fuentes de esta rama; no es el paquete instalable de SendaFH.** Esta rama contiene la portada y el soporte sobre el código heredado de Polestar; la publicación del código completo de la adaptación está pendiente.
-
-No tenemos una publicación de SendaFH en CurseForge anunciada todavía. Los enlaces de descarga se añadirán aquí cuando esté disponible.
+El instalable incluye las ocho carpetas del addon y las fuentes editables, catálogos y herramientas en `SendaFH/Source/`. **Code → Download ZIP descarga esta rama de GitHub; no es el instalable de SendaFH.** Esta rama contiene la portada y el soporte sobre el código heredado de Polestar; la publicación del código completo de la adaptación en GitHub está pendiente. Las fuentes de la versión publicada acompañan al ZIP de CurseForge.
 
 Parte de la traducción está asistida por IA y necesita revisión jugando. Algunos nombres exclusivos de Forever pueden seguir en inglés. Las rutas también están en beta: si una flecha te manda por un sitio imposible, [repórtalo](https://github.com/julen92/SendaFH/issues/new?template=wrong-step.yml).
 
@@ -86,7 +84,7 @@ Se carga el paquete de nombres que corresponda al idioma de tu cliente.
 
 **Si vienes de SendaFH 0.4.0:** sustituye las carpetas por las nuevas y conserva `WTF`; no necesitas repetir la migración. Un `/reload` no basta para cargar los módulos nuevos.
 
-**Si vienes de Polestar:** consulta primero el [Discord](https://discord.gg/qkW5Y8yzk6) y las instrucciones del paquete. El instalable incluye `SendaFH/Migrar-SendaFH.cmd` para migrar los datos con el juego cerrado. Conserva una copia de seguridad y evita tener ambos addons activos a la vez.
+**Si vienes de Polestar:** consulta primero el [Discord](https://discord.gg/qkW5Y8yzk6) y las instrucciones del paquete. El ZIP de CurseForge no incluye los scripts opcionales de migración de Windows; pide ayuda para conservar tu progreso con el juego cerrado. Conserva una copia de seguridad y evita tener ambos addons activos a la vez.
 
 ## Primeros pasos
 
@@ -106,7 +104,7 @@ Se carga el paquete de nombres que corresponda al idioma de tu cliente.
 
 Incluye la versión de SendaFH, la guía y el paso, qué esperabas y qué ha ocurrido. Una captura y el informe del addon nos ayudan a encontrar el problema. Más detalles en [cómo reportar fallos](docs/sendafh/SOPORTE.md).
 
-**Estos reportes son de SendaFH.** Si una mejora también sirve para Polestar, la proponemos al proyecto original. Ya hemos enviado [122 mejoras de traducción en el PR #139](https://github.com/fitzforge/polestar/pull/139).
+**Estos reportes son de SendaFH.** Si una mejora también sirve para Polestar, la proponemos al proyecto original. Polestar ya ha incorporado [122 mejoras de traducción en el PR #139](https://github.com/fitzforge/polestar/pull/139).
 
 ## Créditos y licencia
 
