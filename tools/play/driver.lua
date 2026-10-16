@@ -592,7 +592,7 @@ function play.key(key, text)
 end
 function M.SetMaxLetters(self, n) self.maxLetters = n end
 
--- "/polestar options", "/run code", or any registered slash command.
+-- "/sendafh options", "/run code", or any registered slash command.
 function play.slash(line)
 	line = tostring(line or ""):gsub("^%s+", "")
 	local cmd, rest = line:match("^/(%S+)%s*(.-)%s*$")
@@ -634,7 +634,7 @@ end
 -- The world map: Blizzard_MapCanvas's shape for data providers and pins
 ---------------------------------------------------------------------------
 
-local NAV = "Interface\\AddOns\\Polestar\\Media\\Nav\\"
+local NAV = "Interface\\AddOns\\SendaFH\\Media\\Nav\\"
 local MAP_W, MAP_H = 1002, 668
 
 MapCanvasDataProviderMixin = MapCanvasDataProviderMixin or {
@@ -870,7 +870,7 @@ end
 -- Complete the current step's first open goal the way the simulator does.
 -- -> what happened: "done" | "advanced" | "stuck" | "noguide"
 function play.doGoal()
-	local E = Polestar.Engine
+	local E = SendaFH.Engine
 	local G, i = E.GetGuide(), E.GetStepIndex()
 	if not (G and i) then return "noguide" end
 	local view = E.GetStepView(i)
@@ -895,7 +895,7 @@ end
 
 -- Play goals until the step changes (or the guide ends, or a goal sticks).
 function play.playStep()
-	local E = Polestar.Engine
+	local E = SendaFH.Engine
 	local i = E.GetStepIndex()
 	for _ = 1, 80 do
 		local r = play.doGoal()
@@ -906,7 +906,7 @@ end
 
 -- Play the active guide to its end. -> result, steps played
 function play.playGuide(limit)
-	local E = Polestar.Engine
+	local E = SendaFH.Engine
 	local G = E.GetGuide()
 	local n = 0
 	for _ = 1, limit or 4000 do
@@ -1019,7 +1019,7 @@ local function enc(v)
 	elseif t == "table" then
 		local len = #v
 		if len > 0 or next(v) == nil then
-			-- An array (Polestar's arrays have no holes); {} is an empty one.
+			-- An array (SendaFH's arrays have no holes); {} is an empty one.
 			buf[n] = "["
 			for i = 1, len do
 				if i > 1 then n = n + 1; buf[n] = "," end
@@ -1079,7 +1079,7 @@ local LOOK = { "ui.style", "ui.compact", "ui.scale", "ui.width", "ui.bgOpacity",
 
 -- Stored overrides as { "path.to.key", value } pairs. An empty table holds no
 -- override (a section reset to its defaults), so it is not reported: pasting
--- Polestar.Set("ui", {}) in game would wipe the whole section.
+-- SendaFH.Set("ui", {}) in game would wipe the whole section.
 local function flatten(t, prefix, out)
 	for k, v in pairs(t) do
 		local key = prefix == "" and tostring(k) or (prefix .. "." .. tostring(k))
@@ -1093,7 +1093,7 @@ local function flatten(t, prefix, out)
 end
 
 local function guideState()
-	local E = Polestar.Engine
+	local E = SendaFH.Engine
 	local G = E and E.GetGuide and E.GetGuide()
 	if not G then return nil end
 	local i = E.GetStepIndex()
@@ -1102,7 +1102,7 @@ local function guideState()
 	local goals = {}
 	local view = i and E.GetStepView(i)
 	if view then
-		local UI = Polestar.UI
+		local UI = SendaFH.UI
 		for gi, g in ipairs(view.goals) do
 			local ok, text = pcall(UI.PlainGoalText, g)
 			goals[gi] = { text = ok and text or tostring(g.t), status = g.status, t = g.t }
@@ -1112,7 +1112,7 @@ local function guideState()
 	local tabs, active = E.GetTabs()
 	local tabList = {}
 	for ti, t in ipairs(tabs or {}) do tabList[ti] = { id = t.guideId, title = t.title } end
-	local GF = Polestar.UI and Polestar.UI.GuideFrame
+	local GF = SendaFH.UI and SendaFH.UI.GuideFrame
 	return {
 		id = G.id, title = G.title, step = i, count = #G.steps, steps = steps, goals = goals,
 		done = done, total = total, pending = E.PendingRouteChoice and E.PendingRouteChoice() or nil,
@@ -1124,7 +1124,7 @@ end
 
 function play.state()
 	local w = stub.world
-	local ns = Polestar
+	local ns = SendaFH
 	local look = {}
 	for _, k in ipairs(LOOK) do look[k] = ns.Get(k) end
 	local changed = flatten(ns.DB().settings, "", {})
@@ -1159,7 +1159,7 @@ function play.state()
 		waypoint = ns.Engine and ns.Engine.GetWaypoint and ns.Engine.GetWaypoint() or nil,
 		look = look, changed = changed, schemes = schemes, eui = stub.addonsLoaded.EllesmereUI == true,
 		quests = quests, sections = sections, section = P and P.Section and P.Section() or nil,
-		hub = ns.UI and ns.UI.Picker and PolestarPicker and PolestarPicker.shown and true or false,
+		hub = ns.UI and ns.UI.Picker and SendaFHPicker and SendaFHPicker.shown and true or false,
 		worldMap = map.shown, worldMapID = stub.worldMapID,
 		focus = focus and play.ids[focus] or nil,
 		chat = chat, popups = popups, errorSeq = errorSeq,

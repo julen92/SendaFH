@@ -1,14 +1,14 @@
 'use strict';
-// The welcome (addon/Polestar/UI/Welcome.lua) against the real Core + Theme +
+// The welcome (addon/SendaFH/UI/Welcome.lua) against the real Core + Theme +
 // UI manifests and the fake Engine of tests/lua/stub_ui.lua: once per new
-// character (PolestarCharDB.welcomeSeen = 1), with setup only while the
-// account has not had one (PolestarDB.welcomeSeen = 1); never in combat,
+// character (SendaFHCharDB.welcomeSeen = 1), with setup only while the
+// account has not had one (SendaFHDB.welcomeSeen = 1); never in combat,
 // never during a cinematic, never over the route choice; three pages
 // (welcome, setup, start; two for a later character) with step dots; setup
 // choices that write their settings, the scheme cards applying live; a start
 // page that names the suggested guide for the character, the beta callout
 // while the routes are in beta, the Discord invite and guide packs; opened
-// from About and by /polestar welcome.
+// from About and by /sendafh welcome.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -16,13 +16,13 @@ const { runAddon } = require('./helpers/lua');
 
 const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 
-// Saved variables: an account that has had its welcome, a character Polestar
+// Saved variables: an account that has had its welcome, a character SendaFH
 // knew before the welcome had a flag, one that has seen it, one still due.
-const ACCOUNT_SEEN = 'PolestarDB = { schema = 1, settings = {}, welcomeSeen = 1 }';
-const ACCOUNT_NEW = 'PolestarDB = { schema = 1, settings = {} }';
-const CHAR_KNOWN = 'PolestarCharDB = { schema = 1 }';
-const CHAR_SEEN = 'PolestarCharDB = { schema = 1, welcomeSeen = 1 }';
-const CHAR_DUE = 'PolestarCharDB = { schema = 1, welcomeSeen = 0 }';
+const ACCOUNT_SEEN = 'SendaFHDB = { schema = 1, settings = {}, welcomeSeen = 1 }';
+const ACCOUNT_NEW = 'SendaFHDB = { schema = 1, settings = {} }';
+const CHAR_KNOWN = 'SendaFHCharDB = { schema = 1 }';
+const CHAR_SEEN = 'SendaFHCharDB = { schema = 1, welcomeSeen = 1 }';
+const CHAR_DUE = 'SendaFHCharDB = { schema = 1, welcomeSeen = 0 }';
 
 // uistub.install marks the welcome seen for every other UI test; here the
 // account and the character keep what their saved variables (and the addon
@@ -30,17 +30,17 @@ const CHAR_DUE = 'PolestarCharDB = { schema = 1, welcomeSeen = 0 }';
 function run(script, opts = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
-		saved: opts.saved && { Polestar: opts.saved },
-		script: `local savedSeen = PolestarDB and PolestarDB.welcomeSeen
-local savedChar = PolestarCharDB and PolestarCharDB.welcomeSeen
+		addons: [{ name: 'SendaFH', files: FILES }],
+		saved: opts.saved && { SendaFH: opts.saved },
+		script: `local savedSeen = SendaFHDB and SendaFHDB.welcomeSeen
+local savedChar = SendaFHCharDB and SendaFHCharDB.welcomeSeen
 uistub.install()
-Polestar.DB().welcomeSeen = savedSeen
-Polestar.CharState().welcomeSeen = savedChar
+SendaFH.DB().welcomeSeen = savedSeen
+SendaFH.CharState().welcomeSeen = savedChar
 ${opts.before || ''}
 stub.login()
-local Wel = Polestar.UI.Welcome
-function shown() return PolestarWelcome ~= nil and PolestarWelcome:IsShown() end
+local Wel = SendaFH.UI.Welcome
+function shown() return SendaFHWelcome ~= nil and SendaFHWelcome:IsShown() end
 function title() return (select(4, Wel.Page())) end
 function key() return (Wel.Page()) end
 -- "2 of 3": the page's place, as the step dots show it.
@@ -48,7 +48,7 @@ function step() local _, at, n = Wel.Page(); return at .. " of " .. n end
 -- The dots: how many show, which one is the accent capsule.
 function dots()
 	local n, on = 0, nil
-	for i, d in ipairs(PolestarWelcome.Dots.list) do
+	for i, d in ipairs(SendaFHWelcome.Dots.list) do
 		if d:IsShown() then
 			n = n + 1
 			if d.psOn then on = i end
@@ -60,8 +60,8 @@ function titles()
 	local out = {}
 	repeat
 		out[#out + 1] = title()
-		if not PolestarWelcome.Next:IsShown() then break end
-		PolestarWelcome.Next:Click()
+		if not SendaFHWelcome.Next:IsShown() then break end
+		SendaFHWelcome.Next:Click()
 	until not shown() or #out > 6
 	return out
 end
@@ -77,17 +77,17 @@ test('a new character sees the welcome once, shortly after login; opening it mar
 		local after = shown()
 		local first = title()
 		local at = { step = step(), dots = dots() }
-		local open = { char = PolestarCharDB.welcomeSeen, account = PolestarDB.welcomeSeen or false }
-		PolestarWelcome.Skip:Click()
+		local open = { char = SendaFHCharDB.welcomeSeen, account = SendaFHDB.welcomeSeen or false }
+		SendaFHWelcome.Skip:Click()
 		emit({ atLogin = atLogin, after = after, first = first, at = at, open = open, closed = not shown(),
-			char = PolestarCharDB.welcomeSeen, account = PolestarDB.welcomeSeen })`);
+			char = SendaFHCharDB.welcomeSeen, account = SendaFHDB.welcomeSeen })`);
 	assert.deepEqual(out, { atLogin: false, after: true, first: 'Hello, Testchar', at: { step: '1 of 3', dots: '3:1' },
 		open: { char: 1, account: false }, closed: true, char: 1, account: 1 },
 	'a reload or logout with it still up does not show it again');
 });
 
 test('a character with saved data and no flag never gets it unasked, even on an account that never saw it', () => {
-	const [out] = run('stub.advance(10)\nemit({ shown = shown(), char = PolestarCharDB.welcomeSeen, account = PolestarDB.welcomeSeen or false })', {
+	const [out] = run('stub.advance(10)\nemit({ shown = shown(), char = SendaFHCharDB.welcomeSeen, account = SendaFHDB.welcomeSeen or false })', {
 		saved: `${ACCOUNT_NEW}\n${CHAR_KNOWN}`,
 	});
 	assert.deepEqual(out, { shown: false, char: 1, account: false });
@@ -98,14 +98,14 @@ test('a later login of a character that has seen it does not show it', () => {
 	assert.equal(out.shown, false);
 });
 
-test('a new character on an account that has had its welcome gets it without setup; /polestar welcome shows every page', () => {
+test('a new character on an account that has had its welcome gets it without setup; /sendafh welcome shows every page', () => {
 	const [out] = run(`
 		stub.advance(3)
 		local login = titles()
 		local loginDots = dots()
-		SlashCmdList.POLESTAR("welcome")
+		SlashCmdList.SENDAFH("welcome")
 		local asked = titles()
-		emit({ login = login, loginDots = loginDots, asked = asked, askedDots = dots(), char = PolestarCharDB.welcomeSeen })`, { saved: ACCOUNT_SEEN });
+		emit({ login = login, loginDots = loginDots, asked = asked, askedDots = dots(), char = SendaFHCharDB.welcomeSeen })`, { saved: ACCOUNT_SEEN });
 	assert.deepEqual(out.login, ['Hello, Testchar', 'Elwynn Forest']);
 	assert.equal(out.loginDots, '2:2');
 	assert.deepEqual(out.asked, ['Hello, Testchar', 'Make it yours', 'Elwynn Forest']);
@@ -119,19 +119,19 @@ test('a due welcome that never opened shows at the next login', () => {
 });
 
 test('an account that saw the old beta notice still gets the welcome on a new character, and the old flag goes', () => {
-	const [out] = run('stub.advance(3)\nemit({ shown = shown(), old = PolestarDB.betaNoticeSeen or false })', {
-		saved: 'PolestarDB = { schema = 1, settings = {}, betaNoticeSeen = true }',
+	const [out] = run('stub.advance(3)\nemit({ shown = shown(), old = SendaFHDB.betaNoticeSeen or false })', {
+		saved: 'SendaFHDB = { schema = 1, settings = {}, betaNoticeSeen = true }',
 	});
 	assert.deepEqual(out, { shown: true, old: false });
 });
 
-test('the first page greets the character by name, says what Polestar does and shows its three parts', () => {
+test('the first page greets the character by name, says what SendaFH does and shows its three parts', () => {
 	const [out] = run(`
 		Wel.Show()
-		local F = PolestarWelcome
+		local F = SendaFHWelcome
 		local named = title()
 		local parts = {}
-		for _, s in ipairs({ "The guide window", "The arrow", "Every guide", "/polestar guides", "Goals tick off as you play.",
+		for _, s in ipairs({ "The guide window", "The arrow", "Every guide", "/sendafh guides", "Goals tick off as you play.",
 			"Leveling guides for World of Warcraft: Forever", "who to talk to" }) do
 			parts[s] = uistub.findText(F, s) ~= nil
 		end
@@ -140,60 +140,60 @@ test('the first page greets the character by name, says what Polestar does and s
 		Wel.Show()
 		emit({ named = named, parts = parts, anonymous = title() })`);
 	assert.equal(out.named, 'Hello, Testchar');
-	assert.equal(out.anonymous, 'Welcome to Polestar', 'without a name');
+	assert.equal(out.anonymous, 'Welcome to SendaFH', 'without a name');
 	for (const [part, found] of Object.entries(out.parts)) assert.equal(found, true, part);
 });
 
 test('the start page names the suggested guide on its painting, for this character, leaving out what is unknown', () => {
 	const [out] = run(`
 		local g = uistub.guides[uistub.suggest]
-		local function facts() return plain(PolestarWelcome.pages.start.Hero.For:GetText()) end
-		local function again() PolestarWelcome:Hide(); Wel.Show("start"); return facts() end
+		local function facts() return plain(SendaFHWelcome.pages.start.Hero.For:GetText()) end
+		local function again() SendaFHWelcome:Hide(); Wel.Show("start"); return facts() end
 		Wel.Show("start")
-		local h = PolestarWelcome.pages.start.Hero
+		local h = SendaFHWelcome.pages.start.Hero
 		local first = { title = title(), chip = h.Chip:IsShown() and h.Chip.Text:GetText(), facts = facts(),
-			start = PolestarWelcome.Start.Label:GetText() }
+			start = SendaFHWelcome.Start.Label:GetText() }
 		g.title = "First Steps"
 		local other = again()
 		uistub.player = { name = "Testchar", level = 7 }
 		local levelOnly = again()
 		uistub.player = {}
-		Polestar.Compat.GetZoneText = function() return nil end
+		SendaFH.Compat.GetZoneText = function() return nil end
 		local nothing = again()
 		uistub.suggest = nil
 		local none = again()
 		emit({ first = first, other = other, levelOnly = levelOnly, nothing = nothing,
-			none = { title = title(), facts = none, chip = h.Chip:IsShown(), start = PolestarWelcome.Start.Label:GetText() } })`);
+			none = { title = title(), facts = none, chip = h.Chip:IsShown(), start = SendaFHWelcome.Start.Label:GetText() } })`);
 	assert.deepEqual(out.first, { title: 'Elwynn Forest', chip: 'Levels 1\u201313',
 		facts: 'Your first guide, for your level 4 Human Warrior', start: 'Start guide' }, 'a guide named for the zone already says where');
 	assert.equal(out.other, 'Your first guide, for your level 4 Human Warrior in Elwynn Forest');
 	assert.equal(out.levelOnly, 'Your first guide, for your level 7 character in Elwynn Forest');
 	assert.equal(out.nothing, 'Your first guide');
-	assert.deepEqual(out.none, { title: 'Choose your first guide', facts: 'Polestar has no guide to suggest for where you are.',
+	assert.deepEqual(out.none, { title: 'Choose your first guide', facts: 'SendaFH has no guide to suggest for where you are.',
 		chip: false, start: 'Choose a guide' });
 });
 
 test('the ✕ and Escape close it and mark it seen too', () => {
 	const [out] = run(`
 		stub.advance(3)
-		PolestarWelcome.Close:Click()
-		local x = { closed = not shown(), seen = PolestarCharDB.welcomeSeen }
-		PolestarCharDB.welcomeSeen = 0
+		SendaFHWelcome.Close:Click()
+		local x = { closed = not shown(), seen = SendaFHCharDB.welcomeSeen }
+		SendaFHCharDB.welcomeSeen = 0
 		Wel.Show()
 		local special = false
-		for _, n in ipairs(UISpecialFrames) do if n == "PolestarWelcome" then special = true end end
-		PolestarWelcome:Hide()
-		emit({ x = x, special = special, seen = PolestarCharDB.welcomeSeen })`);
+		for _, n in ipairs(UISpecialFrames) do if n == "SendaFHWelcome" then special = true end end
+		SendaFHWelcome:Hide()
+		emit({ x = x, special = special, seen = SendaFHCharDB.welcomeSeen })`);
 	assert.deepEqual(out, { x: { closed: true, seen: 1 }, special: true, seen: 1 });
 });
 
 test('in combat it waits for the fight to end', () => {
 	const [out] = run(`
 		stub.advance(3)
-		local during = { shown = shown(), char = PolestarCharDB.welcomeSeen }
+		local during = { shown = shown(), char = SendaFHCharDB.welcomeSeen }
 		stub.inCombat = false
 		stub.fire("PLAYER_REGEN_ENABLED")
-		emit({ during = during, after = shown(), seen = PolestarDB.welcomeSeen or false })`, { before: 'stub.inCombat = true' });
+		emit({ during = during, after = shown(), seen = SendaFHDB.welcomeSeen or false })`, { before: 'stub.inCombat = true' });
 	assert.deepEqual(out, { during: { shown: false, char: 0 }, after: true, seen: false });
 });
 
@@ -215,15 +215,15 @@ end`;
 test('the intro cinematic does not use it up: closed as the cinematic starts, it comes back on the same page after it', () => {
 	const [out] = run(`
 		stub.advance(3)
-		PolestarWelcome.Next:Click()
+		SendaFHWelcome.Next:Click()
 		local before = { shown = shown(), step = step() }
 		cinematic(true)
 		stub.advance(5)
-		local during = { shown = shown(), account = PolestarDB.welcomeSeen or false }
+		local during = { shown = shown(), account = SendaFHDB.welcomeSeen or false }
 		cinematic(false)
 		stub.advance(2)
 		emit({ before = before, during = during, after = shown(), step = step(), key = key(),
-			account = PolestarDB.welcomeSeen or false })`, { before: CINEMATIC });
+			account = SendaFHDB.welcomeSeen or false })`, { before: CINEMATIC });
 	assert.deepEqual(out, {
 		before: { shown: true, step: '2 of 3' },
 		during: { shown: false, account: false },
@@ -235,29 +235,29 @@ test('a cinematic playing when the welcome is due holds it until the cinematic e
 	const [out] = run(`
 		cinematic(true)
 		stub.advance(3)
-		local during = { shown = shown(), char = PolestarCharDB.welcomeSeen }
+		local during = { shown = shown(), char = SendaFHCharDB.welcomeSeen }
 		cinematic(false)
 		stub.advance(2)
-		emit({ during = during, after = shown(), first = title(), char = PolestarCharDB.welcomeSeen })`, { before: CINEMATIC });
+		emit({ during = during, after = shown(), first = title(), char = SendaFHCharDB.welcomeSeen })`, { before: CINEMATIC });
 	assert.deepEqual(out, { during: { shown: false, char: 0 }, after: true, first: 'Hello, Testchar', char: 1 });
 });
 
 test('it never opens over the route choice: it waits for that window to close, and steps aside if one opens', () => {
 	const [out] = run(`
-		local E = Polestar.Engine
+		local E = SendaFH.Engine
 		E.GetRouteChoice = function(id)
 			return { from = id, options = { { id = "a", title = "A", recommended = true }, { id = "b", title = "B" } } }
 		end
 		E.PendingRouteChoice = function() return "x" end
-		local RC = Polestar.UI.RouteChoice
-		Polestar.Fire("ROUTE_CHOICE", "x")
+		local RC = SendaFH.UI.RouteChoice
+		SendaFH.Fire("ROUTE_CHOICE", "x")
 		stub.advance(3)
 		local underChoice = shown()
 		RC.Hide()
 		local afterChoice = shown()
-		PolestarWelcome.Next:Click()
-		Polestar.Fire("ROUTE_CHOICE", "x")
-		local overWelcome = { welcome = shown(), choice = RC.IsShown(), char = PolestarCharDB.welcomeSeen }
+		SendaFHWelcome.Next:Click()
+		SendaFH.Fire("ROUTE_CHOICE", "x")
+		local overWelcome = { welcome = shown(), choice = RC.IsShown(), char = SendaFHCharDB.welcomeSeen }
 		RC.Hide()
 		emit({ underChoice = underChoice, afterChoice = afterChoice, overWelcome = overWelcome, back = shown(), key = key(),
 			step = step() })`, { saved: ACCOUNT_SEEN });
@@ -272,7 +272,7 @@ test('it never opens over the route choice: it waits for that window to close, a
 test('three pages with Next and Back and the step dots; the last page holds the guide buttons', () => {
 	const [out] = run(`
 		Wel.Show()
-		local F = PolestarWelcome
+		local F = SendaFHWelcome
 		local keys, steps, marks, buttons = {}, {}, {}, {}
 		for i = 1, 3 do
 			keys[i], steps[i], marks[i] = key(), step(), dots()
@@ -288,7 +288,7 @@ test('three pages with Next and Back and the step dots; the last page holds the 
 		local first = key()
 		stub.advance(1)
 		emit({ keys = keys, steps = steps, marks = marks, buttons = buttons, height = height, back = back, first = first,
-			idle = Polestar.Anim.Active() })`);
+			idle = SendaFH.Anim.Active() })`);
 	assert.deepEqual(out.keys, ['welcome', 'setup', 'start']);
 	assert.deepEqual(out.steps, ['1 of 3', '2 of 3', '3 of 3']);
 	assert.deepEqual(out.marks, ['3:1', '3:2', '3:3'], 'the current page is the accent capsule');
@@ -305,13 +305,13 @@ test('three pages with Next and Back and the step dots; the last page holds the 
 test('the beta callout on the start page follows ns.routesBeta', () => {
 	const [out] = run(`
 		Wel.Show("start")
-		local F = PolestarWelcome
+		local F = SendaFHWelcome
 		local p = F.pages.start
 		local beta = { chip = p.Beta.Chip:IsShown() and p.Beta.Chip.Text:GetText(),
 			text = uistub.findText(F, "nobody has followed them through the live game yet") ~= nil,
-			report = plain(p.Beta.Text:GetText()):find("/polestar skip and tell us on Discord", 1, true) ~= nil }
+			report = plain(p.Beta.Text:GetText()):find("/sendafh skip and tell us on Discord", 1, true) ~= nil }
 		F:Hide()
-		Polestar.routesBeta = false
+		SendaFH.routesBeta = false
 		Wel.Show("start")
 		emit({ beta = beta, proven = { chip = p.Beta.Chip:IsShown(), head = uistub.findText(F, "still in beta") ~= nil } })`);
 	assert.deepEqual(out.beta, { chip: 'BETA', text: true, report: true });
@@ -321,19 +321,19 @@ test('the beta callout on the start page follows ns.routesBeta', () => {
 test('the start page invites the player to the Discord community: its mark, and the invite as a link that opens the copy window', () => {
 	const [out] = run(`
 		Wel.Show("start")
-		local F = PolestarWelcome
+		local F = SendaFHWelcome
 		local mark = F.pages.start.Discord.Mark
 		local r, g, b = mark:GetVertexColor()
-		local dr, dg, db = Polestar.Theme.Color("discord")
+		local dr, dg, db = SendaFH.Theme.Color("discord")
 		local link = F.Discord
 		local seen = { link = link:IsVisible() and link.Label:GetText(),
 			head = uistub.findText(F, "Join us on Discord") ~= nil, line = uistub.findText(F, "Feedback, bug reports and news") ~= nil,
 			mark = mark:IsVisible() and tostring(mark:GetTexture()):find("discord", 1, true) ~= nil,
 			own = r == dr and g == dg and b == db, kind = link:GetObjectType() }
 		link:Click()
-		emit({ seen = seen, copy = PolestarCopy ~= nil and PolestarCopy:IsShown() and PolestarCopy.Box:GetText(),
-			shared = Polestar.DiscordURL })`);
-	assert.deepEqual(out.seen, { link: 'discord.gg/vMbee6F2e9', head: true, line: true, mark: true, own: true, kind: 'Button' },
+		emit({ seen = seen, copy = SendaFHCopy ~= nil and SendaFHCopy:IsShown() and SendaFHCopy.Box:GetText(),
+			shared = SendaFH.DiscordURL })`);
+	assert.deepEqual(out.seen, { link: 'discord.gg/qkW5Y8yzk6', head: true, line: true, mark: true, own: true, kind: 'Button' },
 		'the address reads as a link, not a field');
 	assert.ok(out.shared && out.copy === out.shared, `the copy window holds the shared invite: ${out.copy}`);
 });
@@ -341,12 +341,12 @@ test('the start page invites the player to the Discord community: its mark, and 
 test('the start page says what guide packs are and where to learn more', () => {
 	const [out] = run(`
 		Wel.Show("start")
-		local F = PolestarWelcome
+		local F = SendaFHWelcome
 		local t = plain(F.pages.start.Packs.Text:GetText())
 		emit({ head = uistub.findText(F, "Guide packs") ~= nil,
-			others = t:find("made by other players for Polestar", 1, true) ~= nil,
+			others = t:find("made by other players for SendaFH", 1, true) ~= nil,
 			addon = t:find("installed like any other", 1, true) ~= nil,
-			where = t:find("/polestar guides under Guide packs", 1, true) ~= nil,
+			where = t:find("/sendafh guides under Guide packs", 1, true) ~= nil,
 			author = t:find("credited to their author, who supports them", 1, true) ~= nil,
 			more = t:find("Options > Guide packs", 1, true) ~= nil })`);
 	assert.deepEqual(out, { head: true, others: true, addon: true, where: true, author: true, more: true });
@@ -355,15 +355,15 @@ test('the start page says what guide packs are and where to learn more', () => {
 test('the setup page writes its settings: quest automation both ways, the login guide, and the scheme from its cards', () => {
 	const [out] = run(`
 		Wel.Show("setup")
-		local get = Polestar.Get
-		local F = PolestarWelcome
+		local get = SendaFH.Get
+		local F = SendaFHWelcome
 		local start = { title = title(), on = F.AutoQuest.checked,
 			desc = uistub.findText(F, "Never picks between rewards") ~= nil, login = uistub.findText(F, "when no tab is open") ~= nil }
 		F.AutoQuest:Click()
 		local off = { get("behavior.autoAccept"), get("behavior.autoTurnin"), F.AutoQuest.checked }
 		F.AutoQuest:Click()
 		local on = { get("behavior.autoAccept"), get("behavior.autoTurnin"), F.AutoQuest.checked }
-		Polestar.Set("behavior.autoTurnin", false)
+		SendaFH.Set("behavior.autoTurnin", false)
 		local partly = F.AutoQuest.checked
 		F.AutoGuide:Click()
 		local guide = get("behavior.autoSelectGuide")
@@ -374,22 +374,22 @@ test('the setup page writes its settings: quest automation both ways, the login 
 				if c.psSelected then selected = c.Name:GetText() end
 			end
 		end
-		local before = { Polestar.Theme.Color("bg") }
-		F.Schemes[3]:Click()
-		local after = { Polestar.Theme.Color("bg") }
+		local before = { SendaFH.Theme.Color("bg") }
+		F.Schemes[4]:Click()
+		local after = { SendaFH.Theme.Color("bg") }
 		local now
 		for _, c in ipairs(F.Schemes) do if c.psSelected then now = c.Name:GetText() end end
-		F.Schemes[3]:Click("RightButton")
+		F.Schemes[4]:Click("RightButton")
 		emit({ start = start, off = off, on = on, partly = partly, guide = guide, cards = cards, selected = selected,
-			scheme = F.Schemes[3].psValue, now = now, live = before[1] ~= after[1], reset = get("ui.scheme") or "default",
+			scheme = F.Schemes[4].psValue, now = now, live = before[1] ~= after[1], reset = get("ui.scheme") or "default",
 			stillShown = shown() })`);
 	assert.deepEqual(out.start, { title: 'Make it yours', on: true, desc: true, login: true }, 'descriptions shown inline');
 	assert.deepEqual(out.off, [false, false, false], 'one switch turns both accepting and turning in off');
 	assert.deepEqual(out.on, [true, true, true]);
 	assert.equal(out.partly, false, 'on only while both are on');
 	assert.equal(out.guide, false);
-	assert.deepEqual(out.cards, ['Dusk', 'Night', 'Graphite'], 'one card per scheme on offer');
-	assert.equal(out.selected, 'Dusk');
+	assert.deepEqual(out.cards, ['Hispano', 'Dusk', 'Night', 'Graphite'], 'one card per scheme on offer');
+	assert.equal(out.selected, 'Hispano');
 	assert.equal(out.scheme, 'graphite');
 	assert.equal(out.now, 'Graphite', 'the clicked card is marked at once');
 	assert.equal(out.live, true, 'the window re-themes in front of the player');
@@ -400,8 +400,8 @@ test('the setup page writes its settings: quest automation both ways, the login 
 test('right-clicking the quest automation switch puts accepting and turning in back to their defaults', () => {
 	const [out] = run(`
 		Wel.Show("setup")
-		local get = Polestar.Get
-		local F = PolestarWelcome
+		local get = SendaFH.Get
+		local F = SendaFHWelcome
 		F.AutoQuest:Click()
 		local off = { get("behavior.autoAccept"), get("behavior.autoTurnin") }
 		F.AutoQuest:Click("RightButton")
@@ -416,7 +416,7 @@ test('right-clicking the quest automation switch puts accepting and turning in b
 test('the start page: Start guide opens the suggested guide, Browse guides opens the picker, both close it', () => {
 	const [out] = run(`
 		Wel.Show("start")
-		local F = PolestarWelcome
+		local F = SendaFHWelcome
 		F.Start:Click()
 		local opened
 		for _, c in ipairs(uistub.calls) do if c[1] == "OpenTab" or c[1] == "SetGuide" then opened = c[2] end end
@@ -424,7 +424,7 @@ test('the start page: Start guide opens the suggested guide, Browse guides opens
 		Wel.Show("start")
 		F.Browse:Click()
 		emit({ opened = opened, suggest = uistub.suggest, closed = closed,
-			picker = PolestarPicker ~= nil and PolestarPicker:IsShown(), browseClosed = not shown(), seen = PolestarDB.welcomeSeen })`);
+			picker = SendaFHPicker ~= nil and SendaFHPicker:IsShown(), browseClosed = not shown(), seen = SendaFHDB.welcomeSeen })`);
 	assert.equal(out.opened, out.suggest);
 	assert.equal(out.closed, true);
 	assert.equal(out.picker, true);
@@ -434,8 +434,8 @@ test('the start page: Start guide opens the suggested guide, Browse guides opens
 	const [none] = run(`
 		uistub.suggest = nil
 		Wel.Show("start")
-		PolestarWelcome.Start:Click()
-		emit({ picker = PolestarPicker ~= nil and PolestarPicker:IsShown(), closed = not shown() })`);
+		SendaFHWelcome.Start:Click()
+		emit({ picker = SendaFHPicker ~= nil and SendaFHPicker:IsShown(), closed = not shown() })`);
 	assert.deepEqual(none, { picker: true, closed: true });
 });
 
@@ -450,16 +450,16 @@ test('Show takes a page by key or by number among the pages shown', () => {
 	assert.deepEqual(out, { three: 'start', setup: 'setup', unknown: 'welcome' });
 });
 
-test('About and /polestar welcome reopen it on its first page', () => {
+test('About and /sendafh welcome reopen it on its first page', () => {
 	const [out] = run(`
 		stub.advance(3)
-		PolestarWelcome.Next:Click()
-		PolestarWelcome.Skip:Click()
-		Polestar.UI.ShowOptions("about")
-		Polestar.UI.Options.view.Welcome:Click()
+		SendaFHWelcome.Next:Click()
+		SendaFHWelcome.Skip:Click()
+		SendaFH.UI.ShowOptions("about")
+		SendaFH.UI.Options.view.Welcome:Click()
 		local about = { shown = shown(), title = title(), step = step() }
-		PolestarWelcome:Hide()
-		SlashCmdList.POLESTAR("welcome")
+		SendaFHWelcome:Hide()
+		SlashCmdList.SENDAFH("welcome")
 		emit({ about = about, command = shown(), title = title() })`);
 	assert.deepEqual(out, { about: { shown: true, title: 'Hello, Testchar', step: '1 of 3' }, command: true, title: 'Hello, Testchar' });
 });

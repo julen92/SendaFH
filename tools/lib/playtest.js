@@ -4,7 +4,7 @@
 // class each guide branches on plus one class it never names, as every race
 // that can reach it. At each step the simulated player completes the first
 // open goal the way a player would (accept, kill, loot, walk there, talk,
-// train, bind, level up...). Used by `polestar playtest` and
+// train, bind, level up...). Used by `sendafh playtest` and
 // tests/guides.test.js (every one of our guides), and by the tests that play
 // one guide (buildSimPack, playGuide, SIMULATE). A guide starts with the
 // prerequisites of its accepts that the guides chaining into it turn in
@@ -86,7 +86,7 @@ const loadPack = (folder, scripts) =>
 // Write packs ([{ guides, manifest }]) into one temp folder, in load order
 // -> { loads, maps, dir, dispose }.
 function simPacks(list, data) {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-sim-'));
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-sim-'));
 	const loads = list.map(({ guides, manifest }) => loadPack(manifest.folder, writePackInto(root, { guides, manifest, data }).scripts)).join('\n');
 	return { loads, maps: mapsLua(data), dir: root, dispose: () => fs.rmSync(root, { recursive: true, force: true }) };
 }
@@ -123,15 +123,15 @@ function playGuide(pack, g, { race, faction, cls, stubs = [], before = '', scrip
 			w.level = ${g.minLevel || 1}
 			${start ? `w.moveTo(${start.map}, ${start.x}, ${start.y})` : ''}
 			${before}`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 			${pack.loads}
 			stub.login()
 			stub.fire("QUEST_LOG_UPDATE") -- the client fills the quest log right after login
-			Polestar.Set("behavior.autoNextGuide", ${handOver ? 'true' : 'false'})
-			${handOver ? 'Polestar.Set("behavior.routeChoice", "recommended")' : ''}
-			Polestar.Engine.SetGuide(${luaValue(g.id)})
-			SIM_GUIDE = Polestar.Engine.GetGuide() -- a hand-over may replace it before SIMULATE starts
+			SendaFH.Set("behavior.autoNextGuide", ${handOver ? 'true' : 'false'})
+			${handOver ? 'SendaFH.Set("behavior.routeChoice", "recommended")' : ''}
+			SendaFH.Engine.SetGuide(${luaValue(g.id)})
+			SIM_GUIDE = SendaFH.Engine.GetGuide() -- a hand-over may replace it before SIMULATE starts
 			stub.advance(0.6)
 			${script == null ? SIMULATE : script}
 			${handOver ? handOverCheck(handOver) : ''}`,
@@ -145,7 +145,7 @@ function playGuide(pack, g, { race, faction, cls, stubs = [], before = '', scrip
 // the condition that leaves it out ("faction", "race" or "class").
 function handOverCheck(ids) {
 	return `do
-	local E, G = Polestar.Engine, Polestar.Guides
+	local E, G = SendaFH.Engine, SendaFH.Guides
 	local H = E.GetGuide()
 	local i = H and E.GetStepIndex()
 	local open = false
@@ -155,8 +155,8 @@ function handOverCheck(ids) {
 		end
 	end
 	local misfit = false
-	if H and not G.GuideMatches(H, Polestar.Compat.GetPlayerInfo()) then
-		local P = Polestar.Compat.GetPlayerInfo()
+	if H and not G.GuideMatches(H, SendaFH.Compat.GetPlayerInfo()) then
+		local P = SendaFH.Compat.GetPlayerInfo()
 		if H.faction and P.faction and H.faction:lower() ~= P.faction:lower() then misfit = "faction"
 		elseif not G.ListMatches(H.races, P.race, G.NormRace) then misfit = "race"
 		else misfit = "class" end
@@ -332,7 +332,7 @@ function outcome(out, handOver = null, hand = null, persona = null) {
 		let to = handOver.join(' or ');
 		if (!handOver.includes(hand.guide)) {
 			const registered = (hand.registered || []).some(Boolean);
-			reason = registered ? `Polestar did not open ${one ? 'it' : 'any of them'}${hand.guide ? ` (${hand.guide} stayed open)` : ''}` : one ? 'it is not registered' : 'none of them is registered';
+			reason = registered ? `SendaFH did not open ${one ? 'it' : 'any of them'}${hand.guide ? ` (${hand.guide} stayed open)` : ''}` : one ? 'it is not registered' : 'none of them is registered';
 		} else if (hand.misfit) {
 			// The engine opened a guide whose race, class or faction leaves this character out.
 			to = hand.guide;
@@ -422,7 +422,7 @@ function chainDone(guides, g, persona) {
 // diag (a search over no data would only look like a broken guide).
 function playData(dir, diag) {
 	const data = loadData(dir);
-	if (data.missingCore.length) diag.error(dir, 0, `reference data missing ${data.missingCore.join(', ')}: run node tools/polestar.js data build (or pass --data / --context-data)`);
+	if (data.missingCore.length) diag.error(dir, 0, `reference data missing ${data.missingCore.join(', ')}: run node tools/sendafh.js data build (or pass --data / --context-data)`);
 	return data;
 }
 
@@ -525,7 +525,7 @@ function resultLines(r) {
 }
 
 const SIMULATE = `
-local E, w = Polestar.Engine, stub.world
+local E, w = SendaFH.Engine, stub.world
 -- SIM_GUIDE (playGuide): the guide that was set, which the engine may already
 -- have left for the next one; else the open guide.
 local G = SIM_GUIDE or E.GetGuide()

@@ -1,7 +1,7 @@
 'use strict';
-// skills/polestar-guide-pack (the pack authors' skill, agentskills.io format)
+// skills/sendafh-guide-pack (the pack authors' skill, agentskills.io format)
 // keeps up with the tools: its front matter follows the format's rules, every
-// `polestar <command> --option` it names exists, its guide-format reference
+// `sendafh <command> --option` it names exists, its guide-format reference
 // names every header key, step line, verb, modifier and condition the parser
 // accepts (and nothing else), and its example guide lints clean and plays to
 // the end against data/forever (skipped without it).
@@ -14,12 +14,12 @@ const { spawnSync } = require('node:child_process');
 const { VERBS, MODS, MOD_WORDS, HEADER_KEYS, STEP_KEYS } = require('../tools/lib/dsl/parse');
 const { FACTIONS } = require('../tools/lib/dsl/conditions');
 const { CLASSES, RACES } = require('../tools/lib/game/races');
-const { load } = require('../tools/polestar');
+const { load } = require('../tools/sendafh');
 const { tmpdir } = require('./helpers/tmp');
 const { needs } = require('./helpers/data');
 const cli = require('./helpers/cli');
 
-const SKILL = path.join(__dirname, '..', 'skills', 'polestar-guide-pack');
+const SKILL = path.join(__dirname, '..', 'skills', 'sendafh-guide-pack');
 const read = (rel) => fs.readFileSync(path.join(SKILL, rel), 'utf8');
 const MAIN = read('SKILL.md');
 const REF = read('references/guide-format.md');
@@ -86,7 +86,7 @@ test('SKILL.md front matter follows the agentskills.io format', () => {
 	assert.ok(MAIN.split('\n').length < 500, 'SKILL.md under 500 lines');
 });
 
-test('every file SKILL.md links and every Polestar doc it names exists', () => {
+test('every file SKILL.md links and every SendaFH doc it names exists', () => {
 	const links = [...MAIN.matchAll(/\]\(([^)#]+)\)/g)].map((m) => m[1]).filter((l) => !/^[a-z]+:/.test(l));
 	assert.ok(links.includes('references/guide-format.md'));
 	for (const l of links) assert.ok(fs.existsSync(path.join(SKILL, l)), l);
@@ -95,7 +95,7 @@ test('every file SKILL.md links and every Polestar doc it names exists', () => {
 	for (const d of docs) assert.ok(fs.existsSync(path.join(__dirname, '..', d)), d);
 });
 
-// Every `polestar <command> ...` the skill writes, from code spans and code
+// Every `sendafh <command> ...` the skill writes, from code spans and code
 // blocks (a `# comment` dropped): [{ cmd, args }].
 function invocations() {
 	const lines = [];
@@ -105,21 +105,21 @@ function invocations() {
 	}
 	const out = [];
 	for (const line of lines) {
-		for (const m of line.matchAll(/(?<![<\/.\w-])polestar ([a-z]+)((?: [^\s|]+| "[^"]*")*)/g)) out.push({ cmd: m[1], args: m[2].trim(), line });
+		for (const m of line.matchAll(/(?<![<\/.\w-])sendafh ([a-z]+)((?: [^\s|]+| "[^"]*")*)/g)) out.push({ cmd: m[1], args: m[2].trim(), line });
 	}
 	return out;
 }
 
-test('every polestar command and option the skill names exists', () => {
+test('every sendafh command and option the skill names exists', () => {
 	const calls = invocations();
 	const used = new Set(calls.map((c) => c.cmd));
-	for (const cmd of ['new', 'find', 'lint', 'playtest', 'play', 'dev', 'pack', 'doctor']) assert.ok(used.has(cmd), `the skill names polestar ${cmd}`);
+	for (const cmd of ['new', 'find', 'lint', 'playtest', 'play', 'dev', 'pack', 'doctor']) assert.ok(used.has(cmd), `the skill names sendafh ${cmd}`);
 	const kinds = /--kind <k>\s+only ([a-z, ]+)/.exec(COMMANDS.get('find').usage)[1].split(/,\s*/);
 	for (const { cmd, args, line } of calls) {
 		if (cmd === 'help') continue;
 		assert.ok(COMMANDS.has(cmd), `unknown command in: ${line}`);
 		const usage = COMMANDS.get(cmd).usage;
-		for (const opt of args.match(/--[a-z][a-z-]*/g) || []) assert.match(usage, new RegExp(`${opt}(?![a-z-])`), `polestar ${cmd} --help has no ${opt}: ${line}`);
+		for (const opt of args.match(/--[a-z][a-z-]*/g) || []) assert.match(usage, new RegExp(`${opt}(?![a-z-])`), `sendafh ${cmd} --help has no ${opt}: ${line}`);
 		const kind = /--kind (\S+)/.exec(args);
 		if (kind && !kind[1].startsWith('<')) assert.ok(kinds.includes(kind[1]), `find --kind ${kind[1]}: ${line}`);
 	}
@@ -188,7 +188,7 @@ function examplePack() {
 	const guide = blocks(MAIN).find((b) => b.text.startsWith('guide '));
 	assert.ok(guide, 'SKILL.md has an example guide');
 	const id = /^guide ([a-z0-9-]+)\//.exec(guide.text)[1];
-	const dir = tmpdir('polestar-skill-');
+	const dir = tmpdir('sendafh-skill-');
 	fs.writeFileSync(path.join(dir, 'pack.json'), JSON.stringify({ id, title: 'Skill Example', author: 'Joe', version: '1.0.0', license: 'CC0-1.0' }));
 	fs.mkdirSync(path.join(dir, 'guides'));
 	fs.writeFileSync(path.join(dir, 'guides', 'example.guide'), guide.text);
@@ -196,14 +196,14 @@ function examplePack() {
 }
 
 test('the example guide lints clean against the reference data', { skip: needs('quests.json', 'npcs.json', 'zones.json') }, () => {
-	const r = cli.polestar(['lint', examplePack(), '--format', 'json']);
+	const r = cli.sendafh(['lint', examplePack(), '--format', 'json']);
 	const doc = JSON.parse(r.stdout);
 	assert.equal(r.status, 0, r.stdout + r.stderr);
 	assert.deepEqual({ errors: doc.errors, warnings: doc.warnings }, { errors: 0, warnings: 0 }, r.stdout);
 });
 
 test('the example guide plays to the end', { skip: needs('quests.json', 'npcs.json', 'zones.json', 'races.json') || (!process.env.LUA && !hasLua() && 'no Lua 5.1') }, () => {
-	const r = cli.polestar(['playtest', examplePack()]);
+	const r = cli.sendafh(['playtest', examplePack()]);
 	assert.equal(r.status, 0, r.stdout + r.stderr);
 	assert.match(r.stdout, /^ok {2}/m);
 	assert.doesNotMatch(r.stdout, /^(stuck|fail)/m);

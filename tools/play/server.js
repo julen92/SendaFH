@@ -1,5 +1,5 @@
 'use strict';
-// The playground's HTTP server (node tools/polestar.js play): the page in
+// The playground's HTTP server (node tools/sendafh.js play): the page in
 // tools/play/public, and a JSON API over one Session (tools/play/session.js).
 // Local only: it binds 127.0.0.1 and serves client art from the local cache.
 //
@@ -27,7 +27,7 @@ const { Session, sharedData, CLASS_NAMES, RACE_NAMES, SCREEN } = require('./sess
 
 const { ROOT } = require('../lib/paths');
 const PUBLIC = path.join(__dirname, 'public');
-const FONTS = path.join(ROOT, 'addon', 'Polestar', 'Media', 'Fonts');
+const FONTS = path.join(ROOT, 'addon', 'SendaFH', 'Media', 'Fonts');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ttf': 'font/ttf' };
 const SAVE_EVERY_MS = 5000;
 
@@ -84,7 +84,7 @@ function staticFile(res, dir, rel) {
 // packs' built folders, loaded after ours (see Session).
 // -> { server, url, port, session, reload, close }: reload({ packs?, why? })
 // saves, restarts the Lua session (with the new pack folders when given) and
-// tells the page on its next frame; `polestar dev` calls it after a rebuild.
+// tells the page on its next frame; `sendafh dev` calls it after a rebuild.
 async function startServer(opts = {}) {
 	const { port = 8077, host = '127.0.0.1', dataDir = path.join(ROOT, 'data', 'play'), artDir = null, fresh = false, packs = [], log = () => {} } = opts;
 	if (fresh) fs.rmSync(dataDir, { recursive: true, force: true });
@@ -150,7 +150,7 @@ async function startServer(opts = {}) {
 		'GET /api/version': () => ({ version: rebuilds }),
 		'GET /api/guides': () => serial(async () => {
 			const r = await session.call(`local out = {}
-for i, h in ipairs(Polestar.Guides.List()) do
+for i, h in ipairs(SendaFH.Guides.List()) do
 	out[i] = { id = h.id, title = h.title, faction = h.faction, lo = h.minLevel, hi = h.maxLevel, cat = h.category or "Leveling", races = h.races, classes = h.classes }
 end
 return out`);
@@ -165,7 +165,7 @@ return out`);
 			await session.save({ logout: true }).catch(() => {});
 			session.kill();
 			// A new character: their world and per-character variables start over;
-			// the account's settings (PolestarDB) carry over.
+			// the account's settings (SendaFHDB) carry over.
 			fs.rmSync(path.join(dataDir, 'world.lua'), { force: true });
 			fs.rmSync(path.join(dataDir, 'Character'), { recursive: true, force: true });
 			config = { ...config, race, cls, faction };

@@ -255,7 +255,7 @@ test('PNG: RGB when opaque, RGBA otherwise, pixels survive inflate + unfilter', 
 // blocks at (32, 48) and (33, 49), and zone 1426 (2 x 2 base tiles of 4 x 4 on
 // a 6 x 5 layer, one translucent overlay).
 function fixture() {
-	const root = tmpdir('polestar-art-');
+	const root = tmpdir('sendafh-art-');
 	const sources = path.join(root, 'sources'), data = path.join(root, 'data'), out = path.join(root, 'art');
 	const casc = path.join(sources, 'casc', 'wow_classic_beta', '1.60.1.99999');
 	const wago = path.join(sources, 'wago', '1.60.1.99999');

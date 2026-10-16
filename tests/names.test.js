@@ -1,6 +1,6 @@
 'use strict';
-// Game names in the client's language (addon/Polestar/Core/Names.lua and its
-// consumers) on a fake French client with a small Polestar_Names_frFR
+// Game names in the client's language (addon/SendaFH/Core/Names.lua and its
+// consumers) on a fake French client with a small SendaFH_Names_frFR
 // (tests/helpers/names.js): the client's own quest and item names first,
 // then the pack's, else English; one server request per name, one redraw
 // when they arrive; an English client loads nothing and reads the guides'
@@ -37,7 +37,7 @@ w.moveTo(1429, 48, 42)
 const GUIDE = `
 ${TEST_PACK}
 ${TEST_SOURCE}
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
 	id = "test/names", pack = "test", title = "Names", minLevel = 1, maxLevel = 10,
 	steps = {
 		{ title = "Goldshire", goals = {
@@ -72,17 +72,17 @@ ${NO_INTERFACE_FILE}
 ${pack.stubLua}
 ${CLIENT}
 ${before}`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `${guide ? GUIDE : ''}
 stub.login()
 stub.fire("QUEST_LOG_UPDATE"); stub.advance(0.6)
-N = Polestar.Names
+N = SendaFH.Names
 ${script}`,
 	}).emitted;
 }
 
 // ---------------------------------------------------------------------------
-// Polestar.Names
+// SendaFH.Names
 // ---------------------------------------------------------------------------
 
 test('a French client: NPCs and objects from the pack, quests and items from the client first, asked for once when it has none', () => {
@@ -105,7 +105,7 @@ test('the asked names arriving redraw the guide window once (STEP_UPDATED); a na
 		guide: true,
 		script: `
 local fired = 0
-Polestar.On("STEP_UPDATED", function() fired = fired + 1 end)
+SendaFH.On("STEP_UPDATED", function() fired = fired + 1 end)
 N.Quest(176); N.Item(1528)
 stub.fire("QUEST_DATA_LOAD_RESULT", 4242, true)
 stub.advance(1)
@@ -149,15 +149,15 @@ emit({ N.Localised(), N.Quest(176) or false, N.Npc(448) or false, N.Object(68) o
 
 test('the names pack is optional: never reported missing, named when it is from another version', () => {
 	const check = (addons) => run({
-		before: `stub.addons = { { name = "Polestar" }, { name = "Polestar_Guides" }, { name = "Polestar_Codex" }${addons} }`,
-		script: 'local missing, stale = Polestar.Data.CheckInstall(); emit({ table.concat(missing, ","), table.concat(stale, ",") })',
+		before: `stub.addons = { { name = "SendaFH" }, { name = "SendaFH_Guides" }, { name = "SendaFH_Codex" }${addons} }`,
+		script: 'local missing, stale = SendaFH.Data.CheckInstall(); emit({ table.concat(missing, ","), table.concat(stale, ",") })',
 	})[0];
 	assert.deepEqual(check(''), ['', '']);
-	assert.deepEqual(check(', { name = "Polestar_Names_frFR" }'), ['', '']);
+	assert.deepEqual(check(', { name = "SendaFH_Names_frFR" }'), ['', '']);
 	assert.deepEqual(run({
-		before: 'stub.addons = { { name = "Polestar" }, { name = "Polestar_Guides" }, { name = "Polestar_Codex" }, { name = "Polestar_Names_frFR" } }\nstub.addonMeta["Polestar_Names_frFR"] = { Version = "0.0.1" }',
-		script: 'local missing, stale = Polestar.Data.CheckInstall(); emit({ table.concat(missing, ","), table.concat(stale, ",") })',
-	})[0], ['', 'Polestar_Names_frFR (0.0.1)']);
+		before: 'stub.addons = { { name = "SendaFH" }, { name = "SendaFH_Guides" }, { name = "SendaFH_Codex" }, { name = "SendaFH_Names_frFR" } }\nstub.addonMeta["SendaFH_Names_frFR"] = { Version = "0.0.1" }',
+		script: 'local missing, stale = SendaFH.Data.CheckInstall(); emit({ table.concat(missing, ","), table.concat(stale, ",") })',
+	})[0], ['', 'SendaFH_Names_frFR (0.0.1)']);
 });
 
 // ---------------------------------------------------------------------------
@@ -165,7 +165,7 @@ test('the names pack is optional: never reported missing, named when it is from 
 // ---------------------------------------------------------------------------
 
 const VIEW = `
-local v = Polestar.Engine.GetStepView(1)
+local v = SendaFH.Engine.GetStepView(1)
 local out = {}
 for i, g in ipairs(v.goals) do out[i] = { g.subject, g.detail or false, g.npcName or false } end
 emit(out)`;
@@ -195,7 +195,7 @@ test('an English client keeps the guide\'s English, its quest title before the c
 // ---------------------------------------------------------------------------
 
 test('the target button\'s macro targets the French name; an English client\'s the English one', () => {
-	const script = 'local B = Polestar.QoL.Buttons; emit(B.TargetMacro(B.TargetNames(), 1))';
+	const script = 'local B = SendaFH.QoL.Buttons; emit(B.TargetMacro(B.TargetNames(), 1))';
 	const before = 'stub.world.accept(7, { { text = "Kobold Vermin slain: 0/10", required = 10 }, { text = "Handful of Oats: 0/8", required = 8 } })';
 	assert.deepEqual(run({ guide: true, before, script }), ['/targetexact Vermine kobold']);
 	assert.deepEqual(run({ locale: null, guide: true, before, script }), ['/targetexact Kobold Vermin']);
@@ -210,7 +210,7 @@ const { tmpdir } = require('./helpers/tmp');
 // Vermin Runts (9500), a name holding the other.
 function questDb() {
 	const FIX = path.join(__dirname, 'fixtures', 'questdb');
-	const dir = tmpdir('polestar-names-questdb-');
+	const dir = tmpdir('sendafh-names-questdb-');
 	for (const f of fs.readdirSync(FIX)) fs.copyFileSync(path.join(FIX, f), path.join(dir, f));
 	const quests = JSON.parse(fs.readFileSync(path.join(FIX, 'quests.json'), 'utf8'));
 	const npcs = JSON.parse(fs.readFileSync(path.join(FIX, 'npcs.json'), 'utf8'));
@@ -218,7 +218,7 @@ function questDb() {
 	quests[9500] = { ...quests[7], id: 9500, title: 'Quest 9500', pre: [], objectives: [{ type: 'kill', id: 6, count: 8, text: 'Kobold Vermin' }, { type: 'kill', id: 9500, count: 5, text: 'Kobold Vermin Runt' }] };
 	fs.writeFileSync(path.join(dir, 'quests.json'), JSON.stringify(quests));
 	fs.writeFileSync(path.join(dir, 'npcs.json'), JSON.stringify(npcs));
-	const out = tmpdir('polestar-names-questdb-out-');
+	const out = tmpdir('sendafh-names-questdb-out-');
 	writeQuestDB(buildQuestDB({ dataDir: dir }), out);
 	return ['MapFrames.lua', 'Quests.lua', 'Npcs.lua', 'Objects.lua', 'Items.lua'].map((f) => path.join(out, f));
 }
@@ -243,10 +243,10 @@ local w = stub.world
 w.addMap(1429, { name = "Elwynn Forest", c = 0, left = 1500, right = -1500, top = 500, bottom = -1500 })
 w.moveTo(1429, 48, 40)
 ${setup}`,
-		addons: ['Polestar'],
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { qol = { mapObjectives = true } } }' },
+		addons: ['SendaFH'],
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { qol = { mapObjectives = true } } }' },
 		script: `
-local w, sq, Q = stub.world, stub.quests, Polestar.QuestDB
+local w, sq, Q = stub.world, stub.quests, SendaFH.QuestDB
 sq.installPins()
 stub.login()
 stub.advance(0.3)
@@ -291,11 +291,11 @@ const CODEX = writeCodexPack(sampleCodex());
 const SEARCH = `
 local function q(text)
 	local out = {}
-	for _, r in ipairs(Polestar.Search.Query(text)) do out[#out + 1] = r.kind .. ":" .. tostring(r.id) .. ":" .. r.title end
+	for _, r in ipairs(SendaFH.Search.Query(text)) do out[#out + 1] = r.kind .. ":" .. tostring(r.id) .. ":" .. r.title end
 	return table.concat(out, "|")
 end
 emit(q("lardeur")); emit(q("hogger")); emit(q("foret d'elwynn")); emit(q("elwynn")); emit(q("viande de loup"))
-local _, counts = Polestar.Search.Query("hogger")
+local _, counts = SendaFH.Search.Query("hogger")
 emit(counts)
 emit(__namesLoads)`;
 
@@ -326,17 +326,17 @@ test('a Russian client\'s Lookup finds a capitalised name from a lower-case quer
 	const [hogger, meat, fold] = run({ locale: 'ruRU', pack: ru, before: CODEX.stubLua, script: `
 local function q(text)
 	local out = {}
-	for _, r in ipairs(Polestar.Search.Query(text, { kinds = { npc = true, item = true } })) do out[#out + 1] = r.kind .. ":" .. tostring(r.id) .. ":" .. r.title end
+	for _, r in ipairs(SendaFH.Search.Query(text, { kinds = { npc = true, item = true } })) do out[#out + 1] = r.kind .. ":" .. tostring(r.id) .. ":" .. r.title end
 	return table.concat(out, "|")
 end
-emit(q("хоггер")); emit(q("жесткое")); emit(Polestar.Search.Fold("Œuvre cœur"))` });
+emit(q("хоггер")); emit(q("жесткое")); emit(SendaFH.Search.Fold("Œuvre cœur"))` });
 	assert.equal(hogger, 'npc:448:Хоггер');
 	assert.equal(meat, 'item:750:Жёсткое волчье мясо');
 	assert.equal(fold, ' oeuvre coeur');
 	const zh = namesPack('zhCN', { npc: { 448: '霍格' } });
 	const [cjk] = run({ locale: 'zhCN', pack: zh, before: CODEX.stubLua, script: `
 local out = {}
-for _, r in ipairs(Polestar.Search.Query("霍格", { kinds = { npc = true } })) do out[#out + 1] = r.kind .. ":" .. tostring(r.id) end
+for _, r in ipairs(SendaFH.Search.Query("霍格", { kinds = { npc = true } })) do out[#out + 1] = r.kind .. ":" .. tostring(r.id) end
 emit(table.concat(out, "|"))` });
 	assert.equal(cjk, 'npc:448');
 });
@@ -347,8 +347,8 @@ test('a names pack refused in combat loads when combat ends, without another ask
 		before: 'stub.inCombat = true',
 		script: `
 local fired, names = 0, 0
-Polestar.On("STEP_UPDATED", function() fired = fired + 1 end)
-Polestar.On("NAMES_LOADED", function() names = names + 1 end)
+SendaFH.On("STEP_UPDATED", function() fired = fired + 1 end)
+SendaFH.On("NAMES_LOADED", function() names = names + 1 end)
 local during = N.Npc(448) or false
 stub.inCombat = false
 stub.fire("PLAYER_REGEN_ENABLED")

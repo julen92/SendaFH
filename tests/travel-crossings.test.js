@@ -2,7 +2,7 @@
 // Zone crossings in the toolchain (tools/lib/travel/crossings.js, `travel
 // build`): validation of the crossings file with errors naming the entry,
 // crossings learned from recordings (TravelData.lua), the local data addon
-// Polestar_Travel built from the optional local crossings file, and that the
+// SendaFH_Travel built from the optional local crossings file, and that the
 // addon planner routes through them.
 
 const { test } = require('node:test');
@@ -92,7 +92,7 @@ test('validation names every malformed entry', () => {
 
 test('the crossings file is optional; a broken one stops the build with its errors', async () => {
 	assert.equal(readCrossingsFile(path.join(FIX, 'missing.json'), frames), null);
-	const dir = tmpdir('polestar-crossings-');
+	const dir = tmpdir('sendafh-crossings-');
 	try {
 		const bad = path.join(dir, 'crossings.json');
 		fs.writeFileSync(bad, JSON.stringify({ schema: 1, crossings: [{ id: 'x', a: { map: 1429, x: 1, y: 1 }, b: { map: 1453, x: 1, y: 1, radius: 10 } }] }));
@@ -100,7 +100,7 @@ test('the crossings file is optional; a broken one stops the build with its erro
 		fs.writeFileSync(bad, '{ not json');
 		await assert.rejects(buildTravel(opts({ crossingsFile: bad })), /crossings\.json: .*JSON/);
 		const { travelAddon } = await buildTravel(opts());
-		assert.equal(travelAddon, null, 'no local file next to the data: no Polestar_Travel');
+		assert.equal(travelAddon, null, 'no local file next to the data: no SendaFH_Travel');
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
@@ -118,35 +118,35 @@ test('zone changes in recordings become crossings in TravelData.lua, which only 
 	assert.match(lua, /learned path nodes: continent, wx, wy, gateway \(1 = zone-border crossing\), uiMap/);
 });
 
-test('the local crossings file builds Polestar_Travel (never TravelData.lua), and the planner walks through it', async () => {
-	const dir = tmpdir('polestar-crossings-');
+test('the local crossings file builds SendaFH_Travel (never TravelData.lua), and the planner walks through it', async () => {
+	const dir = tmpdir('sendafh-crossings-');
 	try {
 		const result = await buildTravel(opts({ crossingsFile: CROSSINGS }));
 		assert.ok(!result.lua.includes('elwynn-stormwind') && !result.lua.includes('Test Cave'), 'local crossings stay out of TravelData.lua');
 		const files = result.travelAddon;
-		assert.deepEqual(Object.keys(files).sort(), ['Crossings.lua', 'Polestar_Travel.toc']);
-		assert.match(files['Polestar_Travel.toc'], /^## Dependencies: Polestar$/m);
-		assert.doesNotMatch(files['Polestar_Travel.toc'], /LoadOnDemand/);
-		assert.match(files['Crossings.lua'], /local N = Polestar and Polestar\.Nav\nif not \(N and N\.RegisterCrossings\) then return end/);
+		assert.deepEqual(Object.keys(files).sort(), ['Crossings.lua', 'SendaFH_Travel.toc']);
+		assert.match(files['SendaFH_Travel.toc'], /^## Dependencies: SendaFH$/m);
+		assert.doesNotMatch(files['SendaFH_Travel.toc'], /LoadOnDemand/);
+		assert.match(files['Crossings.lua'], /local N = SendaFH and SendaFH\.Nav\nif not \(N and N\.RegisterCrossings\) then return end/);
 		assert.match(files['Crossings.lua'], /complete = true,/);
 		assert.deepEqual(result.localCounts, { 0: { crossings: 1, open: 1, chains: 1, chainNodes: 3 } });
 
-		writeTravel(result, { jsonOut: path.join(dir, 'travel.json'), luaOut: path.join(dir, 'TravelData.lua'), travelAddonDir: path.join(dir, 'Polestar_Travel') });
+		writeTravel(result, { jsonOut: path.join(dir, 'travel.json'), luaOut: path.join(dir, 'TravelData.lua'), travelAddonDir: path.join(dir, 'SendaFH_Travel') });
 		for (const f of ['map-frames.json', 'zones.json']) fs.copyFileSync(path.join(FIX, 'data', f), path.join(dir, f));
 		const common = { dataDir: dir, travelLua: path.join(dir, 'TravelData.lua'), from: { map: 1436, x: 56, y: 47 }, to: { map: 1453, x: 60, y: 60 } };
 		const plain = planRoute(common);
-		const crossed = planRoute({ ...common, crossingsLua: path.join(dir, 'Polestar_Travel', 'Crossings.lua') });
+		const crossed = planRoute({ ...common, crossingsLua: path.join(dir, 'SendaFH_Travel', 'Crossings.lua') });
 		assert.deepEqual(plain.map((l) => l.label), ['Stormwind City 60, 60']);
 		assert.deepEqual(crossed.map((l) => l.label), ['Enter Stormwind City', 'Enter Stormwind City', 'Stormwind City 60, 60'], 'Westfall -> Elwynn is open ground, then the gate');
 		assert.deepEqual([crossed[0].radius, crossed[0].waypoint, crossed[0].to.map], [20, true, 1429]);
-		const back = planRoute({ ...common, from: common.to, to: common.from, crossingsLua: path.join(dir, 'Polestar_Travel', 'Crossings.lua') });
+		const back = planRoute({ ...common, from: common.to, to: common.from, crossingsLua: path.join(dir, 'SendaFH_Travel', 'Crossings.lua') });
 		assert.deepEqual(back.map((l) => l.label), ['Leave Stormwind City', 'Leave Stormwind City', 'Westfall 56, 47']);
-		const cave = planRoute({ ...common, to: { map: 1436, x: 38.3, y: 77.4 }, crossingsLua: path.join(dir, 'Polestar_Travel', 'Crossings.lua') });
+		const cave = planRoute({ ...common, to: { map: 1436, x: 38.3, y: 77.4 }, crossingsLua: path.join(dir, 'SendaFH_Travel', 'Crossings.lua') });
 		assert.deepEqual(cave.map((l) => l.label), ['Enter the cave', 'Follow the path', 'Westfall 38.3, 77.4']);
 
 		// The CLI writes the addon where it is told and reports the counts.
 		const cli = spawnSync(process.execPath, [
-			path.join(ROOT, 'tools', 'polestar.js'), 'travel', 'build', '--offline', '--shipped', 'none', '--data', path.join(FIX, 'data'), '--recordings', path.join(FIX, 'recordings'),
+			path.join(ROOT, 'tools', 'sendafh.js'), 'travel', 'build', '--offline', '--shipped', 'none', '--data', path.join(FIX, 'data'), '--recordings', path.join(FIX, 'recordings'),
 			'--sources', path.join(FIX, 'sources'), '--crossings', CROSSINGS, '--json', path.join(dir, 'cli.json'), '--lua', path.join(dir, 'Cli.lua'),
 			'--travel-addon', path.join(dir, 'CliTravel'),
 		], { encoding: 'utf8' });
@@ -159,17 +159,17 @@ test('the local crossings file builds Polestar_Travel (never TravelData.lua), an
 	}
 });
 
-test('Polestar_Travel installs when built and is never a release addon', async () => {
+test('SendaFH_Travel installs when built and is never a release addon', async () => {
 	const { RELEASE_ADDONS, RELEASE_DATA_ADDONS } = require('../tools/lib/dsl/project');
-	assert.ok(![...RELEASE_ADDONS, ...RELEASE_DATA_ADDONS].includes('Polestar_Travel'));
-	const src = fakeAddons(tmpdir('polestar-crossings-'));
-	const dest = tmpdir('polestar-crossings-');
+	assert.ok(![...RELEASE_ADDONS, ...RELEASE_DATA_ADDONS].includes('SendaFH_Travel'));
+	const src = fakeAddons(tmpdir('sendafh-crossings-'));
+	const dest = tmpdir('sendafh-crossings-');
 	try {
 		const before = await quiet(() => install.run(['--dest', dest, '--addons', src, '--dry-run'], {}));
-		assert.match(before.out, /note: Polestar_Travel not built \(no Polestar_Travel\/Polestar_Travel\.toc\); skipping it/);
-		fakeAddons(src, ['Polestar_Travel']);
+		assert.match(before.out, /note: SendaFH_Travel not built \(no SendaFH_Travel\/SendaFH_Travel\.toc\); skipping it/);
+		fakeAddons(src, ['SendaFH_Travel']);
 		const after = await quiet(() => install.run(['--dest', dest, '--addons', src, '--dry-run'], {}));
-		assert.match(after.out, /would add Polestar_Travel/);
+		assert.match(after.out, /would add SendaFH_Travel/);
 	} finally {
 		fs.rmSync(src, { recursive: true, force: true });
 		fs.rmSync(dest, { recursive: true, force: true });
@@ -212,7 +212,7 @@ test('travel import: Carbonite\'s walks between zones become crossings, both way
 // The shipped crossings (tools/lib/travel/crossings.json, in TravelData.lua),
 // on the real maps when this checkout has them built.
 const SHIPPED = require('../tools/lib/travel/build').SHIPPED_CROSSINGS;
-const realData = fs.existsSync(path.join(DATA, 'map-frames.json')) || 'data/forever not built (node tools/polestar.js data build)';
+const realData = fs.existsSync(path.join(DATA, 'map-frames.json')) || 'data/forever not built (node tools/sendafh.js data build)';
 
 // Fitz, 2026-10-16: from the Barrens (61.66,35.46) to his map marker by
 // Astranaar (Ashenvale 41.21,47.97), a Horde character who knows Ratchet,

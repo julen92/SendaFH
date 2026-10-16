@@ -1,14 +1,14 @@
 'use strict';
 // Regenerates the addon's textures. Every module in tools/media/*.js exports
 // { name, generate(addonRoot) -> [writtenPaths] }; this runs them all, in name
-// order, against addon/Polestar. The generated TGAs are committed.
+// order, against addon/SendaFH. The generated TGAs are committed.
 
 const fs = require('node:fs');
 const path = require('node:path');
 
 const { ROOT } = require('../lib/paths');
 const MEDIA = path.join(ROOT, 'tools', 'media');
-const ADDON = path.join(ROOT, 'addon', 'Polestar');
+const ADDON = path.join(ROOT, 'addon', 'SendaFH');
 
 function generators() {
 	if (!fs.existsSync(MEDIA)) return [];
@@ -25,12 +25,12 @@ function generators() {
 
 module.exports = {
 	name: 'media',
-	summary: 'Regenerate the addon textures (tools/media/*.js -> addon/Polestar/Media)',
+	summary: 'Regenerate the addon textures (tools/media/*.js -> addon/SendaFH/Media)',
 	usage: [
-		'usage: node tools/polestar.js media [generator ...]',
+		'usage: node tools/sendafh.js media [generator ...]',
 		'',
 		'Runs every generator in tools/media/ (or only the named ones) against',
-		'addon/Polestar and lists the files written.',
+		'addon/SendaFH and lists the files written.',
 	].join('\n'),
 	async run(argv) {
 		const only = new Set(argv.filter((a) => !a.startsWith('-')));

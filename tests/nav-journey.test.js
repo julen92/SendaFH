@@ -1,5 +1,5 @@
 'use strict';
-// Journeys (addon/Polestar/Nav/Journey.lua, Nearby.lua): plan to anywhere
+// Journeys (addon/SendaFH/Nav/Journey.lua, Nearby.lua): plan to anywhere
 // from the world map and minimap, the public Nav API, the TomTom stand-in and
 // following TomTom's arrow, /way, nearby services, and the death helper
 // handing a picked point back. Runs Core/Init.lua + Nav/Nav.xml against
@@ -11,7 +11,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
 // Map 9100 "Testland" (continent type) holds 9000 "Testshire" at x, y 25..75;
 // 9002 "The Barrens" lies west of it. The world map canvas records its click
@@ -61,7 +61,7 @@ Menu = { ModifyMenu = function(tag, fn) stub.menus[tag] = fn end }
 `;
 
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local API = N.API
 local J = N.journey
 local nav = stub.nav
@@ -157,7 +157,7 @@ test('plan anywhere: Shift-click on the planned spot\'s own pin lets it go (pins
 	assert.deepEqual(out, { pin: true, took: true, target: true });
 });
 
-test('plan anywhere: Alt-click plans over map icons by their name and leaves Polestar\'s clickable pins alone (row 9)', () => {
+test('plan anywhere: Alt-click plans over map icons by their name and leaves SendaFH\'s clickable pins alone (row 9)', () => {
 	const [cursor, icon, own, menu] = run(`
 		nav.showWorldMap(9000)
 		keys(false, true)
@@ -170,7 +170,7 @@ test('plan anywhere: Alt-click plans over map icons by their name and leaves Pol
 		stub.fire("GLOBAL_MOUSE_DOWN", "LeftButton")
 		t = N.GetTarget()
 		emit({ x = t.x, y = t.y, label = t.label })
-		stub.foci = { { pinTemplate = "PolestarPinsTemplate", data = { pin = { onClick = function() end } },
+		stub.foci = { { pinTemplate = "SendaFHPinsTemplate", data = { pin = { onClick = function() end } },
 			GetMap = function() return WorldMapFrame end } }
 		stub.canvas.cursor = { 0.9, 0.9 }
 		stub.fire("GLOBAL_MOUSE_DOWN", "LeftButton")
@@ -210,7 +210,7 @@ test('plan anywhere: Shift-click on the minimap goes to the spot under the curso
 
 test('plan anywhere: off in settings, map clicks are the map\'s own', () => {
 	const [out] = run(`
-		Polestar.Set("nav.mapPlan", false)
+		SendaFH.Set("nav.mapPlan", false)
 		nav.showWorldMap(9000)
 		keys(true)
 		local took = stub.canvasClick()
@@ -285,17 +285,17 @@ test('API: a route sent while a ghost is taken without error (C11)', () => {
 
 // The stand-in is off by default ("Let other addons set waypoints"): these
 // tests turn it on as a player would.
-const ANSWER = { Polestar: 'PolestarDB = { schema = 1, settings = { nav = { answerTomTom = true } } }' };
+const ANSWER = { SendaFH: 'SendaFHDB = { schema = 1, settings = { nav = { answerTomTom = true } } }' };
 
 test('TomTom stand-in: off by default, so no TomTom global (an addon reading TomTom.db would error) and no /way', () => {
 	const [out] = run(`
-		emit({ tomtom = TomTom == nil, answering = J.AnsweringTomTom(), way = SLASH_POLESTARWAY1 == nil,
-			default = Polestar.Get("nav.answerTomTom") })
+		emit({ tomtom = TomTom == nil, answering = J.AnsweringTomTom(), way = SLASH_SENDAFHWAY1 == nil,
+			default = SendaFH.Get("nav.answerTomTom") })
 	`);
 	assert.deepEqual(out, { tomtom: true, answering: false, way: true, default: false });
 });
 
-test('TomTom stand-in: other addons\' waypoints point the arrow, one at a time; corpse and Polestar\'s own are ignored (row 7)', () => {
+test('TomTom stand-in: other addons\' waypoints point the arrow, one at a time; corpse and SendaFH\'s own are ignored (row 7)', () => {
 	const [installed, added, removed, ignored, zoned, cleared, off] = run(`
 		emit(TomTom == N.tomtomShim)
 		local uid = TomTom:AddWaypoint(9000, 0.25, 0.75, { title = "Quest giver", from = "Helper" })
@@ -305,14 +305,14 @@ test('TomTom stand-in: other addons\' waypoints point the arrow, one at a time; 
 			exists = TomTom:WaypointExists(9000, 0.25, 0.75, "Quest giver"), from = uid.from })
 		emit({ removed = TomTom:RemoveWaypoint(uid), target = N.GetTarget() == nil, valid = TomTom:IsValidWaypoint(uid) })
 		emit({ corpse = TomTom:AddWaypoint(9000, 0.5, 0.5, { title = "My Corpse", corpse = true }) == nil,
-			mirror = TomTom:AddWaypoint(9000, 0.5, 0.5, { from = "Polestar" }) == nil, target = N.GetTarget() == nil,
+			mirror = TomTom:AddWaypoint(9000, 0.5, 0.5, { from = "SendaFH" }) == nil, target = N.GetTarget() == nil,
 			bad = TomTom:AddWaypoint(9000, 0.5, 0.5, "nope") == nil })
 		TomTom:AddZWaypoint(0, 9000, 30, 40, "Old style")
 		t = N.GetTarget()
 		emit({ x = t.x, y = t.y, label = t.label })
 		TomTom:ClearAllWaypoints()
 		emit(N.GetTarget() == nil)
-		Polestar.Set("nav.answerTomTom", false)
+		SendaFH.Set("nav.answerTomTom", false)
 		emit(TomTom == nil)
 	`, { saved: ANSWER });
 	assert.equal(installed, true);
@@ -324,7 +324,7 @@ test('TomTom stand-in: other addons\' waypoints point the arrow, one at a time; 
 	assert.equal(off, true);
 });
 
-test('TomTom stand-in: Polestar\'s own targets are never mirrored into it (no loop)', () => {
+test('TomTom stand-in: SendaFH\'s own targets are never mirrored into it (no loop)', () => {
 	const [out] = run(`
 		N.SetTarget(9000, 60, 60, "Picked")
 		local n = 0
@@ -383,7 +383,7 @@ function TomTom:AddWaypoint(m, x, y, opts)
 	return uid
 end
 `;
-const FOLLOW = { Polestar: 'PolestarDB = { schema = 1, settings = { nav = { followTomTom = true } } }' };
+const FOLLOW = { SendaFH: 'SendaFHDB = { schema = 1, settings = { nav = { followTomTom = true } } }' };
 
 test('follow TomTom: restores the arrow\'s waypoint one frame after PLAYER_ENTERING_WORLD, never mirrored back (row 7)', () => {
 	const [early, entered, framed] = run(`
@@ -401,26 +401,26 @@ test('follow TomTom: restores the arrow\'s waypoint one frame after PLAYER_ENTER
 	assert.deepEqual(framed, { label: 'Saved', adds: 1, shim: false });
 });
 
-test('follow TomTom: Remove all ends it, the corpse arrow and Polestar\'s own mirror are ignored, off means never (row 7)', () => {
+test('follow TomTom: Remove all ends it, the corpse arrow and SendaFH\'s own mirror are ignored, off means never (row 7)', () => {
 	const [followed, corpse, mirror, removed, off] = run(`
 		stub.runTimers()
 		local uid = TomTom:AddWaypoint(9000, 0.25, 0.75, { title = "Guide pin", from = "Helper" })
 		emit(label())
 		TomTom:AddWaypoint(9000, 0.5, 0.5, { title = "My Corpse", corpse = true })
 		emit(label())
-		N.SetTarget(9000, 60, 60, "Picked") -- Bridges mirrors it (from = "Polestar", crazy off unless the TomTom arrow is used)
+		N.SetTarget(9000, 60, 60, "Picked") -- Bridges mirrors it (from = "SendaFH", crazy off unless the TomTom arrow is used)
 		TomTom:SetCrazyArrow(TomTom.adds[#TomTom.adds])
 		emit({ label = label(), from = TomTom.adds[#TomTom.adds].from })
 		TomTom:SetCrazyArrow(uid)
 		TomTom:ClearWaypoint(uid) -- "Remove all waypoints" clears through ClearWaypoint alone
 		emit(N.GetTarget() == nil)
-		Polestar.Set("nav.followTomTom", false)
+		SendaFH.Set("nav.followTomTom", false)
 		TomTom:AddWaypoint(9000, 0.1, 0.1, { title = "Ignored", from = "Helper" })
 		emit(N.GetTarget() == nil)
 	`, { before: REAL_TOMTOM, saved: FOLLOW });
 	assert.equal(followed, 'Guide pin');
 	assert.equal(corpse, 'Guide pin');
-	assert.deepEqual(mirror, { label: 'Picked', from: 'Polestar' });
+	assert.deepEqual(mirror, { label: 'Picked', from: 'SendaFH' });
 	assert.equal(removed, true);
 	assert.equal(off, true);
 });
@@ -431,8 +431,8 @@ test('follow TomTom: Remove all ends it, the corpse arrow and Polestar\'s own mi
 
 test('/way: x y on your map, #mapID, a zone named inside its name, an ambiguous name, reset (row 7)', () => {
 	const [claimed, here, byId, barrens, ambiguous, reset] = run(`
-		emit(SLASH_POLESTARWAY1)
-		local way = SlashCmdList.POLESTARWAY
+		emit(SLASH_SENDAFHWAY1)
+		local way = SlashCmdList.SENDAFHWAY
 		way("45 61 Camp")
 		local t = N.GetTarget()
 		emit({ map = t.map, x = t.x, y = t.y, label = t.label })
@@ -457,7 +457,7 @@ test('/way: x y on your map, #mapID, a zone named inside its name, an ambiguous 
 });
 
 test('/way: left alone when another addon has it', () => {
-	const [out] = run('emit(SLASH_POLESTARWAY1 == nil)', { before: 'SLASH_OTHERWAY1 = "/WAY"', saved: ANSWER });
+	const [out] = run('emit(SLASH_SENDAFHWAY1 == nil)', { before: 'SLASH_OTHERWAY1 = "/WAY"', saved: ANSWER });
 	assert.equal(out, true);
 });
 
@@ -476,13 +476,13 @@ local npcs = {
 }
 local roles = { repair = { 1, 2, 3, 4 }, vendor = { 1, 5 }, ["trainer:186"] = { 6 } }
 stub.codexLoaded = true
-Polestar.Codex = {
+SendaFH.Codex = {
 	IsLoaded = function() return stub.codexLoaded end,
 	Load = function() stub.codexLoaded = true; return true end,
 	WithRole = function(r) return roles[r] or {} end,
 	Npc = function(id) return npcs[id] end,
 }
-Polestar.QoL = { data = { reagentVendors = { [5] = true } } }
+SendaFH.QoL = { data = { reagentVendors = { [5] = true } } }
 nav.faction = "Alliance"
 local Near = N.nearby
 `;
@@ -528,9 +528,9 @@ test('nearby: Rank estimates only the nearest few, and the quickest by route win
 
 test('nearby: no Codex, combat and nothing known each say their own line (C14)', () => {
 	const [noCodex, combat, none, usage] = run(`
-		Polestar.Codex = nil
+		SendaFH.Codex = nil
 		stub.messages = {}
-		emit({ ok = N.nearby.Go("bank"), said = said("Nearby services need the Polestar Codex addon, which is not installed") })
+		emit({ ok = N.nearby.Go("bank"), said = said("Nearby services need the SendaFH Codex addon, which is not installed") })
 	` + CODEX + `
 		stub.codexLoaded = false
 		stub.inCombat = true
@@ -541,7 +541,7 @@ test('nearby: no Codex, combat and nothing known each say their own line (C14)',
 		emit({ ok = Near.Go("stable"), said = said("No stable master known for your faction.") })
 		stub.messages = {}
 		Near.Command("spaceport")
-		emit(said("Usage: /polestar near"))
+		emit(said("Usage: /sendafh near"))
 	`);
 	assert.deepEqual(noCodex, { ok: false, said: true });
 	assert.deepEqual(combat, { ok: false, said: true, loaded: false });
@@ -553,8 +553,8 @@ test('nearby: each Codex failure says its own line: missing, disabled, empty, an
 	const out = run(CODEX + `
 		local function try(loadReason, roleList)
 			stub.codexLoaded = loadReason == nil
-			Polestar.Codex.Load = function() return false, loadReason end
-			Polestar.Codex.WithRole = function() return roleList or {} end
+			SendaFH.Codex.Load = function() return false, loadReason end
+			SendaFH.Codex.WithRole = function() return roleList or {} end
 			stub.messages = {}
 			local _, why = Near.Find("bank")
 			Near.Go("bank")
@@ -567,13 +567,13 @@ test('nearby: each Codex failure says its own line: missing, disabled, empty, an
 	`);
 	const [missing, disabled, other, empty] = out;
 	assert.equal(missing.why, 'missing');
-	assert.match(missing.line, /need the Polestar Codex addon, which is not installed/);
+	assert.match(missing.line, /need the SendaFH Codex addon, which is not installed/);
 	assert.equal(disabled.why, 'disabled');
 	assert.match(disabled.line, /turn it on in the AddOns list/);
 	assert.equal(other.why, 'interface_version');
-	assert.match(other.line, /could not load the Polestar Codex \(interface_version\)/);
+	assert.match(other.line, /could not load the SendaFH Codex \(interface_version\)/);
 	assert.equal(empty.why, 'empty');
-	assert.match(empty.line, /could not read the Polestar Codex: reinstall Polestar/);
+	assert.match(empty.line, /could not read the SendaFH Codex: reinstall SendaFH/);
 	assert.equal(new Set(out.map((o) => o.line)).size, 4, 'four different lines');
 	assert.ok(out.every((o) => !/known for your faction/.test(o.line)), 'never "none known" for a Codex failure');
 });
@@ -594,7 +594,7 @@ test('nearby: the tracking menus carry a Nearby services submenu with every kind
 		for _, k in ipairs(sub.kids[1].kids) do trainers[#trainers + 1] = k.text end
 		sub.kids[3].fn() -- Repair
 		local world = stub.menus.MENU_WORLD_MAP_TRACKING ~= nil
-		Polestar.Set("nav.nearbyMenu", false)
+		SendaFH.Set("nav.nearbyMenu", false)
 		local empty = node("root")
 		stub.menus.MENU_MINIMAP_TRACKING(nil, empty)
 		emit({ title = sub.text, texts = texts, trainers = trainers, label = label(), world = world, off = #empty.kids })
@@ -612,9 +612,9 @@ test('nearby: the tracking menus carry a Nearby services submenu with every kind
 // ---------------------------------------------------------------------------
 
 test('death helper: a point picked before dying comes back after resurrecting, on the same step only', () => {
-	const QOL = { name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'QoL/QoL.xml'] };
+	const QOL = { name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'QoL/QoL.xml'] };
 	const run2 = (script) =>
-		runAddon({ stubs: ['stub_qol.lua'], addons: [QOL], login: true, script: `local q = stub.qol\nlocal QoL = Polestar.QoL\n${script}` }).emitted;
+		runAddon({ stubs: ['stub_qol.lua'], addons: [QOL], login: true, script: `local q = stub.qol\nlocal QoL = SendaFH.QoL\n${script}` }).emitted;
 	const [back, moved] = [
 		run2(`
 			q.Nav.IsOverride = function() return q.nav.target ~= nil and q.nav.target.label == "Picked" end

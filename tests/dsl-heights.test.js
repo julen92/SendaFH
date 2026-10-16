@@ -12,7 +12,7 @@ const { compile, guideText, DATA_DIR, GUIDES_DIR } = require('./helpers/dsl');
 const { loadData } = require('../tools/lib/dsl/data');
 const { worldPoint } = require('../tools/lib/dsl/heights');
 const { emitGuides } = require('../tools/lib/dsl/emit');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 const { tmpdir } = require('./helpers/tmp');
 
 // Fixture data (Elwynn Forest, uiMap 1429, Era frame on instance map 1415):
@@ -79,17 +79,17 @@ test('z is emitted right after y, deterministically', () => {
 });
 
 test('compile reports how many NPC and object goals got z; LICENSE-DATA.txt then names classic-db', () => {
-	const data = tmpdir('polestar-heights-data-');
+	const data = tmpdir('sendafh-heights-data-');
 	fs.cpSync(DATA_DIR, data, { recursive: true });
 	const outNone = tmpdir();
-	const none = polestar(['compile', '--guides', GUIDES_DIR, '--data', data, '--out', outNone]);
+	const none = sendafh(['compile', '--guides', GUIDES_DIR, '--data', data, '--out', outNone]);
 	assert.equal(none.status, 0, none.stderr);
 	assert.match(none.stdout, /\nheights: none \(no spawnz\.json in the reference data; `data build` writes it\)\n$/);
 	assert.doesNotMatch(fs.readFileSync(path.join(outNone, 'LICENSE-DATA.txt'), 'utf8'), /classic-db/);
 	const mcbride = worldPoint(loadData(DATA_DIR), { map: 1429, x: 48.92, y: 41.61, f: 'e' });
 	fs.writeFileSync(path.join(data, 'spawnz.json'), JSON.stringify({ npc: { 197: [[1415, mcbride.wx, mcbride.wy, 12.3]] }, object: {} }));
 	const outZ = tmpdir();
-	const some = polestar(['compile', '--guides', GUIDES_DIR, '--data', data, '--out', outZ]);
+	const some = sendafh(['compile', '--guides', GUIDES_DIR, '--data', data, '--out', outZ]);
 	assert.equal(some.status, 0, some.stderr);
 	const m = /\nheights: (\d+) of (\d+) NPC or object goals got z \(spawnz\.json\)\n$/.exec(some.stdout);
 	assert.ok(m, some.stdout);

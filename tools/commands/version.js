@@ -1,7 +1,7 @@
 'use strict';
 // version: the release version, kept in package.json, in our guides' pack
 // manifest (guides/pack.json: compile writes its version into
-// Polestar_Guides.toc) and in the ## Version line of every addon TOC. With no
+// SendaFH_Guides.toc) and in the ## Version line of every addon TOC. With no
 // argument it prints the version and any file that disagrees; with one it sets
 // them all.
 
@@ -11,11 +11,11 @@ const { parseArgs, resolvePath } = require('../lib/cli');
 const project = require('../lib/dsl/project');
 const { ROOT } = require('../lib/paths');
 
-const usage = `usage: node tools/polestar.js version [<x.y.z>] [options]
+const usage = `usage: node tools/sendafh.js version [<x.y.z>] [options]
 
 Without a version, prints package.json's version and names guides/pack.json
 or any addon TOC whose version differs (exit 1 if one does). With one, writes
-it to package.json, to guides/pack.json (compile takes Polestar_Guides'
+it to package.json, to guides/pack.json (compile takes SendaFH_Guides'
 version from it) and to the ## Version line of every addon/<Name>/<Name>.toc
 present. Data addons built later take the version from package.json.
 

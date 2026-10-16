@@ -266,7 +266,7 @@ function loadMetas(dir) {
 	const expr = `
 local out = {}
 for i, p in ipairs({ ${files.map((f) => JSON.stringify(f)).join(', ')} }) do
-  local ok, m = __polestar_loaddata(p)
+  local ok, m = __sendafh_loaddata(p)
   if not ok then error(m, 0) end
   out[i] = m
 end

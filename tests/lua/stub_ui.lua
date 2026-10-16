@@ -1,7 +1,7 @@
 -- A contract-faithful stand-in for the Engine, the guide registry, Nav and
 -- Compat (docs/ARCHITECTURE.md), plus sample guides, for the UI's tests and
--- for `node tools/polestar.js preview`. Load after wow_stub.lua; call
--- uistub.install() once the addon has loaded (it replaces Polestar.Engine,
+-- for `node tools/sendafh.js preview`. Load after wow_stub.lua; call
+-- uistub.install() once the addon has loaded (it replaces SendaFH.Engine,
 -- .Guides, .Nav and .Compat), then stub.login().
 --
 --   uistub.calls              every Engine/Nav call the UI made: { fn, args... }
@@ -337,13 +337,13 @@ end
 
 local function tabsChanged()
 	local list, a = Engine.GetTabs()
-	Polestar.Fire("TABS_CHANGED", list, a)
+	SendaFH.Fire("TABS_CHANGED", list, a)
 end
 
 local function activated()
-	Polestar.Fire("GUIDE_CHANGED", guide and guide.id or nil)
-	Polestar.Fire("STEP_CHANGED", current)
-	Polestar.Fire("WAYPOINT_CHANGED", nil)
+	SendaFH.Fire("GUIDE_CHANGED", guide and guide.id or nil)
+	SendaFH.Fire("STEP_CHANGED", current)
+	SendaFH.Fire("WAYPOINT_CHANGED", nil)
 end
 
 function Engine.GetTabs()
@@ -464,7 +464,7 @@ local function move(i)
 	current = i
 	uistub.aim = nil
 	saveTab()
-	Polestar.Fire("STEP_CHANGED", i)
+	SendaFH.Fire("STEP_CHANGED", i)
 	tabsChanged()
 end
 function Engine.Next() record("Next"); if guide and current then move(current < #guide.steps and current + 1 or nil) end end
@@ -475,7 +475,7 @@ function Engine.Skip()
 	local s = current
 	if s then uistub.skipped[s] = true end
 	Engine.Next()
-	if s then Polestar.Fire("PLAYER_SKIPPED_STEP", guide.id, s) end
+	if s then SendaFH.Fire("PLAYER_SKIPPED_STEP", guide.id, s) end
 	return s
 end
 function Engine.Unskip(i)
@@ -496,7 +496,7 @@ function Engine.ToggleGoal(s, g)
 	if not goal or goal.t == "note" then return false end
 	goal.ticked = not goal.ticked
 	goal.status = goal.ticked and "done" or "active"
-	Polestar.Fire("STEP_UPDATED", s)
+	SendaFH.Fire("STEP_UPDATED", s)
 	return true
 end
 -- Optional goals skip and come back.
@@ -506,7 +506,7 @@ function Engine.SkipGoal(s, g)
 	if not (goal and goal.optional) then return false end
 	goal.dismissed = not goal.dismissed or nil
 	goal.status = goal.dismissed and "skipped" or "active"
-	Polestar.Fire("STEP_UPDATED", s)
+	SendaFH.Fire("STEP_UPDATED", s)
 	return true
 end
 -- A goal of the step shown with a place: the arrow is aimed there
@@ -516,7 +516,7 @@ function Engine.AimGoal(s, g)
 	local goal = guide and guide.steps[s] and guide.steps[s].goals[g]
 	if not (s == current and goal and goal.x) then return false end
 	uistub.aim = { s, g }
-	Polestar.Fire("WAYPOINT_CHANGED", Engine.GetWaypoint())
+	SendaFH.Fire("WAYPOINT_CHANGED", Engine.GetWaypoint())
 	return true
 end
 local function waypointOf(g, goal)
@@ -559,7 +559,7 @@ function Engine.CycleCandidate(s, g)
 	else
 		goal.subject, goal.npc, goal.map, goal.x, goal.y = c.npcName, c.npc, c.map, c.x, c.y
 	end
-	Polestar.Fire("STEP_UPDATED", s)
+	SendaFH.Fire("STEP_UPDATED", s)
 end
 -- Goals with spawn areas: the next spot (recorded only).
 function Engine.CycleSpot(s, g, index) record("CycleSpot", s, g, index) end
@@ -588,14 +588,14 @@ local Nav = {}
 function Nav.SetTarget(map, x, y, label, f)
 	record("SetTarget", map, x, y, label, f)
 	uistub.target = { map = map, x = x, y = y, label = label, f = f }
-	Polestar.Fire("WAYPOINT_CHANGED", uistub.target)
+	SendaFH.Fire("WAYPOINT_CHANGED", uistub.target)
 end
 function Nav.ClearTarget() record("ClearTarget"); uistub.target = nil end
 -- Drops a point picked by hand: the Engine's waypoint is the target again.
 function Nav.ReleaseTarget()
 	record("ReleaseTarget")
 	uistub.target = nil
-	Polestar.Fire("WAYPOINT_CHANGED", Engine.GetWaypoint())
+	SendaFH.Fire("WAYPOINT_CHANGED", Engine.GetWaypoint())
 end
 function Nav.GetTarget() return uistub.target or Engine.GetWaypoint() end
 function Nav.GetDistance() return 42 end
@@ -635,27 +635,27 @@ function uistub.install(opts)
 	if opts.noTabs then
 		for _, k in ipairs({ "GetTabs", "OpenTab", "CloseTab", "SelectTab", "MoveTab", "GetGuideState" }) do Engine[k] = nil end
 	end
-	Polestar.Engine = Engine
+	SendaFH.Engine = Engine
 	-- The real registry stays reachable for pages that show its records
-	-- (the Guide packs page): Polestar.Guides = uistub.realGuides.
-	if Polestar.Guides ~= Guides then uistub.realGuides = Polestar.Guides end
-	Polestar.Guides = Guides
-	if not opts.noNav then Polestar.Nav = Nav end
-	Polestar.Compat = Compat
+	-- (the Guide packs page): SendaFH.Guides = uistub.realGuides.
+	if SendaFH.Guides ~= Guides then uistub.realGuides = SendaFH.Guides end
+	SendaFH.Guides = Guides
+	if not opts.noNav then SendaFH.Nav = Nav end
+	SendaFH.Compat = Compat
 	-- The real modules register these; the fakes stand in for them.
-	if not opts.noNav and Polestar.GetDefault("nav.arrow") == nil then
-		Polestar.RegisterDefaults("nav", { arrow = true, arrowStyle = "3d", arrowScale = 1, arrowAlpha = 1, arrowEta = true,
+	if not opts.noNav and SendaFH.GetDefault("nav.arrow") == nil then
+		SendaFH.RegisterDefaults("nav", { arrow = true, arrowStyle = "3d", arrowScale = 1, arrowAlpha = 1, arrowEta = true,
 			worldPins = true, minimapPins = true, trailDots = true, tomtom = true, useTomTomArrow = false, blizzardWaypoint = false, arrivalSound = true, travel = true,
 			arrowColor = false, arrowNearColor = false })
 	end
-	if Polestar.GetDefault("behavior.autoAccept") == nil then
-		Polestar.RegisterDefaults("behavior", { autoAccept = true, autoTurnin = true, autoNextGuide = true, autoSelectGuide = true, skipGrey = false })
+	if SendaFH.GetDefault("behavior.autoAccept") == nil then
+		SendaFH.RegisterDefaults("behavior", { autoAccept = true, autoTurnin = true, autoNextGuide = true, autoSelectGuide = true, skipGrey = false })
 	end
 	-- An account and a character that have seen the welcome, so it never
 	-- opens over windows under test; tests/ui-welcome.test.js restores the
 	-- saved values.
-	Polestar.DB().welcomeSeen = 1
-	Polestar.CharState().welcomeSeen = 1
+	SendaFH.DB().welcomeSeen = 1
+	SendaFH.CharState().welcomeSeen = 1
 end
 
 -- Show guide `id` at step `step` in the active tab (opening a first tab).
@@ -679,7 +679,7 @@ function uistub.setGuide(id, step)
 		end
 		uistub.started[id] = true
 	end
-	Polestar.Fire("GUIDE_CHANGED", id)
+	SendaFH.Fire("GUIDE_CHANGED", id)
 	if Engine.GetTabs then tabsChanged() end
 end
 
@@ -691,25 +691,25 @@ function uistub.openTabs(list, active)
 		uistub.started[e[1]] = true
 	end
 	loadTab(active or 1)
-	Polestar.Fire("GUIDE_CHANGED", guide and guide.id)
+	SendaFH.Fire("GUIDE_CHANGED", guide and guide.id)
 	tabsChanged()
 end
 
 function uistub.setStep(i)
 	current = i
 	saveTab()
-	Polestar.Fire("STEP_CHANGED", i)
+	SendaFH.Fire("STEP_CHANGED", i)
 end
 
 function uistub.complete()
 	current = nil
 	saveTab()
-	Polestar.Fire("GUIDE_COMPLETED", guide.id)
-	Polestar.Fire("STEP_CHANGED", nil)
+	SendaFH.Fire("GUIDE_COMPLETED", guide.id)
+	SendaFH.Fire("STEP_CHANGED", nil)
 end
 
 function uistub.goal(s, g) return guide.steps[s].goals[g] end
-function uistub.update() Polestar.Fire("STEP_UPDATED", current) end
+function uistub.update() SendaFH.Fire("STEP_UPDATED", current) end
 
 -- Frames the UI created so far.
 function uistub.frameCount() return #stub.frames end

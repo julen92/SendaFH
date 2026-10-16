@@ -16,7 +16,7 @@ const { Space, MinHeap } = require('../tools/lib/nav/grid/search');
 const { CLS, encodeGraph, decodeGraph } = require('../tools/lib/nav/grid/format');
 
 async function navOf(...scenes) {
-	const dir = tmpdir('polestar-nav-');
+	const dir = tmpdir('sendafh-nav-');
 	const byKey = new Map(scenes.map((s) => [`${s.col}_${s.row}`, s]));
 	await buildGrid({
 		outDir: dir, workers: 0,
@@ -180,7 +180,7 @@ test('lifts: an elevator joins a mesa top to the ground both ways, landing where
 	const s = new Scene();
 	s.box(50, 50, -1, 250, 450, 60);
 	s.floor(248, 244, 260, 256, 75, 1);
-	const dir = tmpdir('polestar-nav-');
+	const dir = tmpdir('sendafh-nav-');
 	const spawn = s.world(253, 250);
 	await buildGrid({
 		outDir: dir, workers: 0, continents: [{ c: 0, name: 'test', tiles: [{ col: 32, row: 32 }] }],
@@ -304,7 +304,7 @@ test('abstract graph: slope links cost their yards, no lift ride, so the graph p
 
 const NAV = path.join(__dirname, '..', 'data', 'local', 'nav');
 const navIndex = fs.existsSync(path.join(NAV, 'index.json')) ? JSON.parse(fs.readFileSync(path.join(NAV, 'index.json'), 'utf8')) : null;
-const realSkip = !navIndex ? 'no navigation build in data/local/nav (node tools/polestar.js nav build)' : navIndex.version !== require('../tools/lib/nav/grid/format').VERSION ? `data/local/nav is tile version ${navIndex.version}: rebuild it (node tools/polestar.js nav build)` : false;
+const realSkip = !navIndex ? 'no navigation build in data/local/nav (node tools/sendafh.js nav build)' : navIndex.version !== require('../tools/lib/nav/grid/format').VERSION ? `data/local/nav is tile version ${navIndex.version}: rebuild it (node tools/sendafh.js nav build)` : false;
 
 test('real: Kharanos to inside Frostmane Hold goes through the cave mouth, not over the hills', { skip: realSkip }, () => {
 	const nav = openNav({ dir: NAV });

@@ -325,7 +325,7 @@ async function initMap() {
 		showMapNote(`Map unavailable: ${e.message}`, 'err');
 		return;
 	}
-	if (!S.info.art || !S.info.art.available) showMapNote('No map art yet: run node tools/polestar.js planner art. The route still draws on the grid.', 'warn');
+	if (!S.info.art || !S.info.art.available) showMapNote('No map art yet: run node tools/sendafh.js planner art. The route still draws on the grid.', 'warn');
 	for (const [k] of LAYERS) map.setLayer(k, !!S.layers[k]);
 	mc = mapController(map);
 	loadNav();

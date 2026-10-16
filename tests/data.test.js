@@ -31,7 +31,7 @@ function toWorld(f, x, y) {
 }
 
 async function fixtureBuild(extra = {}) {
-	const outDir = extra.outDir || tmpdir('polestar-data-');
+	const outDir = extra.outDir || tmpdir('sendafh-data-');
 	const result = await buildData({
 		offline: true,
 		pfquestDir: path.join(FIX, 'pfquest'),
@@ -197,7 +197,7 @@ describe('spawn reduction', () => {
 
 describe('fixture build', () => {
 	test('normalizes quests', async () => {
-		const { read } = await fixtureBuild({ recordingsDir: path.join(tmpdir('polestar-data-'), 'none') });
+		const { read } = await fixtureBuild({ recordingsDir: path.join(tmpdir('sendafh-data-'), 'none') });
 		const q = read('quests');
 		assert.deepEqual(Object.keys(q), ['100', '101', '102', '104'], 'untitled quest 103 is skipped');
 		assert.deepEqual(q[101], {
@@ -239,7 +239,7 @@ describe('fixture build', () => {
 	});
 
 	test('normalizes npcs, objects and items', async () => {
-		const { read, result } = await fixtureBuild({ recordingsDir: path.join(tmpdir('polestar-data-'), 'none') });
+		const { read, result } = await fixtureBuild({ recordingsDir: path.join(tmpdir('sendafh-data-'), 'none') });
 		const npcs = read('npcs');
 		assert.deepEqual(npcs[1], { id: 1, name: 'Bob', level: 20, faction: 'A', roles: ['flightmaster'], spawns: { 1429: { f: 'e', pts: [[48.9, 41.6]] } } });
 		assert.deepEqual(npcs[2], {
@@ -267,7 +267,7 @@ describe('fixture build', () => {
 	});
 
 	test('builds factions from the Era Faction table', async () => {
-		const { read } = await fixtureBuild({ recordingsDir: path.join(tmpdir('polestar-data-'), 'none') });
+		const { read } = await fixtureBuild({ recordingsDir: path.join(tmpdir('sendafh-data-'), 'none') });
 		const f = read('factions');
 		// Player template factions (ReputationIndex -1) are not reputations.
 		assert.equal(f[1], undefined);
@@ -398,7 +398,7 @@ describe('fixture build', () => {
 	});
 
 	test('refuses a pfQuest checkout that is not MIT licensed', () => {
-		const dir = tmpdir('polestar-data-');
+		const dir = tmpdir('sendafh-data-');
 		fs.writeFileSync(path.join(dir, 'LICENSE'), 'All rights reserved.\n');
 		assert.throws(() => checkLicense(dir), /not the MIT license/);
 		assert.equal(checkLicense(path.join(FIX, 'pfquest')).license, 'MIT');
@@ -422,7 +422,7 @@ describe('wago.tools cache', () => {
 	}
 
 	test('fetches the newest Classic Era build once, then works offline from the cache', async () => {
-		const sourcesDir = tmpdir('polestar-data-');
+		const sourcesDir = tmpdir('sendafh-data-');
 		const calls = [];
 		const online = await fixtureBuild({ offline: false, sourcesDir, fetchImpl: fakeFetch(calls) });
 		assert.match(online.result.meta.sources[1].revision, /1\.15\.10\.2$/);
@@ -437,6 +437,6 @@ describe('wago.tools cache', () => {
 	});
 
 	test('--offline without a cache fails clearly', async () => {
-		await assert.rejects(fixtureBuild({ offline: true, sourcesDir: tmpdir('polestar-data-') }), /--offline: no cached wago\.tools build/);
+		await assert.rejects(fixtureBuild({ offline: true, sourcesDir: tmpdir('sendafh-data-') }), /--offline: no cached wago\.tools build/);
 	});
 });

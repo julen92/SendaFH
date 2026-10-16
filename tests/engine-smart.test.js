@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 // Kalimdor (continent 1): the Barrens, Durotar, Orgrimmar. Eastern Kingdoms
 // (continent 0): Tirisfal, Stormwind.
@@ -35,7 +35,7 @@ const TRAINERS = `{
 }`;
 
 const GUIDE = `
-Polestar.RegisterGuide({ id = "test/fa", pack = "test", title = "First Aid", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
+SendaFH.RegisterGuide({ id = "test/fa", pack = "test", title = "First Aid", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
 	{ goals = { { t = "train", skill = "First Aid", skillLine = 129, rank = 2, candidates = ${TRAINERS} } } },
 	{ goals = { { t = "train", class = true, candidates = {
 		{ npc = 4568, npcName = "Anastasia Hartwell", map = 1420, x = 40, y = 40, faction = "H", classes = { "MAGE" } },
@@ -60,7 +60,7 @@ function run({ before = '', guides = GUIDE, saved, script, login = true }) {
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
 ${guides}
-			E = Polestar.Engine
+			E = SendaFH.Engine
 			function flush() stub.advance(0.25) end
 			${login ? 'stub.login()' : ''}
 			${script}`,
@@ -100,7 +100,7 @@ test('candidates are re-picked on zone change and landing, not on every move; Na
 			w.setZone("Tirisfal Glades", "Brill"); flush()
 			at[3] = npc()
 			-- A flight lands in Orgrimmar; Nav's travel model prefers it.
-			Polestar.Nav = { EstimateTravel = function(from, to) return to.map == 1454 and 10 or 1000 end }
+			SendaFH.Nav = { EstimateTravel = function(from, to) return to.map == 1454 and 10 or 1000 end }
 			w.moveTo(1454, 45, 45)
 			stub.fire("PLAYER_CONTROL_GAINED"); flush()
 			at[4] = npc()
@@ -159,15 +159,15 @@ test('train class completes on any candidate trainer window during the step; set
 test('Scourge and Undead are the same race in only, guide races and candidates', () => {
 	const [out] = run({
 		guides: `
-			Polestar.RegisterGuide({ id = "test/u", pack = "test", title = "Undead", faction = "Horde", races = { "Undead" }, minLevel = 1, maxLevel = 60, steps = {
+			SendaFH.RegisterGuide({ id = "test/u", pack = "test", title = "Undead", faction = "Horde", races = { "Undead" }, minLevel = 1, maxLevel = 60, steps = {
 				{ only = { races = { "Undead" } }, goals = { { t = "level", level = 30 } } },
 				{ goals = { { t = "level", level = 60, only = { races = { "!Undead" } } }, { t = "level", level = 50 } } },
 			} })
 		`,
 		script: `
 			local v1 = E.GetStepView(1)
-			emit({ suggest = Polestar.Guides.Suggest(), s1 = v1.status, g2 = E.GetStepView(2).goals[1].status,
-				m = { Polestar.Guides.Matches({ races = { "Scourge" } }, { race = "Undead" }), Polestar.Guides.Matches({ races = { "Undead" } }, { race = "Scourge" }) } })
+			emit({ suggest = SendaFH.Guides.Suggest(), s1 = v1.status, g2 = E.GetStepView(2).goals[1].status,
+				m = { SendaFH.Guides.Matches({ races = { "Scourge" } }, { race = "Undead" }), SendaFH.Guides.Matches({ races = { "Undead" } }, { race = "Scourge" }) } })
 		`,
 	});
 	assert.deepEqual(out, { suggest: 'test/u', s1: 'current', g2: 'na', m: [true, true] });
@@ -176,7 +176,7 @@ test('Scourge and Undead are the same race in only, guide races and candidates',
 test('Suggest prefers the current zone, then the nearest by travel; race chains win ties', () => {
 	const guides = `
 		local function g(id, zone, x, races)
-			Polestar.RegisterGuide({ id = id, pack = "test", title = id, faction = "Horde", races = races, minLevel = 15, maxLevel = 25, zone = zone, steps = {
+			SendaFH.RegisterGuide({ id = id, pack = "test", title = id, faction = "Horde", races = races, minLevel = 15, maxLevel = 25, zone = zone, steps = {
 				{ goals = { { t = "goto", map = zone, x = x, y = 50 } } },
 			} })
 		end
@@ -185,11 +185,11 @@ test('Suggest prefers the current zone, then the nearest by travel; race chains 
 		g("test/barrens", 1413, 50, nil)               -- the player's zone
 		g("test/barrens-undead", 1413, 52, { "Scourge" })
 	`;
-	const [inZone] = run({ guides, login: false, script: 'emit(Polestar.Guides.Suggest())' });
+	const [inZone] = run({ guides, login: false, script: 'emit(SendaFH.Guides.Suggest())' });
 	assert.equal(inZone, 'test/barrens-undead'); // in zone; travel tie; race chain first
-	const [nearest] = run({ guides, login: false, before: 'stub.world.moveTo(1454, 50, 100); stub.world.zone = "Orgrimmar"', script: 'emit(Polestar.Guides.Suggest())' });
+	const [nearest] = run({ guides, login: false, before: 'stub.world.moveTo(1454, 50, 100); stub.world.zone = "Orgrimmar"', script: 'emit(SendaFH.Guides.Suggest())' });
 	assert.equal(nearest, 'test/stonetalon');
-	const [home] = run({ guides, login: false, before: 'stub.world.moveTo(1420, 50, 50); stub.world.zone = "Tirisfal Glades"', script: 'emit(Polestar.Guides.Suggest())' });
+	const [home] = run({ guides, login: false, before: 'stub.world.moveTo(1420, 50, 50); stub.world.zone = "Tirisfal Glades"', script: 'emit(SendaFH.Guides.Suggest())' });
 	assert.equal(home, 'test/silverpine');
 });
 
@@ -197,12 +197,12 @@ test('GUIDE_OUTLEVELED fires once per guide when the level passes maxLevel + 2',
 	const [out] = run({
 		before: 'stub.world.level = 5',
 		guides: `
-			Polestar.RegisterGuide({ id = "test/low", pack = "test", title = "Low", faction = "Horde", minLevel = 1, maxLevel = 6, steps = { { goals = { { t = "level", level = 60 } } } } })
-			Polestar.RegisterGuide({ id = "test/mid", pack = "test", title = "Mid", faction = "Horde", minLevel = 7, maxLevel = 20, steps = { { goals = { { t = "level", level = 60 } } } } })
+			SendaFH.RegisterGuide({ id = "test/low", pack = "test", title = "Low", faction = "Horde", minLevel = 1, maxLevel = 6, steps = { { goals = { { t = "level", level = 60 } } } } })
+			SendaFH.RegisterGuide({ id = "test/mid", pack = "test", title = "Mid", faction = "Horde", minLevel = 7, maxLevel = 20, steps = { { goals = { { t = "level", level = 60 } } } } })
 		`,
 		script: `
 			local fired = {}
-			Polestar.On("GUIDE_OUTLEVELED", function(id, s) fired[#fired + 1] = id .. ">" .. tostring(s) end)
+			SendaFH.On("GUIDE_OUTLEVELED", function(id, s) fired[#fired + 1] = id .. ">" .. tostring(s) end)
 			local w = stub.world
 			w.setLevel(7); flush()
 			local at7 = #fired
@@ -220,7 +220,7 @@ test('GUIDE_OUTLEVELED fires once per guide when the level passes maxLevel + 2',
 // grey needs it, directly or through other grey quests.
 test('skipGrey skips grey accepts and their turn-ins unless a quest worth doing needs them, and never auto-accepts them', () => {
 	const guides = `
-		Polestar.RegisterGuide({ id = "test/g1", pack = "test", title = "G1", faction = "Horde", minLevel = 1, maxLevel = 30, next = "test/g2", steps = {
+		SendaFH.RegisterGuide({ id = "test/g1", pack = "test", title = "G1", faction = "Horde", minLevel = 1, maxLevel = 30, next = "test/g2", steps = {
 			{ goals = { { t = "accept", quest = 101, title = "Grey alone", qlvl = 2 } } },
 			{ goals = { { t = "accept", quest = 102, title = "Grey turned in", qlvl = 3 } } },
 			{ goals = { { t = "accept", quest = 103, title = "Grey prerequisite", qlvl = 4 } } },
@@ -233,7 +233,7 @@ test('skipGrey skips grey accepts and their turn-ins unless a quest worth doing 
 			{ goals = { { t = "accept", quest = 110, title = "Grey dead end", qlvl = 6, preAll = { 109 } } } },
 			{ goals = { { t = "turnin", quest = 110, title = "Grey dead end" } } },
 		} })
-		Polestar.RegisterGuide({ id = "test/g2", pack = "test", title = "G2", faction = "Horde", minLevel = 20, maxLevel = 30, steps = {
+		SendaFH.RegisterGuide({ id = "test/g2", pack = "test", title = "G2", faction = "Horde", minLevel = 20, maxLevel = 30, steps = {
 			{ goals = { { t = "accept", quest = 105, title = "Follow-up", qlvl = 20, pre = { 103 } } } },
 		} })
 	`;
@@ -258,7 +258,7 @@ test('skipGrey skips grey accepts and their turn-ins unless a quest worth doing 
 		out.byHand = { again[2], again[5] }
 		emit(out)
 	`;
-	const [on] = run({ guides, saved: { Polestar: 'PolestarDB = { schema = 1, settings = { behavior = { skipGrey = true } } }' }, script });
+	const [on] = run({ guides, saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { behavior = { skipGrey = true } } }' }, script });
 	assert.deepEqual(on, {
 		statuses: ['na', 'na', 'active', 'pending', 'na', 'pending', 'pending', 'pending', 'na', 'na', 'na'],
 		at: 3, accepted101: false, grey: true, byHand: ['done', 'pending'],
@@ -271,7 +271,7 @@ test('skipGrey skips grey accepts and their turn-ins unless a quest worth doing 
 test('learn goals with candidates point at the nearest usable trainer and complete when the spell is known', () => {
 	const [out] = run({
 		guides: `
-			Polestar.RegisterGuide({ id = "test/lr", pack = "test", title = "Learn", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
+			SendaFH.RegisterGuide({ id = "test/lr", pack = "test", title = "Learn", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
 				{ goals = { { t = "learn", spell = 3275, spellName = "Linen Bandage", skillLine = 129, candidates = ${TRAINERS} } } },
 				{ goals = { { t = "level", level = 60 } } },
 			} })
@@ -289,7 +289,7 @@ test('learn goals with candidates point at the nearest usable trainer and comple
 });
 
 const CRAFT = `
-	Polestar.RegisterGuide({ id = "test/cook", pack = "test", title = "Cooking", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
+	SendaFH.RegisterGuide({ id = "test/cook", pack = "test", title = "Cooking", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
 		{ goals = { { t = "collect", item = 769, itemName = "Chunk of Boar Meat", count = 4 } } },
 		{ goals = {
 			{ t = "collect", item = 2672, itemName = "Stringy Wolf Meat", count = 10 },
@@ -326,7 +326,7 @@ test('the in-step latch survives a reload and is cleared when the step is left b
 		script: `
 			E.SetGuide("test/cook")
 			stub.world.addItem(2672, 10); flush()
-			emit(PolestarCharDB.manual["test/cook"])
+			emit(SendaFHCharDB.manual["test/cook"])
 		`,
 	});
 	assert.deepEqual(first, { '1:1': true, '2:1': true }); // step 1 passed, step 2 in-step
@@ -335,12 +335,12 @@ test('the in-step latch survives a reload and is cleared when the step is left b
 		guides: CRAFT,
 		// Reloaded with the meat already cooked away.
 		before: 'stub.world.learnSkill(185, "Cooking", 30, 75); stub.world.items[769] = 4',
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, tabs = { "test/cook" }, activeTab = 1, manual = { ["test/cook"] = { ["2:1"] = true } } }' },
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, tabs = { "test/cook" }, activeTab = 1, manual = { ["test/cook"] = { ["2:1"] = true } } }' },
 		script: `
 			local r = { at = E.GetStepIndex(), collect = E.GetStepView(2).goals[1].status }
 			E.Prev(); flush()
 			r.prev = E.GetStepIndex()
-			r.latch = PolestarCharDB.manual["test/cook"]["2:1"] or false
+			r.latch = SendaFHCharDB.manual["test/cook"]["2:1"] or false
 			E.Next(); flush()
 			r.back = { E.GetStepIndex(), E.GetStepView(2).goals[1].status }
 			emit(r)
@@ -368,7 +368,7 @@ w.addMap(1438, { name = "Teldrassil", c = 1, top = 11000, bottom = 9000, left = 
 function firstAid(frame) {
 	const f = frame ? ', f = "e"' : '';
 	return `
-		Polestar.RegisterGuide({ id = "test/fa2", pack = "test", title = "First Aid", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/fa2", pack = "test", title = "First Aid", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
 			{ goals = { { t = "train", skill = "First Aid", skillLine = 129, rank = 1, candidates = {
 				{ npc = 3373, npcName = "Rawrk", map = 1411, x = 54, y = 42, faction = "H"${f} },
 				{ npc = 4211, npcName = "Byancie", map = 1438, x = 55, y = 57, faction = "A"${f} },
@@ -414,11 +414,11 @@ test('a vendor in a zone far above the character comes after every other choice;
 			w.race, w.raceName, w.faction, w.class = "NightElf", "Night Elf", "Alliance", "PRIEST"
 			w.level = ${level}
 			w.moveTo(1439, 41.77, 83.55)`,
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Maps/Maps.lua', 'Maps/WorldMap.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Maps/Maps.lua', 'Maps/WorldMap.lua'] }],
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
-			Polestar.Maps.RegisterZoneLevels({ [1439] = { 10, 20, 50, 50 }, [2482] = { 56, 60, 50, 50 } })
-			Polestar.RegisterGuide({ id = "test/darkshore", pack = "test", title = "Darkshore", faction = "Alliance", minLevel = 10, maxLevel = 20, steps = {
+			SendaFH.Maps.RegisterZoneLevels({ [1439] = { 10, 20, 50, 50 }, [2482] = { 56, 60, 50, 50 } })
+			SendaFH.RegisterGuide({ id = "test/darkshore", pack = "test", title = "Darkshore", faction = "Alliance", minLevel = 10, maxLevel = 20, steps = {
 				{ goals = { { t = "vendor", candidates = {
 					{ npc = 4183, npcName = "Naram Longclaw", map = 1439, x = 37.57, y = 40.35, faction = "A" },
 					{ npc = 265883, npcName = "Chagrak Hammerstrike", map = 2482, x = 13.4, y = 52.4, faction = "AH" },
@@ -426,7 +426,7 @@ ${TEST_SOURCE}
 				{ goals = { { t = "level", level = 60 } } },
 			} })
 			stub.login()
-			local E = Polestar.Engine
+			local E = SendaFH.Engine
 			E.SetGuide("test/darkshore")
 			local first = E.GetStepView(1).goals[1].npcName
 			E.CycleCandidate(1, 1)

@@ -40,20 +40,20 @@ test('`next` and every route option must be a guide the characters can follow: r
 		return r.diag.errors.map((d) => `${d.line === lineOf(from, 'next t/b, t/c') ? 'next' : d.line}: ${d.message}${d.hint ? ` | ${d.hint}` : ''}`);
 	};
 	assert.deepEqual(errorsOf(['race Human'], ['race Dwarf, Gnome']), [
-		'next: no Human character can follow t/c (it is for Dwarf/Gnome only) | pick a guide for the same races: `polestar find --kind guide <zone> --race Human`',
+		'next: no Human character can follow t/c (it is for Dwarf/Gnome only) | pick a guide for the same races: `sendafh find --kind guide <zone> --race Human`',
 	]);
 	// A faction-wide target, or one sharing a race, is fine.
 	assert.deepEqual(errorsOf(['race Human'], []), []);
 	assert.deepEqual(errorsOf(['race Human, Dwarf'], ['race Dwarf, Gnome']), []);
 	// Classes alone.
 	assert.deepEqual(errorsOf(['class Paladin'], ['class Mage, Warlock']), [
-		'next: no Alliance Paladin character can follow t/c (it is for Alliance Mage/Warlock only) | pick a guide for the same classes: `polestar find --kind guide <zone> --class Paladin`',
+		'next: no Alliance Paladin character can follow t/c (it is for Alliance Mage/Warlock only) | pick a guide for the same classes: `sendafh find --kind guide <zone> --class Paladin`',
 	]);
 	assert.deepEqual(errorsOf(['class Paladin'], []), []);
 	assert.deepEqual(errorsOf(['class Paladin, Mage'], ['class Mage']), []);
 	// A Human cannot be a Shaman (races.json), so a Shaman guide is no option.
 	assert.deepEqual(errorsOf(['race Human'], ['class Shaman']), [
-		'next: no Human character can follow t/c (it is for Alliance Shaman only) | pick a guide for the same races: `polestar find --kind guide <zone> --race Human`',
+		'next: no Human character can follow t/c (it is for Alliance Shaman only) | pick a guide for the same races: `sendafh find --kind guide <zone> --race Human`',
 	]);
 	assert.deepEqual(errorsOf(['race Dwarf'], ['class Shaman']), []);
 });
@@ -328,7 +328,7 @@ test('an objective index past the quest\'s objectives names them, with a hint', 
 	const d = compile(src).diag.warnings.find((x) => /objective\(s\) in data/.test(x.message));
 	assert.equal(d.line, lineOf(src, '  kill 6 quest 7.2'));
 	assert.equal(d.message, 'quest 7 has 1 objective(s) in data, not 2: 7.1 = kill Kobold Vermin x10');
-	assert.equal(d.hint, 'write `quest 7.<n>` with one of these (`polestar find 7` lists them)');
+	assert.equal(d.hint, 'write `quest 7.<n>` with one of these (`sendafh find 7` lists them)');
 });
 
 // A quest with two item objectives, to name the wrong one by index.
@@ -433,7 +433,7 @@ test('solo policy: goals on quests the simulator excludes are errors when elite,
 test('lint applies the solo policy from the cached world in --sim (built from the same data by the current builder)', () => {
 	const fs = require('node:fs');
 	const path = require('node:path');
-	const { polestar } = require('./helpers/cli');
+	const { sendafh } = require('./helpers/cli');
 	const { GUIDES_DIR, DATA_DIR } = require('./helpers/dsl');
 	const { tmpdir } = require('./helpers/tmp');
 	const { dataHash } = require('../tools/lib/sim/world');
@@ -441,7 +441,7 @@ test('lint applies the solo policy from the cached world in --sim (built from th
 	const sim = tmpdir();
 	const hash = dataHash(DATA_DIR, path.join(ROOT, 'data', 'sources'));
 	fs.writeFileSync(path.join(sim, 'world-alliance.json'), JSON.stringify({ dataHash: hash, excluded: [{ id: 5261, title: 'Eagan Peltskinner', reason: 'dungeon quest', category: 'dungeon' }] }));
-	const lint = (...args) => polestar(['lint', '--guides', GUIDES_DIR, '--data', DATA_DIR, ...args]);
+	const lint = (...args) => sendafh(['lint', '--guides', GUIDES_DIR, '--data', DATA_DIR, ...args]);
 	const r = lint('--sim', sim);
 	assert.equal(r.status, 0, r.stderr);
 	assert.match(r.stderr, /01-northshire\.guide:14: warning: quest 5261 \(Eagan Peltskinner\) is excluded from solo leveling \(dungeon: dungeon quest\)/);

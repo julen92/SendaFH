@@ -47,7 +47,7 @@ test('classic-db spawns: maps 0 and 1 only, to a tenth of a yard, pooled entries
 
 // A copy of the data fixtures' source cache, with the fixture dump cached as the pinned one (its hash given).
 function sources(withDump) {
-	const dir = tmpdir('polestar-spawnz-');
+	const dir = tmpdir('sendafh-spawnz-');
 	fs.cpSync(path.join(FIX, 'sources'), dir, { recursive: true });
 	const gz = zlib.gzipSync(Buffer.from(DUMP.join('\n')));
 	if (withDump) {
@@ -72,8 +72,8 @@ function build(src, outDir) {
 
 test('data build writes spawnz.json from the cached dump, deterministically, and credits classic-db', async () => {
 	const src = sources(true);
-	const a = tmpdir('polestar-spawnz-out-');
-	const b = tmpdir('polestar-spawnz-out-');
+	const a = tmpdir('sendafh-spawnz-out-');
+	const b = tmpdir('sendafh-spawnz-out-');
 	const { meta } = await build(src, a);
 	await build(src, b);
 	const text = fs.readFileSync(path.join(a, 'spawnz.json'), 'utf8');
@@ -90,7 +90,7 @@ test('data build writes spawnz.json from the cached dump, deterministically, and
 });
 
 test('data build --offline without the cached dump: no spawnz.json, one warning, the build still succeeds', async () => {
-	const out = tmpdir('polestar-spawnz-out-');
+	const out = tmpdir('sendafh-spawnz-out-');
 	fs.writeFileSync(path.join(out, 'spawnz.json'), '{"npc":{},"object":{}}\n'); // from an older build
 	const { meta } = await build(sources(false), out);
 	assert.equal(fs.existsSync(path.join(out, 'spawnz.json')), false, 'an older spawnz.json goes with it');

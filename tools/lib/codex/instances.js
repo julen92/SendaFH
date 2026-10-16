@@ -3,7 +3,7 @@
 // client's tables (Map, DungeonEncounter, LFGDungeons, MapDifficulty,
 // ContentTuning, AreaTable), data/forever/npcs.json and items.json
 // (pfQuest, QuestieDB, recordings), data/forever/instances.json (Recorder
-// `enter` / `encounter` events) and the entrance points Polestar's own guides
+// `enter` / `encounter` events) and the entrance points SendaFH's own guides
 // name. Replaces AtlasLoot and DungeonJournal in a release build
 // (docs/ARCHITECTURE.md, "Codex (`codex build`)").
 //

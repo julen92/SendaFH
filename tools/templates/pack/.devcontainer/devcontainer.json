@@ -1,5 +1,5 @@
 {
 	"name": "{{title}}",
 	"image": "mcr.microsoft.com/devcontainers/javascript-node:24",
-	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y lua5.1 && git clone --depth 1 \"{{repo}}\" \"$HOME/polestar\" && cd \"$HOME/polestar\" && npm link && polestar data build --no-web-xp --no-wowhead"
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y lua5.1 && git clone --depth 1 \"{{repo}}\" \"$HOME/sendafh\" && cd \"$HOME/sendafh\" && npm link && sendafh data build --no-web-xp --no-wowhead"
 }

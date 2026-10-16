@@ -35,7 +35,7 @@ const split = () => {
 const single = () => new Uint16Array(256).fill(101);
 
 async function navOf(s, areas) {
-	const dir = tmpdir('polestar-aids-');
+	const dir = tmpdir('sendafh-aids-');
 	await buildGrid({
 		outDir: dir, workers: 0,
 		continents: [{ c: 0, name: 'test', tiles: [{ col: s.col, row: s.row }] }],

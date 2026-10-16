@@ -1,5 +1,5 @@
 'use strict';
-// The options window (addon/Polestar/UI/Options.lua): built-in pages, the
+// The options window (addon/SendaFH/UI/Options.lua): built-in pages, the
 // options registry other modules use, the two-column grid, search, the
 // footer, and the Blizzard Settings entry.
 
@@ -14,8 +14,8 @@ function run(script, { install = '', before = '', between = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before,
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `${between}\nuistub.install(${install})\nstub.login()\nlocal UI, O = Polestar.UI, Polestar.UI.Options\n${HELPERS}\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `${between}\nuistub.install(${install})\nstub.login()\nlocal UI, O = SendaFH.UI, SendaFH.UI.Options\n${HELPERS}\n${script}`,
 	}).emitted;
 }
 
@@ -25,32 +25,32 @@ local function lastCall(name)
 end
 local function navLabels()
 	local out = {}
-	for _, b in ipairs(PolestarOptions.navButtons) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
+	for _, b in ipairs(SendaFHOptions.navButtons) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
 	return out
 end
 local function footer()
 	local out = {}
 	for _, side in ipairs({ "left", "right" }) do
-		for _, b in ipairs(PolestarOptions.footerButtons[side]) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
+		for _, b in ipairs(SendaFHOptions.footerButtons[side]) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
 	end
 	return out
 end
 local function footerButton(text)
 	for _, side in ipairs({ "left", "right" }) do
-		for _, b in ipairs(PolestarOptions.footerButtons[side]) do if b:IsShown() and b.Label:GetText() == text then return b end end
+		for _, b in ipairs(SendaFHOptions.footerButtons[side]) do if b:IsShown() and b.Label:GetText() == text then return b end end
 	end
 end
 `;
 
 // A module page, registered the way Quests/Gear/Maps/QoL do.
 const FAKE_PAGE = `
-Polestar.RegisterDefaults("fake", { markers = true, size = 1, colour = { 1, 0.5, 0 }, mode = "auto" })
+SendaFH.RegisterDefaults("fake", { markers = true, size = 1, colour = { 1, 0.5, 0 }, mode = "auto" })
 local clicks = 0
 uifake = { clicks = function() return clicks end }
-Polestar.RegisterOptions({ page = "Quests", icon = "icon-accept", order = 30, tab = "Map", section = "Markers", controls = {
+SendaFH.RegisterOptions({ page = "Quests", icon = "icon-accept", order = 30, tab = "Map", section = "Markers", controls = {
 	{ kind = "toggle", key = "fake.markers", label = "Objective markers", help = "Pins for quest objectives." },
 	{ kind = "slider", key = "fake.size", label = "Marker size", min = 0.5, max = 2, step = 0.05, format = "%.2fx",
-		disabled = function() return not Polestar.Get("fake.markers") end },
+		disabled = function() return not SendaFH.Get("fake.markers") end },
 	{ kind = "dropdown", key = "fake.mode", label = "Weights", choices = { { value = "auto", label = "Automatic" }, { value = "manual", label = "Manual" } } },
 	{ kind = "color", key = "fake.colour", label = "Marker colour" },
 	{ kind = "button", label = "Reset lockouts", help = "Forget saved lockouts.", onClick = function() clicks = clicks + 1 end },
@@ -59,10 +59,10 @@ Polestar.RegisterOptions({ page = "Quests", icon = "icon-accept", order = 30, ta
 
 test('pages: by order, a page with nothing to set left out, Recorder and About last; tabs and sections', () => {
 	const [out] = run(`
-		Polestar.RegisterOptions({ page = "Gear", icon = "star", order = 40, section = "Weights", controls = {} })
+		SendaFH.RegisterOptions({ page = "Gear", icon = "star", order = 40, section = "Weights", controls = {} })
 		UI.ShowOptions()
-		emit({ nav = navLabels(), pages = O.Pages(), title = PolestarOptions.Title:GetText(),
-			tabs = (function() local t = {} for _, b in ipairs(PolestarOptions.tabButtons) do if b:IsShown() then t[#t + 1] = b.Label:GetText() end end return t end)(),
+		emit({ nav = navLabels(), pages = O.Pages(), title = SendaFHOptions.Title:GetText(),
+			tabs = (function() local t = {} for _, b in ipairs(SendaFHOptions.tabButtons) do if b:IsShown() then t[#t + 1] = b.Label:GetText() end end return t end)(),
 			footer = footer() })`, { between: FAKE_PAGE });
 	// Questing, Discovery and Quality of Life fill from modules not loaded
 	// here; Gear registered no control: all left out of the list. Guide packs
@@ -74,7 +74,7 @@ test('pages: by order, a page with nothing to set left out, Recorder and About l
 	assert.deepEqual(out.footer, ['Reset page', 'Reload UI', 'Close']);
 });
 
-// Players and macros still type the old page names (/polestar options
+// Players and macros still type the old page names (/sendafh options
 // navigation); each lands on the page and tab that holds those settings now.
 test('old page keys open the page and tab that hold their settings now', () => {
 	const [out] = run(`
@@ -82,7 +82,7 @@ test('old page keys open the page and tab that hold their settings now', () => {
 			UI.ShowOptions(key)
 			local tab
 			for name, v in pairs(O.page.views) do if v == O.view then tab = name end end
-			return PolestarOptions.Title:GetText() .. " > " .. tab
+			return SendaFHOptions.Title:GetText() .. " > " .. tab
 		end
 		local out = {}
 		for _, k in ipairs({ "guidewindow", "navigation", "automation", "appearance", "map", "recorder", "nav", "behaviour", "General" }) do out[k] = at(k) end
@@ -100,15 +100,15 @@ test('old page keys open the page and tab that hold their settings now', () => {
 	});
 	const [mods] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Quests/Quests.xml', 'Gear/Gear.xml', 'Maps/Maps.xml', 'QoL/QoL.xml',
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Quests/Quests.xml', 'Gear/Gear.xml', 'Maps/Maps.xml', 'QoL/QoL.xml',
 			'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml', 'UI/UI.xml', 'Rares/Rares.xml'] }],
-		script: `uistub.install()\nstub.login()\nlocal UI, O = Polestar.UI, Polestar.UI.Options
+		script: `uistub.install()\nstub.login()\nlocal UI, O = SendaFH.UI, SendaFH.UI.Options
 		local out = {}
 		for _, k in ipairs({ "quests", "gear", "lookup", "dungeons", "rares", "qualityoflife" }) do
 			UI.ShowOptions(k)
 			local tab
 			for name, v in pairs(O.page.views) do if v == O.view then tab = name end end
-			out[k] = PolestarOptions.Title:GetText() .. " > " .. tab
+			out[k] = SendaFHOptions.Title:GetText() .. " > " .. tab
 		end
 		emit(out)`,
 	}).emitted;
@@ -123,7 +123,7 @@ test('old page keys open the page and tab that hold their settings now', () => {
 });
 
 // A translated client: the page titles change, the keys players type do not.
-test('page keys stay English on a translated client: /polestar options quests, gear, lookup and /polestar packs', () => {
+test('page keys stay English on a translated client: /sendafh options quests, gear, lookup and /sendafh packs', () => {
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
 		before: fakeLocale('itIT', {
@@ -138,14 +138,14 @@ test('page keys stay English on a translated client: /polestar options quests, g
 			'Rewards & gear': 'Belohnungen & Ausrüstung',
 			Lookup: 'Nachschlagen',
 		}),
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Quests/Quests.xml', 'Gear/Gear.xml', 'Maps/Maps.xml', 'QoL/QoL.xml',
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Quests/Quests.xml', 'Gear/Gear.xml', 'Maps/Maps.xml', 'QoL/QoL.xml',
 			'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml', 'UI/UI.xml', 'Rares/Rares.xml'] }],
-		script: `uistub.install()\nstub.login()\nlocal O = Polestar.UI.Options
+		script: `uistub.install()\nstub.login()\nlocal O = SendaFH.UI.Options
 		local function at(cmd)
-			SlashCmdList.POLESTAR(cmd)
+			SlashCmdList.SENDAFH(cmd)
 			local tab
 			for name, v in pairs(O.page.views) do if v == O.view then tab = name end end
-			return O.page.key .. ": " .. PolestarOptions.Title:GetText() .. " > " .. tab
+			return O.page.key .. ": " .. SendaFHOptions.Title:GetText() .. " > " .. tab
 		end
 		local out = {}
 		for _, cmd in ipairs({ "options quests", "options gear", "options lookup", "options appearance", "options qualityoflife", "options about", "packs" }) do out[cmd] = at(cmd) end
@@ -175,13 +175,13 @@ test('registered controls read and write settings; disabled functions follow oth
 		c["fake.markers"]:Click()
 		local after = size:IsEnabled()
 		stub.RunScript(size.Slider, "OnValueChanged", 1.5, true)
-		local blocked = Polestar.Get("fake.size")
+		local blocked = SendaFH.Get("fake.size")
 		c["fake.markers"]:Click()
 		stub.RunScript(size.Slider, "OnValueChanged", 1.52, true)
 		c["fake.mode"].Button:Click()
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Manual" then r:Click() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Manual" then r:Click() end end
 		c["Reset lockouts"]:Click()
-		emit({ before = before, after = after, blocked = blocked, size = Polestar.Get("fake.size"), mode = Polestar.Get("fake.mode"),
+		emit({ before = before, after = after, blocked = blocked, size = SendaFH.Get("fake.size"), mode = SendaFH.Get("fake.mode"),
 			label = c["fake.mode"].Button.Label:GetText(), clicks = uifake.clicks(), rowH = c["fake.markers"]:GetHeight() })`, { between: FAKE_PAGE });
 	assert.equal(out.before, true);
 	assert.equal(out.after, false, 'disabled while markers are off');
@@ -196,10 +196,10 @@ test('registered controls read and write settings; disabled functions follow oth
 test('a registration made after the window exists shows up; a malformed one is refused', () => {
 	const [out] = run(`
 		UI.ShowOptions()
-		Polestar.RegisterDefaults("late", { thing = true })
-		local ok = Polestar.RegisterOptions({ page = "Maps", icon = "icon-explore", order = 20, controls = { { kind = "toggle", key = "late.thing", label = "Late thing" } } })
-		local bad, err = Polestar.RegisterOptions({ page = "Broken", controls = { { kind = "wheel", key = "x" } } })
-		local bad2 = Polestar.RegisterOptions({ page = "Broken", controls = { { kind = "button", label = "No handler" } } })
+		SendaFH.RegisterDefaults("late", { thing = true })
+		local ok = SendaFH.RegisterOptions({ page = "Maps", icon = "icon-explore", order = 20, controls = { { kind = "toggle", key = "late.thing", label = "Late thing" } } })
+		local bad, err = SendaFH.RegisterOptions({ page = "Broken", controls = { { kind = "wheel", key = "x" } } })
+		local bad2 = SendaFH.RegisterOptions({ page = "Broken", controls = { { kind = "button", label = "No handler" } } })
 		local nav = navLabels()
 		UI.ShowOptions("maps")
 		emit({ ok = ok, bad = bad, err = err, bad2 = bad2, nav = nav, controls = (function() local n = 0 for _ in pairs(O.Controls("maps")) do n = n + 1 end return n end)() })`);
@@ -213,11 +213,11 @@ test('a registration made after the window exists shows up; a malformed one is r
 
 test('a registered page may give its own key, which opens it whatever its title; a key that is not a string is refused', () => {
 	const [out] = run(`
-		Polestar.RegisterDefaults("mine", { thing = true })
-		local ok = Polestar.RegisterOptions({ page = "Mein Addon", key = "myaddon", controls = { { kind = "toggle", key = "mine.thing", label = "Thing" } } })
-		local bad, err = Polestar.RegisterOptions({ page = "Broken", key = 5, controls = {} })
+		SendaFH.RegisterDefaults("mine", { thing = true })
+		local ok = SendaFH.RegisterOptions({ page = "Mein Addon", key = "myaddon", controls = { { kind = "toggle", key = "mine.thing", label = "Thing" } } })
+		local bad, err = SendaFH.RegisterOptions({ page = "Broken", key = 5, controls = {} })
 		UI.ShowOptions("myaddon")
-		emit({ ok = ok, bad = bad, err = err, key = O.page.key, title = PolestarOptions.Title:GetText() })`);
+		emit({ ok = ok, bad = bad, err = err, key = O.page.key, title = SendaFHOptions.Title:GetText() })`);
 	assert.deepEqual(out, { ok: true, bad: false, err: 'RegisterOptions: key must be a string', key: 'myaddon', title: 'Mein Addon' });
 });
 
@@ -226,31 +226,31 @@ test('built-in controls write settings and follow changes made elsewhere', () =>
 		UI.ShowOptions("guide")
 		local c = O.Controls("guide")
 		c["ui.compact"]:Click()
-		local compact = Polestar.Get("ui.compact")
-		Polestar.Set("ui.showNotes", false)
+		local compact = SendaFH.Get("ui.compact")
+		SendaFH.Set("ui.showNotes", false)
 		local followed = c["ui.showNotes"].checked
 		local notesOpen = c["ui.notesOpen"]:IsEnabled()
 		O.Select("guide", "Automation")
 		O.Controls("guide", "Automation")["behavior.skipGrey"]:Click()
 		O.Select("guide", "Arrow & routes")
 		local nav = O.Controls("guide", "Arrow & routes")
-		Polestar.Set("nav.tomtom", false)
+		SendaFH.Set("nav.tomtom", false)
 		UI.ShowOptions("appearance")
 		local look = O.Controls("appearance")
 		look["ui.accent"]:Click("LeftButton")
 		local info = ColorPickerFrame.info
 		ColorPickerFrame.GetColorRGB = function() return 0.9, 0.3, 0.1 end
 		info.swatchFunc()
-		local picked = Polestar.Get("ui.accent")
+		local picked = SendaFH.Get("ui.accent")
 		info.cancelFunc()
 		O.Select("appearance", "Windows")
 		local win = O.Controls("appearance", "Windows")
 		win["ui.style"].Button:Click()
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Transparent" then r:Click() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Transparent" then r:Click() end end
 		stub.RunScript(win["ui.scale"].Slider, "OnValueChanged", 1.234, true)
 		O.Select("appearance", "Arrow")
-		emit({ compact = compact, followed = followed, notesOpen = notesOpen, style = Polestar.Get("ui.style"),
-			scale = Polestar.Get("ui.scale"), picked = picked, cancelled = Polestar.Get("ui.accent"), skipGrey = Polestar.Get("behavior.skipGrey"),
+		emit({ compact = compact, followed = followed, notesOpen = notesOpen, style = SendaFH.Get("ui.style"),
+			scale = SendaFH.Get("ui.scale"), picked = picked, cancelled = SendaFH.Get("ui.accent"), skipGrey = SendaFH.Get("behavior.skipGrey"),
 			tomtomArrow = nav["nav.useTomTomArrow"]:IsEnabled(), arrowStyle = O.Controls("appearance", "Arrow")["nav.arrowStyle"].Button.Label:GetText() })`);
 	assert.equal(out.compact, true);
 	assert.equal(out.followed, false);
@@ -267,13 +267,13 @@ test('built-in controls write settings and follow changes made elsewhere', () =>
 test('search finds settings by label and help across pages, registered ones included', () => {
 	const [out] = run(`
 		UI.ShowOptions()
-		local box = PolestarOptions.Search
+		local box = SendaFHOptions.Search
 		box:SetText("arrow")
 		stub.RunScript(box, "OnTextChanged", true)
 		local titles = {}
 		for _, g in ipairs(O.results.groups) do titles[#titles + 1] = g.title end
-		local arrow = { titles = titles, count = O.results.count, title = PolestarOptions.Title:GetText(), sub = PolestarOptions.Subtitle:GetText(),
-			tabRow = PolestarOptions.TabRow:IsShown(), footer = footer() }
+		local arrow = { titles = titles, count = O.results.count, title = SendaFHOptions.Title:GetText(), sub = SendaFHOptions.Subtitle:GetText(),
+			tabRow = SendaFHOptions.TabRow:IsShown(), footer = footer() }
 		local groups, n = O.Search("pins objectives")
 		local help = { n = n, label = groups[1] and groups[1].controls[1].label }
 		local _, none = O.Search("zzzz")
@@ -281,7 +281,7 @@ test('search finds settings by label and help across pages, registered ones incl
 		for _, q in ipairs({ "border", "band", "shadow", "arrow colour", "arrival colour" }) do found[q] = select(2, O.Search(q)) end
 		box:SetText("")
 		stub.RunScript(box, "OnTextChanged", true)
-		emit({ arrow = arrow, help = help, none = none, found = found, back = PolestarOptions.Title:GetText() })`, { between: FAKE_PAGE });
+		emit({ arrow = arrow, help = help, none = none, found = found, back = SendaFHOptions.Title:GetText() })`, { between: FAKE_PAGE });
 	assert.deepEqual(out.arrow.titles, ['Guide  \u00b7  Arrow & routes', 'Appearance  \u00b7  Arrow', 'Map  \u00b7  Guide & quests']);
 	assert.equal(out.arrow.title, 'Search');
 	assert.equal(out.arrow.sub, `${out.arrow.count} settings match`);
@@ -295,14 +295,14 @@ test('search finds settings by label and help across pages, registered ones incl
 
 test('Reset page asks twice and resets only that page', () => {
 	const [out] = run(`
-		Polestar.Set("ui.compact", true)
-		Polestar.Set("nav.arrowScale", 1.5)
+		SendaFH.Set("ui.compact", true)
+		SendaFH.Set("nav.arrowScale", 1.5)
 		UI.ShowOptions("guide")
 		local b = footerButton("Reset page")
 		b:Click()
-		local armed = { b.Label:GetText(), Polestar.Get("ui.compact") }
+		local armed = { b.Label:GetText(), SendaFH.Get("ui.compact") }
 		b:Click()
-		emit({ armed = armed, compact = Polestar.Get("ui.compact"), arrow = Polestar.Get("nav.arrowScale") })`);
+		emit({ armed = armed, compact = SendaFH.Get("ui.compact"), arrow = SendaFH.Get("nav.arrowScale") })`);
 	assert.deepEqual(out.armed, ['Click again to confirm', true]);
 	assert.equal(out.compact, false);
 	assert.equal(out.arrow, 1.5, 'the arrow\'s look is on Appearance, not reset with Guide');
@@ -312,8 +312,8 @@ test('a tab whose module is not loaded is left out; a page with nothing at all s
 	const [out] = run(`
 		UI.ShowOptions("navigation")
 		local tabs = {}
-		for _, b in ipairs(PolestarOptions.tabButtons) do if b:IsShown() then tabs[#tabs + 1] = b.Label:GetText() end end
-		local landed = PolestarOptions.Title:GetText()
+		for _, b in ipairs(SendaFHOptions.tabButtons) do if b:IsShown() then tabs[#tabs + 1] = b.Label:GetText() end end
+		local landed = SendaFHOptions.Title:GetText()
 		UI.ShowOptions("discovery")
 		emit({ tabs = tabs, landed = landed, empty = O.view.empty, controls = (function() local n = 0 for _ in pairs(O.Controls("discovery")) do n = n + 1 end return n end)() })`, { install: '{ noNav = true }' });
 	assert.equal(out.landed, 'Guide');
@@ -326,12 +326,12 @@ test('Recorder page: not installed, then live counts and a stop control', () => 
 	const [missing] = run(`
 		UI.ShowOptions("recorder")
 		emit({ text = O.view.Refresh and select(1, (function() for _, r in ipairs({ O.view:GetRegions() }) do if r.text and r.text:find("not loaded") then return r.text end end end)()) })`);
-	assert.match(missing.text, /The Polestar Recorder addon is not loaded/);
+	assert.match(missing.text, /The SendaFH Recorder addon is not loaded/);
 	const [out] = run(`
-		stub.addonsLoaded.Polestar_Recorder = true
-		PolestarRecorderDB = { enabled = true, current = "b", sessions = { a = { events = {} }, b = { char = { name = "Testchar" }, events = { {}, {}, {} } } } }
+		stub.addonsLoaded.SendaFH_Recorder = true
+		SendaFHRecorderDB = { enabled = true, current = "b", sessions = { a = { events = {} }, b = { char = { name = "Testchar" }, events = { {}, {}, {} } } } }
 		local sent = {}
-		SlashCmdList.POLESTARREC = function(arg) sent[#sent + 1] = arg; if arg == "off" then PolestarRecorderDB.enabled = false end end
+		SlashCmdList.SENDAFHREC = function(arg) sent[#sent + 1] = arg; if arg == "off" then SendaFHRecorderDB.enabled = false end end
 		UI.ShowOptions("recorder")
 		local values = {}
 		for _, f in ipairs({ O.view:GetChildren() }) do if rawget(f, "Value") and f:IsShown() then values[f.Label:GetText()] = f.Value:GetText() end end
@@ -346,15 +346,15 @@ test('Recorder page: not installed, then live counts and a stop control', () => 
 
 test('About: Reset all settings asks twice; Reset positions clears saved positions', () => {
 	const [out] = run(`
-		Polestar.Set("ui.scale", 1.4)
-		Polestar.Set("ui.pos", { 10, 20 })
+		SendaFH.Set("ui.scale", 1.4)
+		SendaFH.Set("ui.pos", { 10, 20 })
 		UI.ShowOptions("about")
 		local reset = O.view.ResetAll
 		reset:Click()
-		local after1 = { Polestar.Get("ui.scale"), reset.Title:GetText() }
+		local after1 = { SendaFH.Get("ui.scale"), reset.Title:GetText() }
 		reset:Click()
 		O.ResetPositions()
-		emit({ after1 = after1, after2 = Polestar.Get("ui.scale"), pos = Polestar.Get("ui.pos") or false, arrow = lastCall("ResetArrowPosition") })`);
+		emit({ after1 = after1, after2 = SendaFH.Get("ui.scale"), pos = SendaFH.Get("ui.pos") or false, arrow = lastCall("ResetArrowPosition") })`);
 	assert.deepEqual(out.after1, [1.4, 'Click again to confirm']);
 	assert.equal(out.after2, 1);
 	assert.equal(out.pos, false);
@@ -371,24 +371,24 @@ test('Appearance: every look control is searchable; menu scale applies when the 
 		table.sort(keys)
 		local s = O.Controls("appearance", "Windows")["ui.menuScale"]
 		stub.RunScript(s.Slider, "OnValueChanged", 1.2, true)
-		local during = { PolestarOptions:GetScale(), s.Value:GetText() }
+		local during = { SendaFHOptions:GetScale(), s.Value:GetText() }
 		stub.RunScript(s.Slider, "OnMouseUp")
-		local after = PolestarOptions:GetScale()
+		local after = SendaFHOptions:GetScale()
 		O.Select("appearance", "Colour & type")
-		Polestar.Set("ui.brightness", 0.3)
+		SendaFH.Set("ui.brightness", 0.3)
 		local bright = look["ui.brightness"].Value:GetText()
 		look["ui.brightness"]:Click("RightButton")
 		look["ui.scheme"].Button:Click()
 		local choices = {}
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() then choices[#choices + 1] = r.Text:GetText() end end
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Graphite" then r:Click() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() then choices[#choices + 1] = r.Text:GetText() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Graphite" then r:Click() end end
 		local found = {}
 		for _, q in ipairs({ "colour scheme", "accent", "background colour", "brightness", "background opacity", "font", "menu scale" }) do
 			local _, n = O.Search(q)
 			found[q] = n
 		end
-		emit({ keys = keys, during = during, after = after, stored = Polestar.Get("ui.menuScale"), bright = bright,
-			reset = Polestar.Get("ui.brightness"), choices = choices, scheme = Polestar.Get("ui.scheme"),
+		emit({ keys = keys, during = during, after = after, stored = SendaFH.Get("ui.menuScale"), bright = bright,
+			reset = SendaFH.Get("ui.brightness"), choices = choices, scheme = SendaFH.Get("ui.scheme"),
 			bgNote = look["ui.bgColor"].Note:GetText(), found = found })`);
 	assert.ok(!out.keys.includes('ui.matchAccent') && !out.keys.includes('ui.matchFont'), 'without EllesmereUI its follow toggles are left out');
 	assert.deepEqual(out.during, [1, '120%']);
@@ -396,7 +396,7 @@ test('Appearance: every look control is searchable; menu scale applies when the 
 	assert.equal(out.stored, 1.2);
 	assert.equal(out.bright, '+30%');
 	assert.equal(out.reset, 0, 'right-click resets');
-	assert.deepEqual(out.choices, ['Dusk', 'Night', 'Graphite']);
+	assert.deepEqual(out.choices, ['Hispano', 'Dusk', 'Night', 'Graphite']);
 	assert.equal(out.scheme, 'graphite');
 	assert.equal(out.bgNote, 'Graphite', 'the swatch names the scheme its colour comes from');
 	for (const [q, n] of Object.entries(out.found)) assert.ok(n >= 1, `search finds "${q}"`);
@@ -409,10 +409,10 @@ test('Appearance: every look control is searchable; menu scale applies when the 
 // same shell.
 test('the sidebar page list never reaches the version line: it scrolls, the selected page in view', () => {
 	const [out] = run(`
-		local W, SH = Polestar.Widgets, Polestar.Widgets.SHELL
-		Polestar.RegisterDefaults("many", { on = true })
+		local W, SH = SendaFH.Widgets, SendaFH.Widgets.SHELL
+		SendaFH.RegisterDefaults("many", { on = true })
 		for i = 1, 14 do
-			Polestar.RegisterOptions({ page = "Module " .. i, order = 60 + i, controls = { { kind = "toggle", key = "many.on", label = "On" } } })
+			SendaFH.RegisterOptions({ page = "Module " .. i, order = 60 + i, controls = { { kind = "toggle", key = "many.on", label = "On" } } })
 		end
 		local function measure(F)
 			local side = F:GetHeight() - 2
@@ -434,12 +434,12 @@ test('the sidebar page list never reaches the version line: it scrolls, the sele
 		local out = {}
 		for _, font in ipairs({ "game", "inter" }) do
 			for _, scale in ipairs({ 0.7, 1, 1.4 }) do
-				Polestar.Set("ui.font", font)
-				Polestar.Set("ui.menuScale", scale)
+				SendaFH.Set("ui.font", font)
+				SendaFH.Set("ui.menuScale", scale)
 				UI.ShowOptions("about")
-				out[#out + 1] = measure(PolestarOptions)
+				out[#out + 1] = measure(SendaFHOptions)
 				UI.ShowOptions("guide")
-				out[#out + 1] = measure(PolestarOptions)
+				out[#out + 1] = measure(SendaFHOptions)
 			end
 		end
 		-- The hub: a section whose index holds thirty entries, the last selected.
@@ -449,7 +449,7 @@ test('the sidebar page list never reaches the version line: it scrolls, the sele
 			build = function(parent) end, render = function() end })
 		UI.ShowPicker()
 		UI.Picker.ShowSection("Many")
-		out[#out + 1] = measure(PolestarPicker)
+		out[#out + 1] = measure(SendaFHPicker)
 		emit(out)`);
 	for (const [i, m] of out.entries()) {
 		assert.ok(m.floor <= m.foot, `case ${i}: the list ends at ${m.floor}, the version starts at ${m.foot}`);
@@ -465,14 +465,14 @@ test('the sidebar page list never reaches the version line: it scrolls, the sele
 // house look.
 test('window border, band and shadow repaint every window live; right-click restores each', () => {
 	const [out] = run(`
-		local T = Polestar.Theme
+		local T = SendaFH.Theme
 		uistub.openTabs({ { uistub.elwynn, 3 } }, 1)
 		UI.ShowOptions("appearance")
 		O.Select("appearance", "Windows")
 		local c = O.Controls("appearance", "Windows")
-		local GF = PolestarGuideFrame
-		local wins = { options = PolestarOptions, guide = GF }
-		local bands = { options = PolestarOptions.Band, guide = Polestar.UI.GuideFrame.parts.band }
+		local GF = SendaFHGuideFrame
+		local wins = { options = SendaFHOptions, guide = GF }
+		local bands = { options = SendaFHOptions.Band, guide = SendaFH.UI.GuideFrame.parts.band }
 		local function look()
 			local o = {}
 			for name, f in pairs(wins) do
@@ -487,24 +487,25 @@ test('window border, band and shadow repaint every window live; right-click rest
 		c["ui.border"]:Click(); out.noBorder = look(); c["ui.border"]:Click()
 		c["ui.borderAccent"]:Click(); out.accentBorder = look()
 		stub.RunScript(c["ui.borderSize"].Slider, "OnValueChanged", 3, true); out.thick = look()
-		c["ui.band"]:Click(); c["ui.shadow"]:Click(); out.bare = look()
+		c["ui.band"]:Click(); out.withBand = look(); c["ui.band"]:Click(); c["ui.shadow"]:Click(); out.bare = look()
 		c["ui.borderColor"]:Click("LeftButton")
 		ColorPickerFrame.GetColorRGB = function() return 0.2, 0.9, 0.4 end
 		ColorPickerFrame.info.swatchFunc()
-		out.own = { look = look(), accentOff = Polestar.Get("ui.borderAccent") }
+		out.own = { look = look(), accentOff = SendaFH.Get("ui.borderAccent") }
 		for _, k in ipairs({ "ui.borderColor", "ui.borderSize", "ui.band", "ui.shadow" }) do c[k]:Click("RightButton") end
 		out.reset = look()
 		emit(out)`);
 	const round = (c) => c.map((v) => Math.round(v * 1000) / 1000);
 	for (const w of ['options', 'guide']) {
-		assert.deepEqual({ ...out.house[w], colour: round(out.house[w].colour) }, { border: true, colour: round(out.hairline), px: 1, band: 1, shadow: true }, `${w}: the house look`);
+		assert.deepEqual({ ...out.house[w], colour: round(out.house[w].colour) }, { border: true, colour: round(out.hairline), px: 1, band: 0, shadow: true }, `${w}: the house look`);
 		assert.equal(out.noBorder[w].border, false, `${w}: border off`);
 		assert.deepEqual(round(out.accentBorder[w].colour), round([...out.accent, 0.8]), `${w}: accent border`);
 		assert.equal(out.thick[w].px, 3, `${w}: 3px border`);
+		assert.equal(out.withBand[w].band, 1, `${w}: band on`);
 		assert.equal(out.bare[w].band, 0, `${w}: band off`);
 		assert.equal(out.bare[w].shadow, false, `${w}: shadow off`);
 		assert.deepEqual(round(out.own.look[w].colour), [0.2, 0.9, 0.4, 1], `${w}: own border colour`);
-		assert.deepEqual({ ...out.reset[w], colour: round(out.reset[w].colour) }, { border: true, colour: round(out.hairline), px: 1, band: 1, shadow: true }, `${w}: right-click restored the house look`);
+		assert.deepEqual({ ...out.reset[w], colour: round(out.reset[w].colour) }, { border: true, colour: round(out.hairline), px: 1, band: 0, shadow: true }, `${w}: right-click restored the house look`);
 	}
 	assert.equal(out.own.accentOff, false, 'picking an own border colour turns the accent border off');
 });
@@ -512,11 +513,11 @@ test('window border, band and shadow repaint every window live; right-click rest
 test('a Blizzard Settings category opens the options window', () => {
 	const [out] = run(`
 		local cat
-		for _, c in ipairs(Settings.categories) do if c.name == "Polestar" then cat = c end end
+		for _, c in ipairs(Settings.categories) do if c.name == "SendaFH" then cat = c end end
 		local open
-		for _, child in ipairs(cat.frame.children) do if type(child.Label) == "table" and child.Label:GetText() == "Open Polestar settings" then open = child end end
+		for _, child in ipairs(cat.frame.children) do if type(child.Label) == "table" and child.Label:GetText() == "Open SendaFH settings" then open = child end end
 		open:Click()
-		emit({ registered = cat ~= nil, opened = PolestarOptions:IsShown() })`);
+		emit({ registered = cat ~= nil, opened = SendaFHOptions:IsShown() })`);
 	assert.deepEqual(out, { registered: true, opened: true });
 });
 
@@ -526,16 +527,16 @@ test('in combat the Settings canvas button leaves the protected game panel alone
 		SettingsPanel = CreateFrame("Frame", "SettingsPanel", UIParent)
 		HideUIPanel = function(f) hidden = hidden + 1; f:Hide() end
 		local cat
-		for _, c in ipairs(Settings.categories) do if c.name == "Polestar" then cat = c end end
+		for _, c in ipairs(Settings.categories) do if c.name == "SendaFH" then cat = c end end
 		local open
-		for _, child in ipairs(cat.frame.children) do if type(child.Label) == "table" and child.Label:GetText() == "Open Polestar settings" then open = child end end
+		for _, child in ipairs(cat.frame.children) do if type(child.Label) == "table" and child.Label:GetText() == "Open SendaFH settings" then open = child end end
 		stub.inCombat = true
 		open:Click()
-		local inCombat = { hidden = hidden, opened = PolestarOptions:IsShown(), hint = #stub.messages > 0 }
-		PolestarOptions:Hide()
+		local inCombat = { hidden = hidden, opened = SendaFHOptions:IsShown(), hint = #stub.messages > 0 }
+		SendaFHOptions:Hide()
 		stub.inCombat = false
 		open:Click()
-		emit({ inCombat = inCombat, hidden = hidden, opened = PolestarOptions:IsShown() })`);
+		emit({ inCombat = inCombat, hidden = hidden, opened = SendaFHOptions:IsShown() })`);
 	assert.deepEqual(out.inCombat, { hidden: 0, opened: true, hint: true });
 	assert.equal(out.hidden, 1);
 	assert.equal(out.opened, true);
@@ -544,8 +545,8 @@ test('in combat the Settings canvas button leaves the protected game panel alone
 test('hiding a window mid-drag on its scroll bar ends the drag', () => {
 	const [out] = run(`
 		UI.ShowOptions("navigation")
-		local bar = PolestarOptions.Scroll.Bar
-		Polestar.Widgets.SetScrollContent(PolestarOptions.Scroll, 2000, 400)
+		local bar = SendaFHOptions.Scroll.Bar
+		SendaFH.Widgets.SetScrollContent(SendaFHOptions.Scroll, 2000, 400)
 		stub.RunScript(bar, "OnMouseDown", "LeftButton")
 		local dragging = bar:IsShown() and bar:GetScript("OnUpdate") ~= nil
 		-- The client fires OnHide on the bar when its window hides (Escape);
@@ -568,22 +569,22 @@ test('the settings carry the hub rail: a section goes back to the hub, in the sa
 		local function place(f) local p, rel, rp, x, y = f:GetPoint(1) return { p, rel == UIParent, rp, x, y } end
 		local function railButton(f, key) for _, b in ipairs(f.railButtons) do if b:IsShown() and b.psKey == key then return b end end end
 		UI.ShowPicker()
-		local hub, settings = PolestarPicker, nil
+		local hub, settings = SendaFHPicker, nil
 		hub.x, hub.y = 200, 100
 		railButton(hub, "Options"):Click()
-		settings = PolestarOptions
+		settings = SendaFHOptions
 		local opened = { shown = settings:IsShown(), hubHidden = not hub:IsShown(), rail = rail(settings), at = place(settings) }
 		settings.x, settings.y = 300, 50
 		railButton(settings, "Guides"):Click()
-		emit({ opened = opened, back = { shown = hub:IsShown(), settingsHidden = not settings:IsShown(), at = place(hub),
+		emit({ hubHeight = hub:GetHeight(), opened = opened, back = { shown = hub:IsShown(), settingsHidden = not settings:IsShown(), at = place(hub),
 			section = UI.Picker.ActiveSection() and UI.Picker.ActiveSection().key or "Guides" } })`);
 	assert.equal(out.opened.shown, true);
 	assert.equal(out.opened.hubHidden, true);
 	assert.ok(out.opened.rail.includes('Guides') && out.opened.rail.includes('Options*'), `rail: ${out.opened.rail}`);
-	assert.deepEqual(out.opened.at, ['TOPLEFT', true, 'BOTTOMLEFT', 200, 100 + 680]);
+	assert.deepEqual(out.opened.at, ['TOPLEFT', true, 'BOTTOMLEFT', 200, 100 + out.hubHeight]);
 	assert.equal(out.back.shown, true);
 	assert.equal(out.back.settingsHidden, true);
-	assert.deepEqual(out.back.at, ['TOPLEFT', true, 'BOTTOMLEFT', 300, 50 + 680]);
+	assert.deepEqual(out.back.at, ['TOPLEFT', true, 'BOTTOMLEFT', 300, 50 + out.hubHeight]);
 	assert.equal(out.back.section, 'Guides');
 });
 
@@ -591,16 +592,16 @@ test('the settings carry the hub rail: a section goes back to the hub, in the sa
 // the rest cut with an ellipsis; the hub's narrower column bounds it too.
 test('a shell subtitle wraps to two lines within the main column and cuts the rest', () => {
 	const [out] = run(`
-		local W = Polestar.Widgets
+		local W = SendaFH.Widgets
 		UI.ShowOptions("appearance")
-		local f = PolestarOptions
+		local f = SendaFHOptions
 		local s = f.Subtitle
 		local page = { text = s:GetText(), width = s:GetWidth(), lines = s:GetNumLines(), wrap = s:GetWordWrap(), height = s:GetHeight() }
 		local long = string.rep("A long subtitle that runs on. ", 12)
 		W.ShellTitle(f, "Title", long)
 		local cut = { text = s:GetText(), lines = s:GetNumLines() }
 		UI.ShowPicker()
-		emit({ page = page, cut = cut, bodyWidth = f.BodyWidth, hub = { width = PolestarPicker.Subtitle:GetWidth(), bodyWidth = PolestarPicker.BodyWidth } })`);
+		emit({ page = page, cut = cut, bodyWidth = f.BodyWidth, hub = { width = SendaFHPicker.Subtitle:GetWidth(), bodyWidth = SendaFHPicker.BodyWidth } })`);
 	assert.match(out.page.text, /^Colours, type, window frames and the arrow\./);
 	assert.equal(out.page.wrap, true);
 	assert.equal(out.page.width, out.bodyWidth);
@@ -618,10 +619,10 @@ test('Distances: the arrow row picks yards or metres; right-click restores yards
 		local row = O.Controls("guide", "Arrow & routes")["nav.distanceUnit"]
 		local before = row.Button.Label:GetText()
 		row.Button:Click()
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Metres" then r:Click() end end
-		local picked, label = Polestar.Get("nav.distanceUnit"), row.Button.Label:GetText()
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Metres" then r:Click() end end
+		local picked, label = SendaFH.Get("nav.distanceUnit"), row.Button.Label:GetText()
 		row:Click("RightButton")
-		emit({ before = before, picked = picked, label = label, reset = Polestar.Get("nav.distanceUnit") })`,
-		{ between: 'Polestar.RegisterDefaults("nav", { distanceUnit = "yards" })' });
+		emit({ before = before, picked = picked, label = label, reset = SendaFH.Get("nav.distanceUnit") })`,
+		{ between: 'SendaFH.RegisterDefaults("nav", { distanceUnit = "yards" })' });
 	assert.deepEqual(out, { before: "Yards (the game's unit)", picked: 'metres', label: 'Metres', reset: 'yards' });
 });

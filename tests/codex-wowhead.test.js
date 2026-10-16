@@ -69,7 +69,7 @@ function fakeWowhead(ids, calls, { status = () => 200 } = {}) {
 }
 
 test('fetchLists splits a range past the cap, caches the ranges and refetches them after max-age', async () => {
-	const sourcesDir = tmpdir('polestar-wh-lists-');
+	const sourcesDir = tmpdir('sendafh-wh-lists-');
 	// 1,500 NPCs in the first range (past the cap) and one above LIST_TOP.
 	const ids = [...Array.from({ length: 1500 }, (_, i) => i + 1), 400000];
 	const calls = [];
@@ -97,7 +97,7 @@ test('fetchLists splits a range past the cap, caches the ranges and refetches th
 });
 
 test('a failed list range keeps the cached one; a type never fully listed is incomplete', async () => {
-	const sourcesDir = tmpdir('polestar-wh-lists-');
+	const sourcesDir = tmpdir('sendafh-wh-lists-');
 	const ok = politeClient({ fetchImpl: fakeWowhead([5], []), delayMs: 0 });
 	const first = await fetchLists({ sourcesDir, client: ok, now: T0, types: ['npc'] });
 	assert.deepEqual([first.failed, Object.keys(first.rows.npc)], [[], ['5']], 'a range past the last id (filter ignored, the whole list back) holds nothing');
@@ -134,7 +134,7 @@ function writePage(sourcesDir, type, id, facts) {
 }
 
 test('planPages refetches what is missing, older, changed, or stale and Forever-specific or a gap', () => {
-	const sourcesDir = tmpdir('polestar-wh-plan-');
+	const sourcesDir = tmpdir('sendafh-wh-plan-');
 	const old = new Date(T0 - 10 * DAY).toISOString();
 	const fresh = new Date(T0 - DAY).toISOString();
 	const row = (id, status = 'unchanged', extra = {}) => ({ id, name: `Npc ${id}`, location: [], level: [10, 10], classification: null, boss: false, react: null, kind: 7, change: { status, lines: [] }, ...extra });
@@ -161,7 +161,7 @@ test('planPages refetches what is missing, older, changed, or stale and Forever-
 });
 
 test('fetchEntities fetches the plan, stores the list row, honours --limit and dry runs', async () => {
-	const sourcesDir = tmpdir('polestar-wh-fetch-');
+	const sourcesDir = tmpdir('sendafh-wh-fetch-');
 	const calls = [];
 	const client = politeClient({ fetchImpl: fakeWowhead([], calls), delayMs: 0 });
 	const rows = { 1: { id: 1, name: 'Npc 1', change: { status: 'new', lines: [] } } };
@@ -175,7 +175,7 @@ test('fetchEntities fetches the plan, stores the list row, honours --limit and d
 });
 
 test('loadWowhead keeps the list rows apart from the pages (listed)', () => {
-	const sourcesDir = tmpdir('polestar-wh-load-');
+	const sourcesDir = tmpdir('sendafh-wh-load-');
 	writePage(sourcesDir, 'npc', 5, { name: 'Paged', level: [3, 3], classification: 'rare', boss: false, location: [1], spawns: { 1: [[1, 2]] }, drops: [] });
 	const file = path.join(sourcesDir, 'wowhead', 'codex', 'lists', 'npc.json');
 	fs.mkdirSync(path.dirname(file), { recursive: true });

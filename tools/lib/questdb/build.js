@@ -1,11 +1,11 @@
 'use strict';
 // `questdb build`: data/forever (quests, npcs, objects, items, map-frames)
-// -> the load-on-demand addon addon/Polestar_QuestDB: a compact quest
-// database for Polestar's quest markers, available-quest markers, tooltips
-// and nameplate icons (runtime: addon/Polestar/Quests). Same inputs give
+// -> the load-on-demand addon addon/SendaFH_QuestDB: a compact quest
+// database for SendaFH's quest markers, available-quest markers, tooltips
+// and nameplate icons (runtime: addon/SendaFH/Quests). Same inputs give
 // byte-identical files.
 //
-// Lua record layouts (positional, read by addon/Polestar/Quests/QuestDB.lua):
+// Lua record layouts (positional, read by addon/SendaFH/Quests/QuestDB.lua):
 //
 //   quests[id]  = { title, level, minLevel, races, classes, faction, start, finish,
 //                   startItem, pre, excl, objectives, zone, events, skill, holiday,
@@ -54,7 +54,7 @@ const DEFAULTS = {
 };
 
 function readJson(file) {
-	if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/polestar.js data build)`);
+	if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/sendafh.js data build)`);
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
@@ -281,7 +281,7 @@ function luaVal(v) {
 const HEADER = header('lua', 'questdb build', 'data/forever');
 
 function dataFile(kind, records, comment) {
-	const lines = [HEADER, `-- ${comment}`, '', 'local Q = Polestar and Polestar.QuestDB', 'if not (Q and Q.AddData) then return end', 'local add = Q.AddData', ''];
+	const lines = [HEADER, `-- ${comment}`, '', 'local Q = SendaFH and SendaFH.QuestDB', 'if not (Q and Q.AddData) then return end', 'local add = Q.AddData', ''];
 	const entries = [...records.entries()];
 	for (let i = 0; i < entries.length; i += CHUNK) {
 		lines.push(`add(${luaStr(kind)}, {`);
@@ -301,8 +301,8 @@ function version() {
 }
 
 function licenseText(meta) {
-	const out = ['Polestar quest database: third-party notices', '============================================', '',
-		'The data in this folder was generated for Polestar from the reference data', 'sources below (quest, NPC, object and item facts, spawn positions, map frames).', ''];
+	const out = ['SendaFH quest database: third-party notices', '============================================', '',
+		'The data in this folder was generated for SendaFH from the reference data', 'sources below (quest, NPC, object and item facts, spawn positions, map frames).', ''];
 	for (const s of meta.sources || []) {
 		const title = s.name || 'source';
 		out.push(title, '-'.repeat(title.length));
@@ -319,22 +319,22 @@ const DATA_FILES = ['MapFrames.lua', 'Quests.lua', 'Npcs.lua', 'Objects.lua', 'I
 
 function emitFiles(db, meta) {
 	const files = {};
-	files['Polestar_QuestDB.toc'] = [
+	files['SendaFH_QuestDB.toc'] = [
 		'## Interface: 16001',
-		'## Title: Polestar Quest Database',
-		'## Notes: Quest, NPC, object and item data for Polestar\'s quest markers and tooltips. Loaded on demand.',
-		'## Author: Polestar',
+		'## Title: SendaFH Quest Database',
+		'## Notes: Quest, NPC, object and item data for SendaFH\'s quest markers and tooltips. Loaded on demand.',
+		'## Author: SendaFH',
 		`## Version: ${version()}`,
 		'## Category: Quests',
 		'## LoadOnDemand: 1',
-		'## Dependencies: Polestar',
+		'## Dependencies: SendaFH',
 		'',
 		...DATA_FILES,
 		'',
 	].join('\n');
-	const frameLines = [HEADER, '-- Era map frames for every map this database places points on.', '', 'local Q = Polestar and Polestar.QuestDB',
+	const frameLines = [HEADER, '-- Era map frames for every map this database places points on.', '', 'local Q = SendaFH and SendaFH.QuestDB',
 		'if not (Q and Q.AddData) then return end', '', `Q.AddData("meta", ${luaVal({ schema: SCHEMA, quests: db.quests.size, npcs: db.npcs.size, objects: db.objects.size, items: db.items.size })})`, ''];
-	frameLines.push('if Polestar.RegisterMapFrames then', '\tPolestar.RegisterMapFrames({ era = {');
+	frameLines.push('if SendaFH.RegisterMapFrames then', '\tSendaFH.RegisterMapFrames({ era = {');
 	for (const map of Object.keys(db.mapFrames).map(Number).sort(byNum)) {
 		const f = db.mapFrames[map];
 		frameLines.push(`\t\t[${map}] = ${luaVal({ c: f.c, left: f.left, right: f.right, top: f.top, bottom: f.bottom })},`);

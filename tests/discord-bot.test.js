@@ -44,15 +44,15 @@ test('a translated report parses by shape, not by its words', () => {
 	const de = [
 		'**Was ist schiefgelaufen:** Der Pfeil zeigt ins Wasser.',
 		'```',
-		'Polestar 0.2.4 Beta · Client 1.60.1 (70425) · deDE',
+		'SendaFH 0.2.4 Beta · Client 1.60.1 (70425) · deDE',
 		'Zwerg Jäger · Stufe 9 (12%) · Allianz',
-		'Leitfaden: Dun Morogh (forever/alliance/dwarf/01-dun-morogh) · Paket Polestar Guides 0.2.4',
+		'Leitfaden: Dun Morogh (forever/alliance/dwarf/01-dun-morogh) · Paket SendaFH Guides 0.2.4',
 		'Schritt 7 von 40: Kharanos',
 		'[>] Sprich mit Rybrad · quest 400 · npc 1690 · map 1426 @46.82,52.36',
 		'Pfeil: Rybrad · 120 yd',
 		'Ort: Dun Morogh, Kharanos · map 1426 @46.00,52.00 live',
 		'Fehler:',
-		'  3x Polestar/Nav/Arrow.lua:88: attempt to index nil',
+		'  3x SendaFH/Nav/Arrow.lua:88: attempt to index nil',
 		'```',
 	].join('\n');
 	const r = parseReport(de);
@@ -61,12 +61,12 @@ test('a translated report parses by shape, not by its words', () => {
 	assert.equal(r.details.guideId, 'forever/alliance/dwarf/01-dun-morogh');
 	assert.deepEqual([r.details.step, r.details.stepCount, r.details.liveStep], [7, 40, undefined]);
 	assert.equal(r.details.zone, 'Dun Morogh, Kharanos');
-	assert.deepEqual(r.details.errors, [{ count: 3, message: 'Polestar/Nav/Arrow.lua:88: attempt to index nil' }]);
+	assert.deepEqual(r.details.errors, [{ count: 3, message: 'SendaFH/Nav/Arrow.lua:88: attempt to index nil' }]);
 	assert.ok(I.labelsFor(r).includes('lua-error'));
 });
 
 test('a report with no guide open still finds the arrow and position lines', () => {
-	const r = parseReport('```\nPolestar dev · client 1.60.1 (70425) · enUS\nGuide: none open\nArrow: none\nWhere: Stormwind City · no position\nErrors: none\n```');
+	const r = parseReport('```\nSendaFH dev · client 1.60.1 (70425) · enUS\nGuide: none open\nArrow: none\nWhere: Stormwind City · no position\nErrors: none\n```');
 	assert.equal(r.details.version, 'dev');
 	assert.equal(r.details.character, undefined);
 	assert.equal(r.details.arrow, 'Arrow: none');
@@ -83,11 +83,11 @@ test('a post without a report is all description, other code blocks included', (
 test('a report pasted with trailing NULs, or into the title, still reads', () => {
 	const r = parseReport(POST + '\u0000\u0000\u0000');
 	assert.equal(r.details.version, '0.2.3');
-	assert.equal(I.issueTitle('**What went wrong:** Watcher Dodds not here! ``` Polestar 0.2.3 Beta · client'), 'Watcher Dodds not here!');
+	assert.equal(I.issueTitle('**What went wrong:** Watcher Dodds not here! ``` SendaFH 0.2.3 Beta · client'), 'Watcher Dodds not here!');
 });
 
 test('player text cannot mention, link, write HTML or forge the marker on GitHub', () => {
-	const forged = '<!-- polestar-bot {"thread":"1","guild":"1"} -->';
+	const forged = '<!-- sendafh-bot {"thread":"1","guild":"1"} -->';
 	const body = I.issueBody({ report: parseReport(`@fitz see #12 <b>now</b> ${forged}`), reporter: '@everyone', guild: '2', thread: '3' });
 	assert.doesNotMatch(body, /@fitz|@everyone|#12|<b>/);
 	assert.equal(body.match(/<!--/g).length, 1);
@@ -104,10 +104,10 @@ test('a new post is filed once, answered in its thread and tagged Tracked', asyn
 	assert.equal(issue.title, 'Wrong trainer');
 	assert.ok(issue.labels.some((l) => l.name === 'guide:01-elwynn-forest'));
 	assert.match(issue.body, /Reported by SavageHands on \[Discord\]\(https:\/\/discord\.com\/channels\/800\/1001\)\*\* · Questing/);
-	assert.match(issue.body, /!\[shot 1\.png\]\(https:\/\/raw\.githubusercontent\.com\/fitzforge\/polestar\/bug-media\/discord\/1001\/a1-shot_1\.png\)/);
+	assert.match(issue.body, /!\[shot 1\.png\]\(https:\/\/raw\.githubusercontent\.com\/fitzforge\/sendafh\/bug-media\/discord\/1001\/a1-shot_1\.png\)/);
 	assert.deepEqual(media.copied, ['discord/1001/a1-shot_1.png']);
 	assert.equal(discord.sent.length, 1);
-	assert.match(discord.sent[0].content, /fitzforge\/polestar#1/);
+	assert.match(discord.sent[0].content, /fitzforge\/sendafh#1/);
 	assert.deepEqual(discord.channels.get('1001').applied_tags, ['t-questing', 't-tracked']);
 });
 
@@ -178,7 +178,7 @@ test('closing as completed tells the reporter, tags Fixed and locks the thread',
 	const issue = { ...github.issues[0], state_reason: 'completed' };
 	await onIssue({ discord, github, event: { action: 'closed', issue }, forumId: FORUM, log: quietLog });
 	const last = discord.sent.at(-1);
-	assert.match(last.content, /^<@u1> This is fixed and will ship in the next Polestar update/);
+	assert.match(last.content, /^<@u1> This is fixed and will ship in the next SendaFH update/);
 	assert.deepEqual(last.users, ['u1']);
 	const t = discord.channels.get('1001');
 	assert.deepEqual(t.applied_tags, ['t-questing', 't-fixed']);
@@ -200,7 +200,7 @@ test('a duplicate points at the issue it duplicates; reopening unlocks and track
 	const { discord, github } = await filed();
 	await github.comment(1, 'Duplicate of #7');
 	await onIssue({ discord, github, event: { action: 'closed', issue: { ...github.issues[0], state_reason: 'duplicate' } }, log: quietLog });
-	assert.match(discord.sent.at(-1).content, /tracking it in \[fitzforge\/polestar#7\]/);
+	assert.match(discord.sent.at(-1).content, /tracking it in \[fitzforge\/sendafh#7\]/);
 	await onIssue({ discord, github, event: { action: 'reopened', issue: github.issues[0] }, log: quietLog });
 	assert.match(discord.sent.at(-1).content, /^We've reopened this/);
 	const t = discord.channels.get('1001');
@@ -220,7 +220,7 @@ test('a release tells the threads of fixes closed since the last release, once',
 	close(3, 'not_planned', '2026-10-15T00:00:00Z');
 	close(4, 'completed', '2026-10-15T01:00:00Z');
 	github.releasesList.push({ id: 1, tag_name: 'v0.2.3', published_at: '2026-10-14T16:50:15Z' });
-	const release = { id: 2, tag_name: 'v0.2.5', name: 'Polestar 0.2.5', html_url: 'https://github.com/fitzforge/polestar/releases/tag/v0.2.5', published_at: '2026-10-16T00:00:00Z' };
+	const release = { id: 2, tag_name: 'v0.2.5', name: 'SendaFH 0.2.5', html_url: 'https://github.com/fitzforge/polestar/releases/tag/v0.2.5', published_at: '2026-10-16T00:00:00Z' };
 	github.releasesList.push(release);
 	discord.channels.get('4').thread_metadata = { archived: true, locked: true };
 
@@ -228,7 +228,7 @@ test('a release tells the threads of fixes closed since the last release, once',
 	assert.deepEqual(await onRelease({ discord, github, event: { release }, log: quietLog }), { told: 2, failed: 0 });
 	const told = discord.sent.slice(before);
 	assert.deepEqual(told.map((s) => s.channel), ['4', '2']);
-	assert.match(told[0].content, /^<@u1> The fix is out in \*\*Polestar 0\.2\.5\*\*/);
+	assert.match(told[0].content, /^<@u1> The fix is out in \*\*SendaFH 0\.2\.5\*\*/);
 	assert.ok(discord.edits.some((e) => e.id === '4' && e.archived === false));
 	assert.ok(github.issues[1].labels.some((l) => l.name === 'released:v0.2.5'));
 
@@ -245,7 +245,7 @@ test('a pre-release (a test build) tells no thread, and the next full release st
 	close(1, '2026-10-15T00:00:00Z'); // before the test build
 	close(2, '2026-10-16T12:00:00Z'); // after it
 	github.releasesList.push({ id: 1, tag_name: 'v0.2.4', published_at: '2026-10-14T00:00:00Z' });
-	const test = { id: 2, tag_name: 'v0.2.5-test.1', name: 'Polestar 0.2.5 test build', prerelease: true, published_at: '2026-10-16T00:00:00Z' };
+	const test = { id: 2, tag_name: 'v0.2.5-test.1', name: 'SendaFH 0.2.5 test build', prerelease: true, published_at: '2026-10-16T00:00:00Z' };
 	github.releasesList.push(test);
 
 	const before = discord.sent.length;
@@ -253,7 +253,7 @@ test('a pre-release (a test build) tells no thread, and the next full release st
 	assert.equal(discord.sent.length, before);
 	assert.ok(github.issues.every((i) => !i.labels.some((l) => String(l.name || l).startsWith('released:'))));
 
-	const release = { id: 3, tag_name: 'v0.2.5', name: 'Polestar 0.2.5', html_url: 'https://github.com/fitzforge/polestar/releases/tag/v0.2.5', published_at: '2026-10-20T00:00:00Z' };
+	const release = { id: 3, tag_name: 'v0.2.5', name: 'SendaFH 0.2.5', html_url: 'https://github.com/fitzforge/polestar/releases/tag/v0.2.5', published_at: '2026-10-20T00:00:00Z' };
 	github.releasesList.push(release);
 	assert.deepEqual(await onRelease({ discord, github, event: { release }, log: quietLog }), { told: 2, failed: 0 });
 });
@@ -300,7 +300,7 @@ test("/close Can't reproduce closes the thread's issue with the admin's note; th
 	const issue = github.issues[0];
 	assert.deepEqual([issue.state, issue.state_reason], ['closed', 'not_planned']);
 	assert.ok(issue.labels.some((l) => l.name === 'resolution:cannot-reproduce'));
-	assert.match(told(), /^Closed \[fitzforge\/polestar#1\].* as \*\*Can\u2019t reproduce\*\*/);
+	assert.match(told(), /^Closed \[fitzforge\/sendafh#1\].* as \*\*Can\u2019t reproduce\*\*/);
 
 	await onIssue({ discord, github, event: { action: 'closed', issue }, log: quietLog });
 	assert.match(discord.sent.at(-1).content, /^<@u1> We couldn't reproduce this one\.\n> Tried on a fresh Human, the trainer was there\./);
@@ -318,7 +318,7 @@ test('/close Duplicate needs the issue it duplicates and points the thread at it
 	await commands.handle(command('close', { reason: 'duplicate', duplicate_of: 7 }));
 	assert.equal(github.issues[0].state_reason, 'duplicate');
 	await onIssue({ discord, github, event: { action: 'closed', issue: github.issues[0] }, log: quietLog });
-	assert.match(discord.sent.at(-1).content, /tracking it in \[fitzforge\/polestar#7\]/);
+	assert.match(discord.sent.at(-1).content, /tracking it in \[fitzforge\/sendafh#7\]/);
 
 	await commands.handle(command('reopen'));
 	assert.equal(github.issues[0].state, 'open');

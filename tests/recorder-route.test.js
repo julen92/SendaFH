@@ -1,46 +1,46 @@
 'use strict';
-// Route telemetry in the recorder (addon/Polestar_Recorder/Route.lua): `step`
-// snapshots from Polestar's message bus, combat/AFK/revive events, and
-// running with Polestar absent, late or broken.
+// Route telemetry in the recorder (addon/SendaFH_Recorder/Route.lua): `step`
+// snapshots from SendaFH's message bus, combat/AFK/revive events, and
+// running with SendaFH absent, late or broken.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const REC = 'Polestar_Recorder';
+const REC = 'SendaFH_Recorder';
 
-// A stand-in for Polestar's bus and Engine (docs/ARCHITECTURE.md "Message bus",
-// "Tabs"): __fire(msg, ...) delivers a message; __polestar.guide/step is the
+// A stand-in for SendaFH's bus and Engine (docs/ARCHITECTURE.md "Message bus",
+// "Tabs"): __fire(msg, ...) delivers a message; __sendafh.guide/step is the
 // active tab.
-const FAKE_POLESTAR = `
-__polestar = {
+const FAKE_SENDAFH = `
+__sendafh = {
 	handlers = {},
 	guides = {
 		g1 = { id = "forever/alliance/human/01-elwynn", title = "Elwynn Forest", steps = { { title = "Deputy Willem" }, { title = "Kobold Camp" }, { title = "Wolves" } } },
 		g2 = { id = "professions/mining", title = "Mining 1-75", steps = { { title = "Learn Mining" } } },
 	},
 }
-__polestar.guide, __polestar.step = __polestar.guides.g1, 2
-function __installPolestar()
-	Polestar = {
+__sendafh.guide, __sendafh.step = __sendafh.guides.g1, 2
+function __installSendaFH()
+	SendaFH = {
 		On = function(msg, fn)
-			__polestar.handlers[msg] = __polestar.handlers[msg] or {}
-			table.insert(__polestar.handlers[msg], fn)
+			__sendafh.handlers[msg] = __sendafh.handlers[msg] or {}
+			table.insert(__sendafh.handlers[msg], fn)
 			return {}
 		end,
 		Engine = {
-			GetGuide = function() return __polestar.guide end,
-			GetStepIndex = function() return __polestar.step end,
+			GetGuide = function() return __sendafh.guide end,
+			GetStepIndex = function() return __sendafh.step end,
 		},
 	}
 end
 function __fire(msg, ...)
-	for _, fn in ipairs(__polestar.handlers[msg] or {}) do fn(...) end
+	for _, fn in ipairs(__sendafh.handlers[msg] or {}) do fn(...) end
 end
 `;
 
 const PRELUDE = `
-local function S() return PolestarRecorderDB.sessions[PolestarRecorderDB.current] end
+local function S() return SendaFHRecorderDB.sessions[SendaFHRecorderDB.current] end
 local function events(kind)
 	local out = {}
 	for _, e in ipairs(S().events) do
@@ -60,7 +60,7 @@ function run(script, opts = {}) {
 		addons: [REC],
 		login: true,
 		...opts,
-		before: FAKE_POLESTAR + (opts.before || ''),
+		before: FAKE_SENDAFH + (opts.before || ''),
 		script: PRELUDE + script,
 	}).emitted;
 }
@@ -70,24 +70,24 @@ test('step snapshots: at login, on every step change, on a tab switch (once), an
 		`
 		stub.world.xp, stub.world.money, stub.world.rested = 120, 4200, 800
 		stub.advance(5)
-		__polestar.step = 3
+		__sendafh.step = 3
 		__fire("STEP_CHANGED", 3)
 		stub.advance(5)
 		-- switching tabs fires GUIDE_CHANGED then STEP_CHANGED for the same state
-		__polestar.guide, __polestar.step = __polestar.guides.g2, 1
+		__sendafh.guide, __sendafh.step = __sendafh.guides.g2, 1
 		__fire("GUIDE_CHANGED", "professions/mining")
 		__fire("STEP_CHANGED", 1)
 		stub.advance(5)
 		stub.world.combat = true
-		__polestar.guide, __polestar.step = __polestar.guides.g1, 3
+		__sendafh.guide, __sendafh.step = __sendafh.guides.g1, 3
 		__fire("GUIDE_CHANGED", "forever/alliance/human/01-elwynn")
 		stub.world.combat = false
 		stub.advance(5)
-		__polestar.step = nil
+		__sendafh.step = nil
 		__fire("STEP_CHANGED", nil)
 		__fire("GUIDE_COMPLETED", "forever/alliance/human/01-elwynn")
 		emit(events("step"))`,
-		{ before: `__installPolestar(); stub.world.level, stub.world.xp = 3, 100; stub.moveTo(48.2, 41.9)` },
+		{ before: `__installSendaFH(); stub.world.level, stub.world.xp = 3, 100; stub.moveTo(48.2, 41.9)` },
 	);
 
 	const base = { v: 1, lvl: 3, xpMax: 400, map: 1429, x: 48.2, y: 41.9 };
@@ -109,7 +109,7 @@ test('step snapshots: at login, on every step change, on a tab switch (once), an
 });
 
 test('a /reload snapshots the current step again into the same session', () => {
-	const [first] = run(`emit(stub.serialize(PolestarRecorderDB))`, { before: '__installPolestar()' });
+	const [first] = run(`emit(stub.serialize(SendaFHRecorderDB))`, { before: '__installSendaFH()' });
 	const [out] = run(
 		`
 		stub.fire("PLAYER_LOGIN")
@@ -117,9 +117,9 @@ test('a /reload snapshots the current step again into the same session', () => {
 		local reasons = {}
 		for _, e in ipairs(events("step")) do reasons[#reasons + 1] = e.reason .. ":" .. e.step end
 		local n = 0
-		for _ in pairs(PolestarRecorderDB.sessions) do n = n + 1 end
+		for _ in pairs(SendaFHRecorderDB.sessions) do n = n + 1 end
 		emit({ reasons = reasons, sessions = n })`,
-		{ login: false, before: `__installPolestar(); stub.epoch = stub.epoch + 60`, saved: { [REC]: `PolestarRecorderDB = ${first}` } },
+		{ login: false, before: `__installSendaFH(); stub.epoch = stub.epoch + 60`, saved: { [REC]: `SendaFHRecorderDB = ${first}` } },
 	);
 	assert.deepEqual(out, { reasons: ['login:2', 'login:2'], sessions: 1 });
 });
@@ -155,17 +155,17 @@ test('combat, AFK and revive events', () => {
 	assert.deepEqual(out.revive, [{ e: 'revive', map: 1429, x: 41, y: 41 }]);
 });
 
-test('without Polestar nothing is snapshotted and nothing errors; a late or broken Polestar is handled', () => {
+test('without SendaFH nothing is snapshotted and nothing errors; a late or broken SendaFH is handled', () => {
 	const [absent] = run(`
 		stub.fire("PLAYER_REGEN_DISABLED")
 		emit({ steps = #events("step"), combat = #events("combat") })`);
 	assert.deepEqual(absent, { steps: 0, combat: 1 });
 
-	// Polestar loads after the recorder: attached on its ADDON_LOADED.
+	// SendaFH loads after the recorder: attached on its ADDON_LOADED.
 	const [late] = run(`
-		__installPolestar()
-		stub.addonLoaded("Polestar")
-		__polestar.step = 3
+		__installSendaFH()
+		stub.addonLoaded("SendaFH")
+		__sendafh.step = 3
 		__fire("STEP_CHANGED", 3)
 		local s = {}
 		for _, e in ipairs(events("step")) do s[#s + 1] = e.reason .. ":" .. e.step end
@@ -175,14 +175,14 @@ test('without Polestar nothing is snapshotted and nothing errors; a late or brok
 	// An Engine that errors or returns junk: snapshots carry what is known.
 	const [broken] = run(
 		`
-		Polestar.Engine.GetGuide = function() error("boom") end
+		SendaFH.Engine.GetGuide = function() error("boom") end
 		__fire("STEP_CHANGED", 2)
 		__fire("GUIDE_CHANGED", { id = "x/y" })
 		__fire("GUIDE_COMPLETED", nil)
 		local s = {}
 		for _, e in ipairs(events("step")) do s[#s + 1] = { e.reason, e.guide or false, e.step or false } end
 		emit(s)`,
-		{ before: '__installPolestar()' },
+		{ before: '__installSendaFH()' },
 	);
 	assert.deepEqual(broken, [
 		['login', 'forever/alliance/human/01-elwynn', 2],

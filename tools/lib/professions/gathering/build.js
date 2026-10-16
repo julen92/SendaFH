@@ -3,8 +3,8 @@
 // Fishing, Cooking, First Aid) from their specs (specs.js) and the reference
 // data:
 //
-//   node tools/polestar.js profession gathering build    # rewrite guides/forever/professions/<those>.guide
-//   node tools/polestar.js profession gathering check    # exit 1 when a guide is out of date
+//   node tools/sendafh.js profession gathering build    # rewrite guides/forever/professions/<those>.guide
+//   node tools/sendafh.js profession gathering check    # exit 1 when a guide is out of date
 //
 // For each band and each group of characters (starting area, continent, or
 // faction) the zones a group can use are ranked by expected skill-ups per

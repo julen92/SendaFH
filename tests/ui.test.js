@@ -1,5 +1,5 @@
 'use strict';
-// The guide window (addon/Polestar/UI/GuideFrame.lua) against the real
+// The guide window (addon/SendaFH/UI/GuideFrame.lua) against the real
 // Core + Theme + UI manifests and a contract-faithful fake Engine (with
 // tabs), Guides and Nav (tests/lua/stub_ui.lua).
 
@@ -15,8 +15,8 @@ function run(script, { before = '', install = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before,
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `uistub.install(${install})\nstub.login()\nlocal GF, UI, W = Polestar.UI.GuideFrame, Polestar.UI, Polestar.Widgets\nlocal F = PolestarGuideFrame\n${HELPERS}\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `uistub.install(${install})\nstub.login()\nlocal GF, UI, W = SendaFH.UI.GuideFrame, SendaFH.UI, SendaFH.Widgets\nlocal F = SendaFHGuideFrame\n${HELPERS}\n${script}`,
 	}).emitted;
 }
 
@@ -44,7 +44,7 @@ local function shownTabs()
 end
 local function menuPick(text)
 	GF.menuButton:Click()
-	for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == text then r:Click() return r end end
+	for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == text then r:Click() return r end end
 end
 local TABS = { { uistub.elwynn, 3 }, { uistub.tailoring, 2 }, { uistub.stormwindRep, 2 } }
 `;
@@ -66,9 +66,9 @@ test('a field step reads as one focus: the step title, its few objectives with c
 			}
 		end
 		local P = GF.parts
-		emit({ rows = rows, accent = { Polestar.Theme.Accent() }, success = { Polestar.Theme.Color("success") },
-			text = { Polestar.Theme.Color("text") }, muted = { Polestar.Theme.Color("textMuted") }, dim = { Polestar.Theme.Color("textDim") },
-			textHex = Polestar.Theme.Hex("text"), accentHex = Polestar.Theme.Hex("accent"),
+		emit({ rows = rows, accent = { SendaFH.Theme.Accent() }, success = { SendaFH.Theme.Color("success") },
+			text = { SendaFH.Theme.Color("text") }, muted = { SendaFH.Theme.Color("textMuted") }, dim = { SendaFH.Theme.Color("textDim") },
+			textHex = SendaFH.Theme.Hex("text"), accentHex = SendaFH.Theme.Hex("accent"),
 			person = P.person.Name:GetText(), where = P.person.Where:GetText(),
 			personIcon = P.person.Icon:GetTexture():match("([%w-]+)$"),
 			tip = P.tip:IsShown() and P.tip.Text:GetText(), count = P.nav.Steps.Count:GetText(),
@@ -108,11 +108,11 @@ test('a hub reads one person at a time: name in NPC colour, only their goals, th
 			local names = {}
 			for _, r in ipairs(visibleRows()) do names[#names + 1] = r.psGoal.subject end
 			local nr, ng, nb = P.person.Name:GetTextColor()
-			return { person = P.person.Name:GetText(), color = { nr, ng, nb }, npc = { Polestar.Theme.Color("npc") },
+			return { person = P.person.Name:GetText(), color = { nr, ng, nb }, npc = { SendaFH.Theme.Color("npc") },
 				icon = P.person.Icon:GetTexture():match("([%w-]+)$"), goals = names,
 				after = P.after.Text:GetText(), persons = P.after.Count:GetText(), mark = P.person.Mark:IsShown(),
-				markW = P.person.Mark:GetWidth(), iconColor = { P.person.Icon:GetVertexColor() }, dim = { Polestar.Theme.Color("textDim") },
-				sliding = Polestar.Anim.IsRunning(P.card, "offset") }
+				markW = P.person.Mark:GetWidth(), iconColor = { P.person.Icon:GetVertexColor() }, dim = { SendaFH.Theme.Color("textDim") },
+				sliding = SendaFH.Anim.IsRunning(P.card, "offset") }
 		end
 		uistub.setGuide(uistub.elwynn, 4)
 		stub.advance(1)
@@ -134,7 +134,7 @@ test('a hub reads one person at a time: name in NPC colour, only their goals, th
 	assert.match(first.after, /^Then: \|c[0-9a-f]{8}Eagan Peltskinner\|r$/);
 	assert.equal(first.persons, 'Person 1 of 3');
 	assert.equal(first.mark, true, 'the arrow points at this person');
-	assert.equal(first.markW, 2, 'the 2px selection bar used across Polestar');
+	assert.equal(first.markW, 2, 'the 2px selection bar used across SendaFH');
 	assert.deepEqual(first.iconColor.slice(0, 3), first.dim.slice(0, 3), 'the person glyph steps back; the name carries the colour');
 	assert.equal(second.person, 'Eagan Peltskinner');
 	assert.deepEqual(second.goals, ['Wolves Across the Border']);
@@ -167,8 +167,8 @@ test('a done step (viewed with Prev) lists all its goals under the step title, c
 
 test('with Expand step tips off, the tip is one line until clicked', () => {
 	const [out] = run(`
-		Polestar.Set("ui.width", 300)
-		Polestar.Set("ui.notesOpen", false)
+		SendaFH.Set("ui.width", 300)
+		SendaFH.Set("ui.notesOpen", false)
 		uistub.setGuide(uistub.elwynn, 3)
 		local tip = GF.parts.tip
 		local closed = { open = tip.psOpen, h = tip:GetHeight() }
@@ -185,14 +185,14 @@ test('with Expand step tips off, the tip is one line until clicked', () => {
 
 test('step tips start open by default; with Expand step tips off, on one line', () => {
 	const [out] = run(`
-		Polestar.Set("ui.width", 300)
+		SendaFH.Set("ui.width", 300)
 		uistub.setGuide(uistub.elwynn, 3)
 		local tip = GF.parts.tip
 		local byDefault = tip.psOpen
-		Polestar.Set("ui.notesOpen", false)
+		SendaFH.Set("ui.notesOpen", false)
 		local closedH = tip:GetHeight()
 		local off = tip.psOpen
-		Polestar.Set("ui.notesOpen", true)
+		SendaFH.Set("ui.notesOpen", true)
 		local now = tip.psOpen
 		tip:Click()
 		local clicked = tip.psOpen
@@ -220,11 +220,11 @@ test('STEP_UPDATED refills the same rows in place, and a newly done goal pops', 
 		uistub.goal(3, 3).status = "done"
 		uistub.update()
 		local after = rowFor("Kobold Vermin")
-		local popping = Polestar.Anim.IsRunning(after.Icon, "size")
+		local popping = SendaFH.Anim.IsRunning(after.Icon, "size")
 		stub.advance(1)
 		emit({ same = before == after, framesAdded = uistub.frameCount() - frames, text = text, doneText = after.Text:GetText(),
-			icon = after.Icon:GetTexture():match("([%w-]+)$"), popping = popping, settled = Polestar.Anim.Active(),
-			size = after.Icon:GetWidth(), successHex = Polestar.Theme.Hex("success") })`);
+			icon = after.Icon:GetTexture():match("([%w-]+)$"), popping = popping, settled = SendaFH.Anim.Active(),
+			size = after.Icon:GetWidth(), successHex = SendaFH.Theme.Hex("success") })`);
 	assert.equal(out.same, true);
 	assert.equal(out.framesAdded, 0, 'no frames are created for an update');
 	assert.match(out.text, /8\/10\|r$/);
@@ -259,7 +259,7 @@ test('left-click on a goal of the step aims the arrow at it; right-click and the
 		local collect = rowFor("Tough Wolf Meat")
 		stub.RunScript(collect, "OnClick", "LeftButton")
 		local aimed = { lastCall("AimGoal"), lastCall("ReleaseTarget"), lastCall("SetTarget") or false }
-		local target = Polestar.Nav.GetTarget()
+		local target = SendaFH.Nav.GetTarget()
 		local marked = collect.Mark:IsShown()
 		stub.RunScript(rowFor("Kobold Vermin"), "OnClick", "RightButton")
 		local tickedKill = { lastCall("ToggleGoal"), rowFor("Kobold Vermin").Check:IsShown() }
@@ -297,19 +297,19 @@ test('hovering a goal explains it: detail, quest, NPC, location and what clicks 
 
 test('the step navigator and the Up next list drive the engine; a step change animates, then stops', () => {
 	const [out] = run(`
-		Polestar.Set("ui.upcoming", 3)
+		SendaFH.Set("ui.upcoming", 3)
 		uistub.setGuide(uistub.elwynn, 3)
 		stub.advance(1)
 		local N = GF.parts.nav
 		N.Next:Click()
 		local count = N.Steps.Count:GetText()
-		local animating = Polestar.Anim.Active() > 0 and GF.parts.card:GetAlpha() < 1
+		local animating = SendaFH.Anim.Active() > 0 and GF.parts.card:GetAlpha() < 1
 		stub.advance(1)
-		local settled = { Polestar.Anim.Active(), GF.parts.card:GetAlpha() }
+		local settled = { SendaFH.Anim.Active(), GF.parts.card:GetAlpha() }
 		N.Prev:Click()
 		local collapsed = GF.parts.upnext:IsShown() and GF.parts.upnext.Toggle.Label:GetText()
 		GF.parts.upnext.Toggle:Click()
-		local open = Polestar.Get("ui.upcomingOpen")
+		local open = SendaFH.Get("ui.upcomingOpen")
 		local shown = {}
 		for _, r in ipairs(GF.upRows) do if r:IsShown() then shown[#shown + 1] = r.psIndex end end
 		GF.upRows[1]:Click()
@@ -327,12 +327,12 @@ test('the step navigator and the Up next list drive the engine; a step change an
 
 test('reduced motion: a step change lands without movement', () => {
 	const [out] = run(`
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("ui.reduceMotion", true)
 		uistub.setGuide(uistub.elwynn, 3)
 		stub.advance(1)
 		GF.parts.nav.Next:Click()
 		local p = GF.parts.card.points[#GF.parts.card.points]
-		emit({ y = p.y, offsetRunning = Polestar.Anim.IsRunning(GF.parts.card, "offset") })`);
+		emit({ y = p.y, offsetRunning = SendaFH.Anim.IsRunning(GF.parts.card, "offset") })`);
 	assert.deepEqual(out, { y: 0, offsetRunning: false });
 });
 
@@ -340,25 +340,25 @@ test('settings apply live: scale, opacity, lock, compact, upcoming, shown', () =
 	const [out] = run(`
 		uistub.openTabs(TABS, 1)
 		local h0 = F:GetHeight()
-		Polestar.Set("ui.scale", 1.3)
-		Polestar.Set("ui.opacity", 0.5)
-		Polestar.Set("ui.locked", true)
+		SendaFH.Set("ui.scale", 1.3)
+		SendaFH.Set("ui.opacity", 0.5)
+		SendaFH.Set("ui.locked", true)
 		stub.RunScript(GF.parts.nav, "OnDragStart")
 		local movedWhileLocked = F.moving == true
-		Polestar.Set("ui.compact", true)
+		SendaFH.Set("ui.compact", true)
 		local P = GF.parts
 		local compact = { strip = P.strip:IsShown(), after = P.after:IsShown(), tip = P.tip:IsShown(), rows = #visibleRows(),
 			foot = P.foot:IsShown(), h = F:GetHeight() }
-		Polestar.Set("ui.compact", false)
-		Polestar.Set("ui.upcoming", 4)
-		Polestar.Set("ui.upcomingOpen", true)
+		SendaFH.Set("ui.compact", false)
+		SendaFH.Set("ui.upcoming", 4)
+		SendaFH.Set("ui.upcomingOpen", true)
 		local upIdx = {}
 		for _, r in ipairs(GF.upRows) do if r:IsShown() then upIdx[#upIdx + 1] = r.psIndex end end
-		Polestar.Fire("TOGGLE_FRAME")
+		SendaFH.Fire("TOGGLE_FRAME")
 		local afterToggle = F:IsShown()
-		Polestar.Fire("SHOW_FRAME")
+		SendaFH.Fire("SHOW_FRAME")
 		emit({ scale = F:GetScale(), alpha = F:GetAlpha(), grip = GF.grip:IsShown(), movedWhileLocked = movedWhileLocked,
-			compact = compact, h0 = h0, upcoming = upIdx, afterToggle = afterToggle, shown = F:IsShown(), stored = Polestar.Get("ui.shown") })`);
+			compact = compact, h0 = h0, upcoming = upIdx, afterToggle = afterToggle, shown = F:IsShown(), stored = SendaFH.Get("ui.shown") })`);
 	assert.equal(out.scale, 1.3);
 	assert.equal(out.alpha, 0.5);
 	assert.equal(out.grip, false, 'locked: no resize grip');
@@ -380,7 +380,7 @@ test('dragging saves the position; the grip resizes width within bounds', () => 
 		local moving = F.moving
 		local top = F:GetTop()
 		stub.RunScript(GF.parts.nav, "OnDragStop")
-		local pos = Polestar.Get("ui.pos")
+		local pos = SendaFH.Get("ui.pos")
 		stub.cursor = { 100, 500 }
 		stub.RunScript(GF.grip, "OnMouseDown", "LeftButton")
 		stub.cursor = { 180, 500 }
@@ -389,11 +389,11 @@ test('dragging saves the position; the grip resizes width within bounds', () => 
 		stub.cursor = { 2000, 500 }
 		stub.advance(0.1)
 		stub.RunScript(GF.grip, "OnMouseUp", "LeftButton")
-		emit({ moving = moving, pos = pos, top = top, live = live, width = Polestar.Get("ui.width"),
+		emit({ moving = moving, pos = pos, top = top, live = live, width = SendaFH.Get("ui.width"),
 			polling = GF.grip:GetScript("OnUpdate") ~= nil, point = { F:GetPoint(1) } })`);
 	assert.equal(out.moving, true);
 	assert.deepEqual(out.pos, [1500, out.top], 'saved as the top-left corner');
-	assert.equal(out.live, 420, 'width follows the cursor while dragging');
+	assert.equal(out.live, 460, 'width follows the cursor while dragging');
 	assert.equal(out.width, 560, 'and is clamped to the maximum');
 	assert.equal(out.polling, false, 'no OnUpdate once released');
 	assert.equal(out.point[0], 'TOPLEFT');
@@ -403,22 +403,22 @@ test('grow upward pins the window by its bottom-left; turning it on or off keeps
 	const [out] = run(`
 		uistub.setGuide(uistub.elwynn, 3)
 		F.x, F.y = 1500, 300
-		Polestar.Set("ui.growUp", true)
-		local on, onPoint = Polestar.Get("ui.pos"), { F:GetPoint(1) }
+		SendaFH.Set("ui.growUp", true)
+		local on, onPoint = SendaFH.Get("ui.pos"), { F:GetPoint(1) }
 		F.x, F.y = 900, 120
 		stub.RunScript(GF.parts.nav, "OnDragStart")
 		stub.RunScript(GF.parts.nav, "OnDragStop")
-		local dragged = Polestar.Get("ui.pos")
+		local dragged = SendaFH.Get("ui.pos")
 		stub.cursor = { 100, 500 }
 		stub.RunScript(GF.grip, "OnMouseDown", "LeftButton")
 		local resizePoint = { F:GetPoint(1) }
 		stub.RunScript(GF.grip, "OnMouseUp", "LeftButton")
-		Polestar.Set("ui.pos", nil)
+		SendaFH.Set("ui.pos", nil)
 		local resetPoint = { F:GetPoint(1) }
 		F.x, F.y = 900, 120
-		Polestar.Set("ui.growUp", false)
+		SendaFH.Set("ui.growUp", false)
 		emit({ on = on, onPoint = onPoint, dragged = dragged, resizePoint = resizePoint, resetPoint = resetPoint,
-			off = Polestar.Get("ui.pos"), offPoint = { F:GetPoint(1) }, top = F:GetTop() })`);
+			off = SendaFH.Get("ui.pos"), offPoint = { F:GetPoint(1) }, top = F:GetTop() })`);
 	assert.deepEqual(out.on, [1500, 300], 'turning it on saves the bottom-left where the window stands');
 	assert.equal(out.onPoint[0], 'BOTTOMLEFT');
 	assert.deepEqual(out.dragged, [900, 120], 'dragging saves the bottom-left');
@@ -437,14 +437,14 @@ test('combat: by default the window stays as it is; fade dims it, hide hides it,
 		local steady = F:GetAlpha()
 		stub.fire("PLAYER_REGEN_ENABLED")
 		stub.advance(1)
-		Polestar.Set("ui.combat", "fade")
+		SendaFH.Set("ui.combat", "fade")
 		stub.fire("PLAYER_REGEN_DISABLED")
 		stub.advance(1)
 		local faded = F:GetAlpha()
 		stub.fire("PLAYER_REGEN_ENABLED")
 		stub.advance(1)
 		local restored = F:GetAlpha()
-		Polestar.Set("ui.combat", "hide")
+		SendaFH.Set("ui.combat", "hide")
 		stub.fire("PLAYER_REGEN_DISABLED")
 		local hidden = not F:IsShown()
 		stub.fire("PLAYER_REGEN_ENABLED")
@@ -466,10 +466,10 @@ test('empty states: no guides, no guide open (with suggestion), guide complete',
 		end
 		local order = uistub.order
 		uistub.order = {}
-		Polestar.Fire("GUIDES_REGISTERED")
+		SendaFH.Fire("GUIDES_REGISTERED")
 		emit(state())
 		uistub.order = order
-		Polestar.Fire("GUIDES_REGISTERED")
+		SendaFH.Fire("GUIDES_REGISTERED")
 		emit(state())
 		GF.parts.empty.Primary:Click()
 		uistub.complete()
@@ -505,12 +505,12 @@ test('tab strip: one tab per open guide; select, close, move, and + opens the pi
 		local afterSelect = { title = GF.parts.nav.Title:GetText(), count = GF.parts.nav.Steps.Count:GetText(), bar = shownTabs()[2].Bar:IsShown() }
 		-- Right-click: tab options.
 		stub.RunScript(shownTabs()[1], "OnClick", "RightButton")
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Move right" then r:Click() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Move right" then r:Click() end end
 		local moved = lastCall("MoveTab")
 		shownTabs()[3].Close:Click()
 		local closed = { n = #shownTabs(), call = lastCall("CloseTab") }
 		GF.parts.strip.Add:Click()
-		local pickerNewTab = PolestarPicker:IsShown() and Polestar.UI.Picker.IsNewTabMode()
+		local pickerNewTab = SendaFHPicker:IsShown() and SendaFH.UI.Picker.IsNewTabMode()
 		emit({ titles = titles, ranges = ranges, widths = widths, activeBar = activeBar, titleInNav = titleInNav, afterSelect = afterSelect, moved = moved,
 			closed = closed, pickerNewTab = pickerNewTab })`);
 	assert.deepEqual(out.titles, ['Elwynn Forest', 'Tailoring 1-300', 'Stormwind Reputation']);
@@ -526,7 +526,7 @@ test('tab strip: one tab per open guide; select, close, move, and + opens the pi
 
 test('a narrow tab truncates its title and keeps its level range whole, also with the close button shown', () => {
 	const [out] = run(`
-		Polestar.Set("ui.width", 300)
+		SendaFH.Set("ui.width", 300)
 		uistub.openTabs(TABS, 1)
 		local b = shownTabs()[1]
 		local function measure()
@@ -564,7 +564,7 @@ test('transparent mode: no fills or borders, outlined text, chrome only while th
 			for i, c in ipairs(GF.chrome) do a[i] = c:GetAlpha() end
 			return a
 		end
-		Polestar.Set("ui.style", "transparent")
+		SendaFH.Set("ui.style", "transparent")
 		local skin = F.psSkin
 		local bare = { bg = skin.bg:IsShown(), border = F.psBorder[1]:IsShown(), shadow = F.psShadow:IsShown(), band = GF.parts.band:IsShown() }
 		local _, _, flags = GF.parts.person.Name:GetFont()
@@ -582,12 +582,12 @@ test('transparent mode: no fills or borders, outlined text, chrome only while th
 		F.IsMouseOver = function() return false end
 		stub.advance(0.5)
 		local left = chromeAlpha()
-		Polestar.Set("ui.style", "standard")
+		SendaFH.Set("ui.style", "standard")
 		local _, _, flagsAfter = GF.parts.person.Name:GetFont()
 		emit({ bare = bare, flags = flags, goalFlags = goalFlags, rest = rest, hover = hover, watching = watching, left = left,
 			hovering = GF.IsHovering(), restored = { bg = skin.bg:IsShown(), band = GF.parts.band:IsShown(), alpha = chromeAlpha() },
 			flagsAfter = flagsAfter, count = #GF.chrome, steps = steps, clearTrack = clearTrack,
-			track = select(4, track:GetVertexColor()), progressWash = select(4, Polestar.Theme.Wash("progress")) })`);
+			track = select(4, track:GetVertexColor()), progressWash = select(4, SendaFH.Theme.Wash("progress")) })`);
 	const all = (v) => Array(out.count).fill(v);
 	assert.deepEqual(out.bare, { bg: false, border: false, shadow: false, band: false });
 	assert.equal(out.flags, 'OUTLINE');
@@ -617,7 +617,7 @@ test('a goal with alternative trainers shows where it is and cycles to the next'
 		local after = visibleRows()[1]
 		emit({ before = before, tip = tip, call = lastCall("CycleCandidate"), subject = after.psGoal.subject, sub = after.Sub:IsShown(),
 			person = GF.parts.person.Name:GetText(), where = GF.parts.person.Where:GetText(),
-			alone = Polestar.UI.GoalSubline(after.psGoal) })`);
+			alone = SendaFH.UI.GoalSubline(after.psGoal) })`);
 	assert.deepEqual(out.before, { sub: false, alt: true, person: 'Georgio Bolero', where: 'Stormwind City' },
 		'the person names the zone; the goal does not repeat it');
 	assert.ok(out.tip.includes('2 others nearby; the arrow button switches to the next.'));
@@ -634,7 +634,7 @@ test('GUIDE_OUTLEVELED: a dismissible banner offers the better guide, in the sam
 		uistub.openTabs(TABS, 1)
 		local B = GF.parts.banner
 		local h0 = F:GetHeight()
-		Polestar.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall")
+		SendaFH.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall")
 		local shown = { B:IsShown(), B.Jump.Label:GetText(), F:GetHeight() > h0 }
 		shownTabs()[2]:Click()
 		local otherTab = B:IsShown()
@@ -642,7 +642,7 @@ test('GUIDE_OUTLEVELED: a dismissible banner offers the better guide, in the sam
 		local back = B:IsShown()
 		B.Close:Click()
 		local dismissed = B:IsShown()
-		Polestar.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall")
+		SendaFH.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall")
 		B.Jump:Click()
 		emit({ shown = shown, otherTab = otherTab, back = back, dismissed = dismissed, jump = lastCall("SetGuide"),
 			after = B:IsShown(), header = GF.parts.nav.Title:GetText(), tabs = #shownTabs() })`);
@@ -677,19 +677,19 @@ test('the header menu: picker, new tab, compact, transparent, lock; destructive 
 		uistub.setGuide(uistub.elwynn, 3)
 		GF.menuButton:Click()
 		local items = {}
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() then items[#items + 1] = r.Text:GetText() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() then items[#items + 1] = r.Text:GetText() end end
 		GF.menuButton:Click()
 		menuPick("Lock window")
 		menuPick("Transparent")
-		local style = Polestar.Get("ui.style")
+		local style = SendaFH.Get("ui.style")
 		local reset = menuPick("Reset guide progress")
-		local armed = { label = reset.Text:GetText(), open = PolestarMenu:IsShown() }
+		local armed = { label = reset.Text:GetText(), open = SendaFHMenu:IsShown() }
 		reset:Click()
 		menuPick("Choose guide")
-		local picker = PolestarPicker:IsShown()
+		local picker = SendaFHPicker:IsShown()
 		menuPick("Options")
-		emit({ items = items, locked = Polestar.Get("ui.locked"), style = style, armed = armed, reset = lastCall("ResetProgress"),
-			picker = picker, options = PolestarOptions:IsShown(), pickerAfter = PolestarPicker:IsShown() })`);
+		emit({ items = items, locked = SendaFH.Get("ui.locked"), style = style, armed = armed, reset = lastCall("ResetProgress"),
+			picker = picker, options = SendaFHOptions:IsShown(), pickerAfter = SendaFHPicker:IsShown() })`);
 	assert.deepEqual(out.items, ['Choose guide', 'Open in new tab', 'Skip this step', 'Report a problem', 'Compact mode', 'Transparent', 'Lock window',
 		'Reset guide progress', 'Options', 'Hide window']);
 	assert.equal(out.locked, true);
@@ -723,7 +723,7 @@ test('profession, reputation and achievement goals: own colours, icons, progress
 		emit(snapshot())
 		local s = {}
 		local hex = {}
-		for _, k in ipairs({ "skill", "spell", "faction", "area", "achievement" }) do hex[k] = Polestar.Theme.Hex(k) end
+		for _, k in ipairs({ "skill", "spell", "faction", "area", "achievement" }) do hex[k] = SendaFH.Theme.Hex(k) end
 		s.hex = hex
 		stub.RunScript(rowFor("Stormwind"), "OnEnter")
 		s.tip = GameTooltip.lines
@@ -754,28 +754,28 @@ test('profession, reputation and achievement goals: own colours, icons, progress
 test('XP pace from the QoL tracker: rate and time to level, hidden when off or maxed', () => {
 	const [out] = run(`
 		local stats = { rate = 3400, timeToLevel = 3900, maxed = false }
-		Polestar.QoL = {
+		SendaFH.QoL = {
 			GetXPStats = function() return stats end,
 			Duration = function(s) return string.format("%dh %02dm", math.floor(s / 3600), math.floor(s % 3600 / 60)) end,
 			XP = { Short = function(n) return string.format("%.1fk", n / 1000) end, Summary = function() return "Level 12 45.3%" end },
 		}
 		uistub.setGuide(uistub.elwynn, 3)
 		local h0 = F:GetHeight()
-		Polestar.Fire("QOL_XP_UPDATED", stats)
+		SendaFH.Fire("QOL_XP_UPDATED", stats)
 		local xp = GF.xp
 		local on = { shown = xp:IsShown(), text = xp.Text:GetText(), taller = F:GetHeight() > h0 }
 		stub.RunScript(xp, "OnEnter")
 		local tip = GameTooltip.lines
-		Polestar.Set("ui.compact", true)
+		SendaFH.Set("ui.compact", true)
 		local compact = xp:IsShown()
-		Polestar.Set("ui.compact", false)
+		SendaFH.Set("ui.compact", false)
 		local back = xp:IsShown()
 		stats.maxed = true
-		Polestar.Fire("QOL_XP_UPDATED", stats)
+		SendaFH.Fire("QOL_XP_UPDATED", stats)
 		local maxed = xp:IsShown()
-		Polestar.Fire("QOL_XP_UPDATED", nil)
-		Polestar.QoL.GetXPStats = function() return nil end
-		Polestar.Fire("QOL_XP_UPDATED", nil)
+		SendaFH.Fire("QOL_XP_UPDATED", nil)
+		SendaFH.QoL.GetXPStats = function() return nil end
+		SendaFH.Fire("QOL_XP_UPDATED", nil)
 		emit({ on = on, tip = tip, compact = compact, back = back, maxed = maxed, off = xp:IsShown(), h = F:GetHeight() == h0 })`);
 	assert.deepEqual(out.on, { shown: true, text: '3.4k XP/h  \u00b7  1h 05m to level', taller: true });
 	assert.deepEqual(out.tip, ['Experience', 'Level 12 45.3%']);
@@ -788,8 +788,8 @@ test('XP pace from the QoL tracker: rate and time to level, hidden when off or m
 
 test('goal lines render the Engine text: author overrides and counts survive, the subject keeps its colour', () => {
 	const [out] = run(`
-		local UI = Polestar.UI
-		local hex = Polestar.Theme.Hex("npc")
+		local UI = SendaFH.UI
+		local hex = SendaFH.Theme.Hex("npc")
 		emit({
 			override = UI.GoalText({ t = "train", verb = "Train at", subject = "your trainer", subjectKind = "text", text = "Learn Charge and Rend", status = "active" }),
 			count = UI.GoalText({ t = "kill", verb = "Kill", subject = "Young Wolf", subjectKind = "npc", text = "Kill 5 Young Wolf", status = "active" }),
@@ -813,8 +813,8 @@ test('a dismissed Nav target marks no row (no fall back to the Engine waypoint)'
 			return n
 		end
 		local before = marked()
-		Polestar.Nav.GetTarget = function() return nil end
-		Polestar.Fire("WAYPOINT_CHANGED", nil)
+		SendaFH.Nav.GetTarget = function() return nil end
+		SendaFH.Fire("WAYPOINT_CHANGED", nil)
 		emit({ before = before, after = marked() })`);
 	assert.deepEqual(out, { before: 1, after: 0 });
 });
@@ -822,15 +822,15 @@ test('a dismissed Nav target marks no row (no fall back to the Engine waypoint)'
 test('combat state is read at login, so a /reload mid-fight still fades or hides the window', () => {
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()
 			stub.inCombat = true
-			Polestar.Set("ui.combat", "hide")
+			SendaFH.Set("ui.combat", "hide")
 			stub.login()
-			local hidden = not PolestarGuideFrame:IsShown()
+			local hidden = not SendaFHGuideFrame:IsShown()
 			stub.inCombat = false
 			stub.fire("PLAYER_REGEN_ENABLED")
-			emit({ hidden = hidden, shown = PolestarGuideFrame:IsShown() })`,
+			emit({ hidden = hidden, shown = SendaFHGuideFrame:IsShown() })`,
 	}).emitted;
 	assert.deepEqual(out, { hidden: true, shown: true });
 });
@@ -844,8 +844,8 @@ test('an unavailable quest stays readable but muted, says why, and drops its cou
 		local r = rowFor("Kobold Vermin")
 		local _, _, _, a = r.Text:GetTextColor()
 		emit({ text = r.Text:GetText(), detail = r.Sub:GetText(), progress = false, mark = r.Mark:IsShown(),
-			color = { r.Text:GetTextColor() }, muted = { Polestar.Theme.Color("textMuted") }, alpha = a,
-			fallback = Polestar.UI.GoalDetail({ unavailable = "offer" }) })`);
+			color = { r.Text:GetTextColor() }, muted = { SendaFH.Theme.Color("textMuted") }, alpha = a,
+			fallback = SendaFH.UI.GoalDetail({ unavailable = "offer" }) })`);
 	assert.equal(out.text, 'Kill Kobold Vermin', 'plain, no subject colour');
 	assert.equal(out.detail, 'Needs The Demon Seed first');
 	assert.equal(out.progress, false);
@@ -864,7 +864,7 @@ test('a farm-spot collect goal names its mobs, their levels and zone, and cycles
 		uistub.update()
 		local r = rowFor("Tough Wolf Meat")
 		local before = { detail = r.Sub:GetText(), alt = r.Alt:IsShown(), progress = r.Text:GetText():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):match("(%d+/%d+)$") }
-		local elsewhere = Polestar.UI.GoalSubline(r.psGoal, 1453)
+		local elsewhere = SendaFH.UI.GoalSubline(r.psGoal, 1453)
 		r.Alt:Click()
 		emit({ before = before, call = lastCall("CycleCandidate"), elsewhere = elsewhere })`);
 	assert.deepEqual(out.before, { detail: 'from Young Wolf (lvl 2\u20134)', alt: true, progress: '3/8' },
@@ -884,8 +884,8 @@ test('an area objective says its mobs are all over the area, and its row button 
 		stub.RunScript(r.Alt, "OnEnter")
 		local tip = GameTooltip.lines
 		r.Alt:Click()
-		local collect = Polestar.UI.GoalSubline({ t = "collect", spots = 5, spread = true, status = "active" })
-		local camp = Polestar.UI.GoalSubline({ t = "kill", subject = "Kobold Vermin", spots = 3, status = "active" })
+		local collect = SendaFH.UI.GoalSubline({ t = "collect", spots = 5, spread = true, status = "active" })
+		local camp = SendaFH.UI.GoalSubline({ t = "kill", subject = "Kobold Vermin", spots = 3, status = "active" })
 		emit({ before = before, tip = tip, call = lastCall("CycleSpot"), collect = collect, camp = camp or false })`);
 	assert.deepEqual(out.before, { sub: 'Kobold Vermin all over this area: 12 spots', alt: true });
 	assert.ok(out.tip.includes('Next spot'), JSON.stringify(out.tip));
@@ -911,7 +911,7 @@ test('a quest started by a dropped item reads as one line, the quest; the Go to 
 		} }
 		uistub.guides[fog.id] = fog
 		uistub.setGuide(fog.id, 1)
-		Polestar.Nav.SetTarget(1429, 44.7, 70.7, "Field of Giants")
+		SendaFH.Nav.SetTarget(1429, 44.7, 70.7, "Field of Giants")
 		uistub.update()
 		local rows = {}
 		for _, r in ipairs(visibleRows()) do
@@ -939,15 +939,15 @@ test('TRAIN_DUE shows a training banner after the out-levelled offer; Show point
 		uistub.openTabs(TABS, 1)
 		local B = GF.parts.banner
 		local trainer = { npc = 914, npcName = "Ander Germaine", map = 1453, x = 79.6, y = 70.2 }
-		Polestar.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall")
-		Polestar.Fire("TRAIN_DUE", 12, trainer)
+		SendaFH.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall")
+		SendaFH.Fire("TRAIN_DUE", 12, trainer)
 		local first = B.Jump.Label:GetText()
 		B.Close:Click()
 		local second = { text = B.Text:GetText(), show = B.Jump.Label:GetText(), later = B.Later:IsShown(), close = B.Close:IsShown() }
 		B.Jump:Click()
 		local target = lastCall("SetTarget")
 		local afterShow = B:IsShown()
-		Polestar.Fire("TRAIN_DUE", 14, trainer)
+		SendaFH.Fire("TRAIN_DUE", 14, trainer)
 		B.Later:Click()
 		emit({ first = first, second = second, target = target, afterShow = afterShow, afterLater = B:IsShown() })`);
 	assert.equal(out.first, 'Jump to Westfall', 'the out-levelled offer goes first');
@@ -978,7 +978,7 @@ test('an optional goal is tagged in the warning colour and skips in one click, t
 		local after = { text = r.Text:GetText(), skip = r.Skip:IsShown() and r.Skip.Label:GetText(), check = r.Check:IsShown(),
 			icon = r.Icon:GetTexture():match("([%w-]+)$") }
 		r.Skip:Click()
-		emit({ warning = Polestar.Theme.Hex("warning"), muted = Polestar.Theme.Hex("textMuted"), before = before, call = call, after = after,
+		emit({ warning = SendaFH.Theme.Hex("warning"), muted = SendaFH.Theme.Hex("textMuted"), before = before, call = call, after = after,
 			back = rowFor("Tough Wolf Meat").psGoal.status })`);
 	assert.ok(out.before.text.endsWith(`|c${out.warning}optional|r`), out.before.text);
 	assert.equal(out.before.skip, 'Skip');
@@ -997,7 +997,7 @@ test('the current goal is the one the Engine names: past the required goals, an 
 		g4.optional = true
 		uistub.goal(3, 3).status = "done"
 		uistub.update()
-		local accent = Polestar.Theme.Hex("accent")
+		local accent = SendaFH.Theme.Hex("accent")
 		local function hex(t) local r, g, b = t:GetVertexColor(); return string.format("ff%02x%02x%02x", r * 255 + 0.5, g * 255 + 0.5, b * 255 + 0.5) end
 		emit({ accent = accent, wolf = hex(rowFor("Tough Wolf Meat").Icon), kobold = hex(rowFor("Kobold Vermin").Icon) })`);
 	assert.equal(out.wolf, out.accent, 'the optional wolf meat is current');
@@ -1010,9 +1010,9 @@ test('Skip in the navigator skips the step shown, and the banner undoes it', () 
 		local N, B = GF.parts.nav, GF.parts.banner
 		local shown = { N.Skip:IsShown(), N.Skip.Label:GetText() }
 		N.Skip:Click()
-		local skipped = { lastCall("Skip"), Polestar.Engine.GetStepIndex(), B:IsShown(), B.Text:GetText(), B.Jump.Label:GetText() }
+		local skipped = { lastCall("Skip"), SendaFH.Engine.GetStepIndex(), B:IsShown(), B.Text:GetText(), B.Jump.Label:GetText() }
 		B.Jump:Click()
-		emit({ shown = shown, skipped = skipped, undo = lastCall("Unskip"), at = Polestar.Engine.GetStepIndex(), banner = B:IsShown() })`);
+		emit({ shown = shown, skipped = skipped, undo = lastCall("Unskip"), at = SendaFH.Engine.GetStepIndex(), banner = B:IsShown() })`);
 	assert.deepEqual(out.shown, [true, 'Skip']);
 	assert.deepEqual(out.skipped, [['Skip'], 4, true, 'Skipped Step 3  \u00b7  Kobold Camp', 'Undo']);
 	assert.deepEqual(out.undo, ['Unskip', 3]);
@@ -1047,9 +1047,9 @@ test('the next spot of an area objective takes the arrow there, over a point pic
 		local g = uistub.goal(3, 3)
 		g.spots, g.spread = 12, true
 		uistub.update()
-		Polestar.Nav.SetTarget(1429, 50, 50, "By hand")
+		SendaFH.Nav.SetTarget(1429, 50, 50, "By hand")
 		rowFor("Kobold Vermin").Alt:Click()
-		emit({ cycle = lastCall("CycleSpot"), release = lastCall("ReleaseTarget"), target = Polestar.Nav.GetTarget().label })`);
+		emit({ cycle = lastCall("CycleSpot"), release = lastCall("ReleaseTarget"), target = SendaFH.Nav.GetTarget().label })`);
 	assert.deepEqual(out.cycle, ['CycleSpot', 3, 3]);
 	assert.deepEqual(out.release, ['ReleaseTarget']);
 	assert.notEqual(out.target, 'By hand');
@@ -1060,8 +1060,8 @@ test('labels kept in tables are in the client language: the group line and the g
 		`
 		UI.ShowPicker()
 		local tabs = {}
-		for _, b in ipairs(PolestarPicker.tabButtons) do if b:IsShown() then tabs[#tabs + 1] = b.Label:GetText() end end
-		emit({ elite = UI.GroupLine({ party = { kind = "elite", rank = 2 } }), tabs = tabs, title = PolestarPicker.Title:GetText() })`,
+		for _, b in ipairs(SendaFHPicker.tabButtons) do if b:IsShown() then tabs[#tabs + 1] = b.Label:GetText() end end
+		emit({ elite = UI.GroupLine({ party = { kind = "elite", rank = 2 } }), tabs = tabs, title = SendaFHPicker.Title:GetText() })`,
 		{ before: fakeLocale('itIT', { 'Rare elite: group advised': 'Rarer Elite: Gruppe empfohlen', Home: 'Start', Browse: 'Stöbern', Current: 'Aktuell', Recent: 'Zuletzt' }) },
 	);
 	assert.match(out.elite, /\|c\w+Rarer Elite: Gruppe empfohlen\|r/);

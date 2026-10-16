@@ -3,7 +3,7 @@
 Goal: find, for each faction and each race's start, the 1-60 leveling route
 that reaches 60 in the least /played time under one explicit model of the
 game, by simulating very large numbers of complete routes; measure how robust
-the winners are to the model's uncertainty, and score Polestar's own routes
+the winners are to the model's uncertainty, and score SendaFH's own routes
 under the same model.
 
 "Proven" here means: best found under the model, after a search large enough
@@ -13,7 +13,7 @@ proof comes from recorded play (`record report`); `sim calibrate` fits the
 model's kill time to the same recordings.
 
 Code: `tools/lib/sim/` (Node ≥24, CommonJS, zero npm dependencies,
-`worker_threads` for parallel search). CLI: `node tools/polestar.js sim <cmd>`.
+`worker_threads` for parallel search). CLI: `node tools/sendafh.js sim <cmd>`.
 Outputs: `data/sim/` and `data/bench/` (both gitignored).
 
 ## 1. World model (built once per faction, cached in data/sim/world-<faction>.json)
@@ -280,7 +280,7 @@ Only the fitted parameter values are kept (data/sim/params.json).
 
 ## 5. Baselines (scored under the same model)
 
-- Polestar: the compiled guides (default route and every route choice),
+- SendaFH: the compiled guides (default route and every route choice),
   against the best route found (solo and with dungeons).
 - **Guides are scored on what they require.** A guide's `optional` goals are
   left out: an optional quest (its accept is optional) whole, any other
@@ -309,7 +309,7 @@ sim run     --faction F [--race R] [--class C] [--paths N] [--workers W] [--seed
             [--jobs J] [--anneal A] [--max-paths M]
 sim robust  --faction F [--race R] [--draws K] [--top N]   robustness of the top routes
 sim compare --faction F [--race R] [--guides DIR] [--pack DIR | DIR] [--to 10,20,30] [--with-optional]
-            Polestar's routes vs the best found, same model
+            SendaFH's routes vs the best found, same model
 sim bench   --faction F [--race R]                  bracket table: zones, levels, quests per 10 levels
 sim export  --result <file> --out <dir>             zone-by-zone skeleton guides + visits.json for authors
 sim consensus --faction F [--dungeons] [--evals N]  one 12-60 route shared by the faction's starts (+ exports)
@@ -621,14 +621,14 @@ Results are labelled "Era + known Forever quests": Forever's 30-60 content
 is not in the data yet (the beta caps at 30). When it lands:
 
 ```
-node tools/polestar.js data build
-node tools/polestar.js sim world --rebuild
-node tools/polestar.js sim calibrate
-node tools/polestar.js sim run --faction horde
-node tools/polestar.js sim run --faction alliance
-node tools/polestar.js sim run --faction horde --dungeons && node tools/polestar.js sim run --faction alliance --dungeons
-node tools/polestar.js sim robust --faction horde && node tools/polestar.js sim robust --faction alliance
-node tools/polestar.js sim consensus --faction horde && node tools/polestar.js sim consensus --faction alliance
+node tools/sendafh.js data build
+node tools/sendafh.js sim world --rebuild
+node tools/sendafh.js sim calibrate
+node tools/sendafh.js sim run --faction horde
+node tools/sendafh.js sim run --faction alliance
+node tools/sendafh.js sim run --faction horde --dungeons && node tools/sendafh.js sim run --faction alliance --dungeons
+node tools/sendafh.js sim robust --faction horde && node tools/sendafh.js sim robust --faction alliance
+node tools/sendafh.js sim consensus --faction horde && node tools/sendafh.js sim consensus --faction alliance
 ```
 
 then re-export (`sim export`) the starts the guides follow.

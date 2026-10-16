@@ -1,8 +1,8 @@
 'use strict';
-// pack: release archives. In the repository: dist/Polestar-<version>.zip
-// (Polestar, Polestar_Guides, Polestar_Nav and the built data addons) and
-// dist/Polestar_Recorder-<version>.zip, each with the GPL in its first folder
-// (and the player's README.txt in Polestar/), plus dist/SHA256SUMS for both.
+// pack: release archives. In the repository: dist/SendaFH-<version>.zip
+// (SendaFH, SendaFH_Guides, SendaFH_Nav and the built data addons) and
+// dist/SendaFH_Recorder-<version>.zip, each with the GPL in its first folder
+// (and the player's README.txt in SendaFH/), plus dist/SHA256SUMS for both.
 // Given another pack (a folder argument, --pack, or the nearest pack.json):
 // <pack>/dist/<folder>-<version>.zip holding the built pack folder.
 
@@ -17,14 +17,14 @@ const { writeZip, directoryEntries } = require('../lib/zip');
 const { ROOT, DATA } = require('../lib/paths');
 const { releaseRefusal, ADDON: CODEX } = require('../lib/codex/pack');
 
-const usage = `usage: node tools/polestar.js pack [<dir>] [options]
+const usage = `usage: node tools/sendafh.js pack [<dir>] [options]
 
-In the repository: compiles our guides, then writes dist/Polestar-<version>.zip
-(Polestar, Polestar_Guides, Polestar_Nav, Polestar_Codex, the names addons
-Polestar_Names_<locale>, and Polestar_QuestDB / Polestar_ItemDB when built),
-dist/Polestar_Recorder-<version>.zip and
-dist/SHA256SUMS. Polestar/ in the zip also carries LICENSE and README.txt
-(install steps), Polestar_Recorder/ the LICENSE. The Codex must be built
+In the repository: compiles our guides, then writes dist/SendaFH-<version>.zip
+(SendaFH, SendaFH_Guides, SendaFH_Nav, SendaFH_Codex, the names addons
+SendaFH_Names_<locale>, and SendaFH_QuestDB / SendaFH_ItemDB when built),
+dist/SendaFH_Recorder-<version>.zip and
+dist/SHA256SUMS. SendaFH/ in the zip also carries LICENSE and README.txt
+(install steps), SendaFH_Recorder/ the LICENSE. The Codex must be built
 first (\`codex build\`) from release-safe inputs: pack stops on a missing
 Codex or a --local-extras one.
 
@@ -63,11 +63,11 @@ function tocVersion(dir, name) {
 	}
 }
 
-// Install steps for players, Polestar/README.txt in the zip. CRLF so Notepad
+// Install steps for players, SendaFH/README.txt in the zip. CRLF so Notepad
 // shows it as written.
 function readme(version, names) {
 	return [
-		`Polestar ${version}`,
+		`SendaFH ${version}`,
 		'Leveling guides for World of Warcraft: Forever.',
 		'',
 		'Install',
@@ -75,26 +75,26 @@ function readme(version, names) {
 		'   World of Warcraft/_forever_/Interface/AddOns/',
 		'   (_classic_beta_ instead of _forever_ on the beta client):',
 		...names.map((n) => `     ${n}`),
-		'   They are all part of Polestar: Polestar_Codex holds what Lookup,',
-		'   Dungeons and Rares show; Polestar_Nav the arrow\'s walking routes',
+		'   They are all part of SendaFH: SendaFH_Codex holds what Lookup,',
+		'   Dungeons and Rares show; SendaFH_Nav the arrow\'s walking routes',
 		'   (Shortest Path Forever\'s pathing, by Cillian Berragan, GPL-3.0 or',
-		'   later: see its LICENSE and CREDITS.md); the Polestar_Names_ folders',
+		'   later: see its LICENSE and CREDITS.md); the SendaFH_Names_ folders',
 		'   the game\'s quest, NPC, object and item names in each language (the',
-		'   game loads only its own). To update, delete the old Polestar folders',
+		'   game loads only its own). To update, delete the old SendaFH folders',
 		'   there first.',
 		'2. Quit the game completely and start it again. A /reload does not',
 		'   load new addon folders.',
 		'',
-		'Polestar_Recorder (a separate zip) is optional: it records your sessions',
+		'SendaFH_Recorder (a separate zip) is optional: it records your sessions',
 		'to improve the routes and stays off until you turn it on.',
 		'',
 		'Source, issues and documentation: https://github.com/fitzforge/polestar',
-		'Polestar is free software under the GNU General Public License, version 3',
+		'SendaFH is free software under the GNU General Public License, version 3',
 		'only (LICENSE). The data folders carry their own notices (LICENSE-DATA.txt).',
 		'Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever),',
 		'GPL-3.0 or later, adapted with his permission: the route lines, journey',
-		'panel, transit times, travel prompts and alerts in Polestar/ (LICENSE',
-		'names the files) and the walking routes in Polestar_Nav/.',
+		'panel, transit times, travel prompts and alerts in SendaFH/ (LICENSE',
+		'names the files) and the walking routes in SendaFH_Nav/.',
 		'',
 	].join('\r\n');
 }
@@ -126,7 +126,7 @@ function pack(dirs, version) {
 	}
 	if (manifest.version !== version) console.warn(`warning: guides/pack.json says version ${manifest.version}, package.json says ${version}`);
 	const product = project.releaseAddons(dirs.addons);
-	// The Codex is part of Polestar (Lookup, Dungeons, Rares): built from
+	// The Codex is part of SendaFH (Lookup, Dungeons, Rares): built from
 	// release-safe inputs, or no release.
 	const codexRefusal = releaseRefusal(path.join(dirs.addons, CODEX));
 	if (codexRefusal) {
@@ -136,8 +136,8 @@ function pack(dirs, version) {
 	for (const n of product.skipped) console.log(`note: ${n} not built (no ${n}/${n}.toc); leaving it out of the zip`);
 	const license = { name: 'LICENSE', data: fs.readFileSync(path.join(ROOT, 'LICENSE')) };
 	const archives = [
-		{ file: `Polestar-${version}.zip`, names: product.names, extras: { Polestar: [license, { name: 'README.txt', data: readme(version, product.names) }] } },
-		{ file: `Polestar_Recorder-${version}.zip`, names: ['Polestar_Recorder'], extras: { Polestar_Recorder: [license] } },
+		{ file: `SendaFH-${version}.zip`, names: product.names, extras: { SendaFH: [license, { name: 'README.txt', data: readme(version, product.names) }] } },
+		{ file: `SendaFH_Recorder-${version}.zip`, names: ['SendaFH_Recorder'], extras: { SendaFH_Recorder: [license] } },
 	];
 	for (const { names } of archives) {
 		// Our guide pack's TOC is generated below.
@@ -152,7 +152,7 @@ function pack(dirs, version) {
 	}
 	let built;
 	try {
-		// Building reads Polestar.toc's `## Interface` line: a missing one is an error here too.
+		// Building reads SendaFH.toc's `## Interface` line: a missing one is an error here too.
 		built = compile(ours, dirs);
 		if (!built) return 1;
 		project.writePackDir(path.join(dirs.addons, manifest.folder), built.files);

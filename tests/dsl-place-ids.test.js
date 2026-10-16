@@ -12,7 +12,7 @@ const path = require('node:path');
 const { compile, guideText, DATA_DIR, GUIDES_DIR } = require('./helpers/dsl');
 const { loadData } = require('../tools/lib/dsl/data');
 const { emitGuides } = require('../tools/lib/dsl/emit');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 const { tmpdir } = require('./helpers/tmp');
 
 // Fixture AreaTable rows (real IDs, plus 9000x for the made-up cases):
@@ -41,7 +41,7 @@ const NODES = [
 // The fixture data in <root>/forever with a travel.json, and (areas) the
 // AreaTable cached in <root>/sources/wago/1.60.1.1 beside it.
 function placeData({ areas = true, travel = true } = {}) {
-	const root = tmpdir('polestar-place-ids-');
+	const root = tmpdir('sendafh-place-ids-');
 	const dir = path.join(root, 'forever');
 	fs.mkdirSync(dir);
 	for (const f of fs.readdirSync(DATA_DIR)) fs.copyFileSync(path.join(DATA_DIR, f), path.join(dir, f));
@@ -115,11 +115,11 @@ test('node and area are emitted before map, deterministically', () => {
 test('compile reports how many place goals got an area and getfp goals a taxi node', () => {
 	const { dir } = placeData();
 	const out = tmpdir();
-	const some = polestar(['compile', '--guides', GUIDES_DIR, '--data', dir, '--out', out]);
+	const some = sendafh(['compile', '--guides', GUIDES_DIR, '--data', dir, '--out', out]);
 	assert.equal(some.status, 0, some.stderr);
 	assert.match(some.stdout, /\nareas: 1 of 2 place goals got an area \(AreaTable 1\.60\.1\.1\)\nnodes: 0 of 0 getfp goals got a taxi node \(travel\.json\)\nheights: /);
 	const bare = placeData({ areas: false, travel: false });
-	const none = polestar(['compile', '--guides', GUIDES_DIR, '--data', bare.dir, '--out', tmpdir()]);
+	const none = sendafh(['compile', '--guides', GUIDES_DIR, '--data', bare.dir, '--out', tmpdir()]);
 	assert.equal(none.status, 0, none.stderr);
 	assert.match(none.stdout, /\nareas: none \(no cached Forever AreaTable in the sources beside the reference data; `data build` downloads it\)\nnodes: none \(no travel\.json in the reference data; `travel build` writes it\)\nheights: /);
 });

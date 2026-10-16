@@ -1,7 +1,7 @@
 'use strict';
 // `maps overlays`: every world map overlay (the explored-area paintings the
 // world map lays over a zone's base art) of every zone map, from the client's
-// DB2 tables -> addon/Polestar/UI/ZoneArtOverlays.lua, so the zone art can
+// DB2 tables -> addon/SendaFH/UI/ZoneArtOverlays.lua, so the zone art can
 // show a map whole, without fog of war. The client itself only lists the
 // overlays this character has explored (C_MapExplorationInfo.
 // GetExploredMapTextures); no API returns them all.
@@ -33,7 +33,7 @@ async function fetchText(fetchImpl, url) {
 	let last;
 	for (let attempt = 1; attempt <= 3; attempt++) {
 		try {
-			const res = await fetchImpl(url, { headers: { 'user-agent': 'polestar-data-build' }, signal: AbortSignal.timeout(600000) });
+			const res = await fetchImpl(url, { headers: { 'user-agent': 'sendafh-data-build' }, signal: AbortSignal.timeout(600000) });
 			if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 			return await res.text();
 		} catch (err) {

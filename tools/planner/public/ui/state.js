@@ -51,7 +51,7 @@ export function emit(ev, data) {
 
 // ---------------------------------------------------------------- persistence
 
-const KEY = 'polestar.planner';
+const KEY = 'sendafh.planner';
 export function loadPrefs() {
 	try {
 		return JSON.parse(localStorage.getItem(KEY) || '{}') || {};

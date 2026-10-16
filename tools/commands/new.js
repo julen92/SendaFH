@@ -12,9 +12,9 @@ const { ROOT } = require('../lib/paths');
 const TEMPLATE = path.join(ROOT, 'tools', 'templates', 'pack');
 // The pack authors' skill, copied as is into the folders coding tools read a
 // project's skills from: .agents/skills (most of them) and .claude/skills.
-const SKILL = path.join(ROOT, 'skills', 'polestar-guide-pack');
+const SKILL = path.join(ROOT, 'skills', 'sendafh-guide-pack');
 const SKILL_DIRS = [path.join('.agents', 'skills'), path.join('.claude', 'skills')];
-// Files that need Polestar's repository URL; skipped without one.
+// Files that need SendaFH's repository URL; skipped without one.
 const NEEDS_REPO = [path.join('.github', 'workflows', 'pack.yml'), path.join('.devcontainer', 'devcontainer.json')];
 const KEYS = ['id', 'title', 'author', 'license', 'folder', 'year', 'repo'];
 const LICENSE_NAMES = {
@@ -26,14 +26,14 @@ const LICENSE_LINKS = {
 	'CC0-1.0': 'https://creativecommons.org/publicdomain/zero/1.0/legalcode',
 };
 
-const usage = `usage: node tools/polestar.js new [dir] [options]
+const usage = `usage: node tools/sendafh.js new [dir] [options]
 
 Starts a guide pack in [dir] (default: the current folder), which must be
 empty or missing (run it before \`git init\`: a folder holding .git is not
 empty): pack.json, an example guide, README.md, LICENSE, .gitignore, VS Code
-tasks, AGENTS.md / CLAUDE.md for AI assistants, the polestar-guide-pack skill
+tasks, AGENTS.md / CLAUDE.md for AI assistants, the sendafh-guide-pack skill
 (skills/ in this clone) in .agents/skills/ and .claude/skills/, and a GitHub
-workflow and a dev container that install Polestar from this clone's origin
+workflow and a dev container that install SendaFH from this clone's origin
 remote. The origin must be an http(s) or SSH URL; it is written as https,
 without a user name, password, query or fragment. With no origin, or any
 other kind, those two are left out.
@@ -54,10 +54,10 @@ function git(args, cwd) {
 	return r.status === 0 ? r.stdout.trim() : '';
 }
 
-// Polestar's public repository: the origin of this clone. POLESTAR_ORIGIN_URL
+// SendaFH's public repository: the origin of this clone. SENDAFH_ORIGIN_URL
 // overrides it (empty = none), for tests.
 function repoUrl() {
-	if (process.env.POLESTAR_ORIGIN_URL !== undefined) return process.env.POLESTAR_ORIGIN_URL.trim();
+	if (process.env.SENDAFH_ORIGIN_URL !== undefined) return process.env.SENDAFH_ORIGIN_URL.trim();
 	return git(['remote', 'get-url', 'origin'], ROOT);
 }
 
@@ -250,13 +250,13 @@ async function run(argv) {
 	fs.writeFileSync(path.join(dir, 'LICENSE'), licenseText(values));
 	console.log(`new: wrote the pack "${values.id}" to ${dir}`);
 	if (origin && !values.repo) {
-		console.log('note: skipped .github/workflows/pack.yml and .devcontainer/: the origin remote of this Polestar clone is not an http(s) or SSH URL a runner could clone, so they would not know where to install Polestar from');
+		console.log('note: skipped .github/workflows/pack.yml and .devcontainer/: the origin remote of this SendaFH clone is not an http(s) or SSH URL a runner could clone, so they would not know where to install SendaFH from');
 	} else if (!values.repo) {
 		console.log(
-			'note: skipped .github/workflows/pack.yml and .devcontainer/: this Polestar clone has no origin remote (`git remote get-url origin`), so they would not know where to install Polestar from',
+			'note: skipped .github/workflows/pack.yml and .devcontainer/: this SendaFH clone has no origin remote (`git remote get-url origin`), so they would not know where to install SendaFH from',
 		);
 	}
-	console.log('next: cd into it, then `polestar lint` and `polestar playtest`; start from guides/example.guide');
+	console.log('next: cd into it, then `sendafh lint` and `sendafh playtest`; start from guides/example.guide');
 	return 0;
 }
 

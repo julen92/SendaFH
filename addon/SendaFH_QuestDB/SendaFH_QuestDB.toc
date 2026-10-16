@@ -1,0 +1,14 @@
+## Interface: 16001
+## Title: SendaFH | Datos de misiones
+## Notes: Misiones, NPC, objetos y marcas del mapa. Datos de la nueva versión de Polestar.
+## Author: Polestar
+## Version: 0.5.0-beta.1
+## Category: Quests
+## LoadOnDemand: 1
+## Dependencies: SendaFH
+
+MapFrames.lua
+Quests.lua
+Npcs.lua
+Objects.lua
+Items.lua

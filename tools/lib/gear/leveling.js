@@ -1,5 +1,5 @@
 'use strict';
-// ForeverLevelingBiS (MIT, by Thunder) -> addon/Polestar_ItemDB/Forever.lua:
+// ForeverLevelingBiS (MIT, by Thunder) -> addon/SendaFH_ItemDB/Forever.lua:
 // Forever's own item stats over the Classic Era client tables, and where each
 // leveling item comes from (quests, dungeon drops, crafting) for Gear's
 // "next upgrades" and the quest reward pick.
@@ -15,11 +15,11 @@
 const { encode, decode, STAT_KEYS } = require('../itemdb/stats');
 const { header } = require('../generated');
 
-// Stats the scrape records (Polestar keys); the rest stay as the Era table has them.
+// Stats the scrape records (SendaFH keys); the rest stay as the Era table has them.
 const SCRAPED = new Set(['str', 'agi', 'sta', 'int', 'spi', 'armor', 'health', 'mana', 'ap', 'rap', 'sp', 'heal',
 	'spArcane', 'spFire', 'spFrost', 'spHoly', 'spNature', 'spShadow', 'defense', 'dps', 'rdps']);
 
-// Equippable inventory types (as Polestar_ItemDB keeps).
+// Equippable inventory types (as SendaFH_ItemDB keeps).
 const EQUIPPABLE = new Set([1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 25, 26, 28]);
 
 const PROFESSIONS = ['Alchemy', 'Blacksmithing', 'Enchanting', 'Engineering', 'Leatherworking', 'Tailoring', 'Jewelcrafting', 'Mining', 'Herbalism', 'Skinning', 'Cooking', 'First Aid', 'Fishing'];
@@ -39,7 +39,7 @@ function readEraItems(text) {
 function recordOf(it, era) {
 	const stats = {};
 	if (era) for (const [k, v] of Object.entries(era.stats)) if (!SCRAPED.has(k)) stats[k] = v;
-	for (const [k, v] of Object.entries(it.polestar || {})) {
+	for (const [k, v] of Object.entries(it.sendafh || {})) {
 		if (k === 'dps' || k === 'rdps') continue; // weapon damage below
 		if (STAT_KEYS.includes(k) && v) stats[k] = Math.round(v);
 	}
@@ -88,7 +88,7 @@ function sourceTokens(it, npcs, zones, warn) {
 }
 
 // -> { lua, counts, warnings }
-// flb: readForeverLevelingBiS() result; eraText: addon/Polestar_ItemDB/Items.lua.
+// flb: readForeverLevelingBiS() result; eraText: addon/SendaFH_ItemDB/Items.lua.
 function buildForeverPack(flb, eraText) {
 	const era = readEraItems(eraText);
 	const warnings = [];
@@ -153,7 +153,7 @@ function buildForeverPack(flb, eraText) {
 		'--   src     q<quest> | d<npc>x<pct*10>z<zone> | c<spell>p<profession>s<skill>',
 		'--   quests  "<level> <req> <side> <zone> <reqRace> <reqClass> <dungeon>|<choices>|<items>|<name>"',
 		'',
-		'local DB = Polestar and Polestar.ItemDB',
+		'local DB = SendaFH and SendaFH.ItemDB',
 		'if not (DB and DB.Register and DB.RegisterLeveling) then return end',
 		'',
 		'DB.Register(nil, {',

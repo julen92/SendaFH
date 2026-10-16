@@ -1,6 +1,6 @@
 'use strict';
 // Lint and the runtime refuse the same guides: for every reason
-// Polestar.RegisterGuide refuses a guide (Core/Guides.lua validate() and the
+// SendaFH.RegisterGuide refuses a guide (Core/Guides.lua validate() and the
 // pack rules), a .guide under tests/fixtures/packs/parity/ that lint rejects,
 // and its compiled twin (hand-written below) that the runtime refuses. The
 // verb reasons are derived by running the validator over its own verb table
@@ -13,7 +13,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { runAddon } = require('./helpers/lua');
 const { DATA_DIR } = require('./helpers/dsl');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 
 const PARITY = path.join(__dirname, 'fixtures', 'packs', 'parity');
 const CONTEXT = path.join(__dirname, 'fixtures', 'packs', 'context');
@@ -83,7 +83,7 @@ const GENERIC = ['unknown verb fish', 'coordinates outside 0-100', 'step 1 has n
 // a string), then that goal without each field in turn; a filled goal that
 // still fails gives its own reason (sethome's location rule).
 const DERIVE = `
-local G = Polestar.Guides
+local G = SendaFH.Guides
 local function wrap(goal) return { id = "parity/x", title = "x", steps = { { goals = { goal } } } } end
 local function reasonOf(goal)
 	local err = G.Validate(wrap(goal))
@@ -114,15 +114,15 @@ function compiledDef(c) {
 }
 
 function runtime() {
-	const register = CASES.map((c) => `do local ok, err = Polestar.RegisterGuide(${compiledDef(c)}); refused[#refused + 1] = { ok = ok, err = err } end`).join('\n');
+	const register = CASES.map((c) => `do local ok, err = SendaFH.RegisterGuide(${compiledDef(c)}); refused[#refused + 1] = { ok = ok, err = err } end`).join('\n');
 	const script = `
-assert(Polestar.RegisterPack({ addon = "ParityAddon", id = "parity", format = 1, title = "Parity", author = "Tests", version = "1.0.0", license = "CC0-1.0" }))
+assert(SendaFH.RegisterPack({ addon = "ParityAddon", id = "parity", format = 1, title = "Parity", author = "Tests", version = "1.0.0", license = "CC0-1.0" }))
 ${DERIVE}
 refused = {}
 ${register}
 emit(refused)
 `;
-	const [derived, refused] = runAddon({ addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }], login: false, script }).emitted;
+	const [derived, refused] = runAddon({ addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }], login: false, script }).emitted;
 	return { derived, refused };
 }
 
@@ -148,7 +148,7 @@ test('the runtime refuses each compiled twin for its reason', () => {
 test('lint rejects each parity fixture for the matching reason', () => {
 	const files = fs.readdirSync(path.join(PARITY, 'guides')).sort();
 	assert.deepEqual(files, CASES.map((c) => `${c.file}.guide`).sort(), 'one fixture per case, no strays');
-	const r = polestar(['lint', '--pack', PARITY, '--data', DATA_DIR, '--context', CONTEXT, '--context-data', DATA_DIR, '--format', 'json']);
+	const r = sendafh(['lint', '--pack', PARITY, '--data', DATA_DIR, '--context', CONTEXT, '--context-data', DATA_DIR, '--format', 'json']);
 	assert.equal(r.status, 1, r.stderr);
 	const doc = JSON.parse(r.stdout);
 	for (const c of CASES) {

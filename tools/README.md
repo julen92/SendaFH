@@ -1,22 +1,22 @@
 # tools/
 
-Polestar's toolchain: Node 24 or newer, no npm dependencies. Every command
+SendaFH's toolchain: Node 24 or newer, no npm dependencies. Every command
 runs through one entry point:
 
 ```sh
-node tools/polestar.js help              # the list of commands
-node tools/polestar.js help <command>    # one command's options
-node tools/polestar.js <command> --help  # the same; -h too
+node tools/sendafh.js help              # the list of commands
+node tools/sendafh.js help <command>    # one command's options
+node tools/sendafh.js <command> --help  # the same; -h too
 ```
 
 Asking for help never runs a command: `--help` or `-h` anywhere after the
 command name prints its usage and exits, so nothing is built, rendered,
 downloaded or imported. `package.json` has one script, `npm test`; every
-other command runs as `node tools/polestar.js <command>` (or `polestar
+other command runs as `node tools/sendafh.js <command>` (or `sendafh
 <command>` after `npm link`).
 
 Some commands also need a Lua 5.1 interpreter (`play`, `playtest`,
-`record import`, `travel route`); `node tools/polestar.js doctor` checks what
+`record import`, `travel route`); `node tools/sendafh.js doctor` checks what
 is installed. The contract the tools write to is in
 [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md), "Toolchain".
 
@@ -38,7 +38,7 @@ is installed. The contract the tools write to is in
 |---|---|
 | `new` | Starts a guide pack in a new folder from `tools/templates/pack` |
 | `lint` | Checks a pack's `.guide` files without writing anything |
-| `compile` | Compiles a pack into its addon folder (ours into `addon/Polestar_Guides`) |
+| `compile` | Compiles a pack into its addon folder (ours into `addon/SendaFH_Guides`) |
 | `dev` | Rebuilds a pack into the game, and optionally the playground, on every save |
 | `playtest` | Plays a pack's guides to the end for every class they branch on |
 | `find` | Looks up quests, NPCs, objects, items, inns, flight points and guides, printed as guide lines |
@@ -49,7 +49,7 @@ is installed. The contract the tools write to is in
 ### Building data
 
 These need the game client's tables, installed addons or other local
-sources, so they run on a maintainer's machine, never in Polestar's CI. A
+sources, so they run on a maintainer's machine, never in SendaFH's CI. A
 pack's CI (the template's `pack.yml`) runs
 `data build --no-web-xp --no-wowhead`: pfQuest and the client tables,
 without QuestieDB.
@@ -62,18 +62,18 @@ without QuestieDB.
 | `exploration build` / `exploration check` | Writes or checks the exploration guides in `guides/forever/exploration` |
 | `trainers build` | Builds `data/forever/trainers.json` and `Core/ClassTrainers.lua` |
 | `talents build` / `talents check` | Writes or checks `Talents/Builds.lua`: the plans in `talents/forever/` resolved by name on the Forever trait tree and replayed under its rules |
-| `travel build` | Builds the travel network: `data/forever/travel.json`, `Nav/TravelData.lua` (with the boat, zeppelin, tram and lift timetables, walk-in portals and class teleports `Nav/Transit.lua` reads), the flights' tracks (`Maps/FlightPaths.lua`), `Polestar_Travel`; `travel route` runs the in-game planner between two points; `travel chain` drafts an approach chain from recorded walks |
+| `travel build` | Builds the travel network: `data/forever/travel.json`, `Nav/TravelData.lua` (with the boat, zeppelin, tram and lift timetables, walk-in portals and class teleports `Nav/Transit.lua` reads), the flights' tracks (`Maps/FlightPaths.lua`), `SendaFH_Travel`; `travel route` runs the in-game planner between two points; `travel chain` drafts an approach chain from recorded walks |
 | `nav build` / `nav path` | The navigation grid in `data/local/nav`: where a character can walk, climb, fall, swim and ride lifts, built from the Forever client's terrain, water and model collision (local only); `nav path` prints the route between two map points |
 | `nav aids` | The arrow's zone crossings, open borders and approach chains generated from the navigation grid (`nav build`) into `data/local/nav/aids.json` (crossings schema); `--report` measures the arrow on every guide leg without and with them; `--lua <file>` writes a Crossings.lua for a local test |
 | `maps build` / `maps overlays` | Zone level ranges (`Maps/ZoneLevels.lua`) / zone art overlays (`UI/ZoneArtOverlays.lua`) |
 | `qol build` | Spirit healers, flight masters and reagent vendors (`QoL/Data.lua`) |
-| `itemdb build` | The `Polestar_ItemDB` item stats (`Items.lua`) |
+| `itemdb build` | The `SendaFH_ItemDB` item stats (`Items.lua`) |
 | `gear build` / `gear fetch` | Forever item stats, reward choices and stat weight bands / refresh the cached sims |
-| `questdb build` | The `Polestar_QuestDB` data addon |
-| `codex build` | Lookup's Codex: `data/forever/codex/*.json` and the `Polestar_Codex` data addon |
+| `questdb build` | The `SendaFH_QuestDB` data addon |
+| `codex build` | Lookup's Codex: `data/forever/codex/*.json` and the `SendaFH_Codex` data addon |
 | `codex parity` | The release Codex against the last `--local-extras` build, per kind: `data/local/codex-parity.{json,md}` |
-| `nav pack` | Polestar's walking maps of Eastern Kingdoms and Kalimdor from the navigation grid in Shortest Path Forever's map format, with the walk's chokepoints, into `addon/Polestar_Nav` (`Nav/Nav0*.lua`, `Nav/Nav1*.lua`, `Nav/Chokepoints.lua`, `PACK.json`, `Nav/Nav.xml`); `--cells` (default 128), `--date` (the headers' date: the same grid, cells and date give the same bytes), `--check` compares the folder with `PACK.json` |
-| `nav vendor <checkout>` / `nav check` | `addon/Polestar_Nav` from a Shortest Path Forever checkout (Cillian Berragan's walking router and his map of Zephras Isle, GPL-3.0-or-later): `Routing/`, `Nav/Nav2991*.lua`, `UPSTREAM.json`, `Nav/Nav.xml` / checks the folder against `UPSTREAM.json` and `PACK.json` |
+| `nav pack` | SendaFH's walking maps of Eastern Kingdoms and Kalimdor from the navigation grid in Shortest Path Forever's map format, with the walk's chokepoints, into `addon/SendaFH_Nav` (`Nav/Nav0*.lua`, `Nav/Nav1*.lua`, `Nav/Chokepoints.lua`, `PACK.json`, `Nav/Nav.xml`); `--cells` (default 128), `--date` (the headers' date: the same grid, cells and date give the same bytes), `--check` compares the folder with `PACK.json` |
+| `nav vendor <checkout>` / `nav check` | `addon/SendaFH_Nav` from a Shortest Path Forever checkout (Cillian Berragan's walking router and his map of Zephras Isle, GPL-3.0-or-later): `Routing/`, `Nav/Nav2991*.lua`, `UPSTREAM.json`, `Nav/Nav.xml` / checks the folder against `UPSTREAM.json` and `PACK.json` |
 | `media` | Regenerates the addon's textures from `tools/media/*.js` |
 | `readme brand` / `readme charts` | Redraws the README's art: the banners, emblem, logo, download and CurseForge buttons and the CurseForge avatar / the route charts (needs `data/sim`); both also export the CurseForge listing's PNGs when `rsvg-convert` is installed |
 
@@ -81,7 +81,7 @@ without QuestieDB.
 
 | Command | What it does |
 |---|---|
-| `i18n` | The interface translations ([docs/TRANSLATING.md](../docs/TRANSLATING.md)): `status`, `check`, `sync`, `keys`, `import`; and `names`, the names addons `addon/Polestar_Names_<locale>` |
+| `i18n` | The interface translations ([docs/TRANSLATING.md](../docs/TRANSLATING.md)): `status`, `check`, `sync`, `keys`, `import`; and `names`, the names addons `addon/SendaFH_Names_<locale>` |
 
 ### Releasing
 
@@ -96,7 +96,7 @@ The release steps are in [docs/RELEASING.md](../docs/RELEASING.md).
 
 | Path | What it is |
 |---|---|
-| `polestar.js` | The entry point: dispatches to `commands/<name>.js` |
+| `sendafh.js` | The entry point: dispatches to `commands/<name>.js` |
 | `commands/` | One module per command: `{ name, summary, usage, run }` |
 | `lib/` | The library the commands share (below) |
 | `media/` | Texture generators run by `media`: `nav.js`, `qol.js`, `ui.js`; the wordmark fonts in `media/fonts` |
@@ -113,7 +113,7 @@ The release steps are in [docs/RELEASING.md](../docs/RELEASING.md).
 |---|---|
 | `addons.js` | Finds World of Warcraft: Forever installs and their AddOns and WTF folders; every command that reads or writes them goes through it (`$WOW_FOREVER_ADDONS` first, then the detected clients, live first) |
 | `cli.js` | The shared argument parser and diagnostics printer of the commands |
-| `codex/` | `codex build`: the Codex JSON, the Dungeons journal and the `Polestar_Codex` writer |
+| `codex/` | `codex build`: the Codex JSON, the Dungeons journal and the `SendaFH_Codex` writer |
 | `consume/` | Readers for installed addons' data, all through one Lua reader, and for the sims' stat weights |
 | `data/` | `data build`: sources, merging, spawns, races, the dungeon import; also the shared CSV and wago.tools loaders |
 | `dsl/` | The guide compiler: lexer, parser, resolver, validation, emitter; project and pack layout; parsing a guide's class, race and faction conditions |
@@ -122,7 +122,7 @@ The release steps are in [docs/RELEASING.md](../docs/RELEASING.md).
 | `generated.js` | Writes or checks a command's generated files |
 | `game/` | The game's rules, once for every tool: `xp.js` (XP to level, quest and kill XP, the client's QuestXP table) and `races.js` (races, classes and their mask bits) |
 | `gear/` | `gear build`: Forever item stats, reward choices, weight bands |
-| `i18n/` | `i18n`: the locales (`locales.js`), key extraction (`keys.js`), the format check (`check.js`), reading and editing locale files (`files.js`), the glossary (`glossary.js`, `glossary/<locale>.json`) and each locale's state (`project.js`), adapted from Ding! by Yendi; the names addons (`names.js`: DingDB's pin, the ids Polestar's data names, the merge with pfQuest's locale files and the emitted addons) |
+| `i18n/` | `i18n`: the locales (`locales.js`), key extraction (`keys.js`), the format check (`check.js`), reading and editing locale files (`files.js`), the glossary (`glossary.js`, `glossary/<locale>.json`) and each locale's state (`project.js`), adapted from Ding! by Yendi; the names addons (`names.js`: DingDB's pin, the ids SendaFH's data names, the merge with pfQuest's locale files and the emitted addons) |
 | `itemdb/` | `itemdb build`: item stats from the client tables |
 | `lua.js` | Runs Lua 5.1 for the tools (reading SavedVariables and other addons' data) |
 | `maps/` | `maps build` (zone levels) and `maps overlays` |
@@ -150,7 +150,7 @@ where they exist.
 
 Every generated text file starts with the same line, a comment in the
 file's language written by `header()` in `lib/generated.js`:
-``Generated by `node tools/polestar.js <command>` from <sources>. Do not edit: rebuild with that command.``
+``Generated by `node tools/sendafh.js <command>` from <sources>. Do not edit: rebuild with that command.``
 
 | Output | Command | Inputs | In git | Staleness check |
 |---|---|---|---|---|
@@ -159,28 +159,28 @@ file's language written by `header()` in `lib/generated.js`:
 | `data/forever/dungeons.json` | `dungeons build` | the installed dungeon journal addon, `data/forever` | local | none |
 | `data/forever/professions.json` | `profession build` | client tables, `data/forever` items, npcs, objects | local | none |
 | `data/forever/trainers.json` | `trainers build` | `train` goals under `guides/`, `data/recordings`, the curated list, `npcs.json` | local | none |
-| `addon/Polestar/Core/ClassTrainers.lua` | `trainers build` | the same | yes | rerun |
-| `addon/Polestar/Talents/Builds.lua` | `talents build` | `talents/forever/*.json`, Forever trait tables from wago.tools (build pinned in `tools/commands/talents.js`) | yes | `talents check`; `tests/talents-build.test.js` runs it when the tables are cached |
+| `addon/SendaFH/Core/ClassTrainers.lua` | `trainers build` | the same | yes | rerun |
+| `addon/SendaFH/Talents/Builds.lua` | `talents build` | `talents/forever/*.json`, Forever trait tables from wago.tools (build pinned in `tools/commands/talents.js`) | yes | `talents check`; `tests/talents-build.test.js` runs it when the tables are cached |
 | `data/forever/travel.json` | `travel build` | client tables (Era and Forever), the newest cached Forever AreaTable (`data/sources/wago/`, the inns' areas), CMaNGOS classic-db (`data/sources/cmangos/`), `data/forever` map-frames, zones, npcs, objects, `data/recordings` | local | none |
-| `addon/Polestar/Nav/TravelData.lua` | `travel build` | the same | yes | rerun; `tests/travel-build.test.js` loads the committed file; `tests/nav-transit.test.js` builds and loads the timetables |
-| `addon/Polestar/Maps/FlightPaths.lua` | `travel build` | client TaxiPathNode | yes | rerun; `tests/nav-route-lines.test.js` loads the committed file |
-| `addon/Polestar_Travel/` | `travel build` | the local crossings file `data/local/crossings.json` | local | `tests/travel-crossings.test.js` validates the crossings file |
-| `addon/Polestar/Maps/ZoneLevels.lua` | `maps build` | `data/forever` npcs, zones | yes | `tests/maps-zonelevels.test.js` ("up to date") |
-| `addon/Polestar/UI/ZoneArtOverlays.lua` | `maps overlays` | Forever client tables (wago.tools) | yes | rerun |
-| `addon/Polestar/QoL/Data.lua` | `qol build` | `data/forever` npcs, map-frames | yes | rerun |
-| `addon/Polestar_ItemDB/Items.lua`, its TOC | `itemdb build` | Classic Era client item tables | yes | rerun; `tests/itemdb.test.js` loads it within its size budget |
-| `addon/Polestar_ItemDB/Forever.lua` and `LICENSE-DATA.txt`, `addon/Polestar/Gear/SpecData.lua` and `LICENSE-DATA.txt`; `data/forever/gear/report.json` | `gear build`, after `itemdb build` | the installed ForeverLevelingBiS, the sims cached in `data/sources/wowsims` (`gear fetch`) | yes; the report is local | rerun |
-| `addon/Polestar_QuestDB/` | `questdb build` | `data/forever` quests, npcs, objects, items, map-frames | local; ships in the release zip when built | `tests/questdb.test.js` loads it within its budget |
-| `data/forever/codex/*.json`, `addon/Polestar_Codex/` (with `LICENSE-DATA.txt`) | `codex build` | the installed ForeverLevelingBiS; `data/forever` including instances, trainers and professions; Forever and Era client tables; our guides. `--local-extras` adds AtlasLoot, RareScanner and `dungeons.json` (local-only) | local; always in the release zip (`pack` fails without a release-safe one) | `tests/lookup-codex.test.js` loads it in game |
-| `addon/Polestar_Nav/Routing/`, `Nav/Nav2991*.lua`, `UPSTREAM.json` | `nav vendor <checkout>` | a git checkout of https://github.com/cjber/shortest-path-forever | yes (vendored; always in the release zip) | `nav check`; `tests/nav-vendor.test.js` |
-| `addon/Polestar_Nav/Nav/Nav0*.lua`, `Nav1*.lua`, `Chokepoints.lua`, `PACK.json`, `Nav/Nav.xml` | `nav pack` | the navigation grid (`data/local/nav`, current tile version), its `aids.json` and `lifts.json`, `data/forever` map-frames and zones, the newest cached AreaTable | yes (always in the release zip) | `nav check` / `nav pack --check` (sha256 in `PACK.json`); its headers name the grid's client build and the date; rerun after `nav build` or `nav aids` |
+| `addon/SendaFH/Nav/TravelData.lua` | `travel build` | the same | yes | rerun; `tests/travel-build.test.js` loads the committed file; `tests/nav-transit.test.js` builds and loads the timetables |
+| `addon/SendaFH/Maps/FlightPaths.lua` | `travel build` | client TaxiPathNode | yes | rerun; `tests/nav-route-lines.test.js` loads the committed file |
+| `addon/SendaFH_Travel/` | `travel build` | the local crossings file `data/local/crossings.json` | local | `tests/travel-crossings.test.js` validates the crossings file |
+| `addon/SendaFH/Maps/ZoneLevels.lua` | `maps build` | `data/forever` npcs, zones | yes | `tests/maps-zonelevels.test.js` ("up to date") |
+| `addon/SendaFH/UI/ZoneArtOverlays.lua` | `maps overlays` | Forever client tables (wago.tools) | yes | rerun |
+| `addon/SendaFH/QoL/Data.lua` | `qol build` | `data/forever` npcs, map-frames | yes | rerun |
+| `addon/SendaFH_ItemDB/Items.lua`, its TOC | `itemdb build` | Classic Era client item tables | yes | rerun; `tests/itemdb.test.js` loads it within its size budget |
+| `addon/SendaFH_ItemDB/Forever.lua` and `LICENSE-DATA.txt`, `addon/SendaFH/Gear/SpecData.lua` and `LICENSE-DATA.txt`; `data/forever/gear/report.json` | `gear build`, after `itemdb build` | the installed ForeverLevelingBiS, the sims cached in `data/sources/wowsims` (`gear fetch`) | yes; the report is local | rerun |
+| `addon/SendaFH_QuestDB/` | `questdb build` | `data/forever` quests, npcs, objects, items, map-frames | local; ships in the release zip when built | `tests/questdb.test.js` loads it within its budget |
+| `data/forever/codex/*.json`, `addon/SendaFH_Codex/` (with `LICENSE-DATA.txt`) | `codex build` | the installed ForeverLevelingBiS; `data/forever` including instances, trainers and professions; Forever and Era client tables; our guides. `--local-extras` adds AtlasLoot, RareScanner and `dungeons.json` (local-only) | local; always in the release zip (`pack` fails without a release-safe one) | `tests/lookup-codex.test.js` loads it in game |
+| `addon/SendaFH_Nav/Routing/`, `Nav/Nav2991*.lua`, `UPSTREAM.json` | `nav vendor <checkout>` | a git checkout of https://github.com/cjber/shortest-path-forever | yes (vendored; always in the release zip) | `nav check`; `tests/nav-vendor.test.js` |
+| `addon/SendaFH_Nav/Nav/Nav0*.lua`, `Nav1*.lua`, `Chokepoints.lua`, `PACK.json`, `Nav/Nav.xml` | `nav pack` | the navigation grid (`data/local/nav`, current tile version), its `aids.json` and `lifts.json`, `data/forever` map-frames and zones, the newest cached AreaTable | yes (always in the release zip) | `nav check` / `nav pack --check` (sha256 in `PACK.json`); its headers name the grid's client build and the date; rerun after `nav build` or `nav aids` |
 | `guides/forever/exploration/*.guide` (7) | `exploration build` | client map tables, `data/forever` zones, map-frames, travel | yes | `exploration check`; `tests/exploration.test.js` |
 | `guides/forever/professions/` mining, herbalism, skinning, cooking, first-aid, fishing | `profession gathering build` | `data/forever` professions, items, npcs, objects | yes | `profession gathering check`; `tests/profession-gathering.test.js` |
 | `guides/forever/professions/` alchemy, blacksmithing, enchanting, engineering, leatherworking, tailoring | `profession draft <Profession> --out` | `data/forever` including professions | yes | rerun |
-| `addon/Polestar_Guides/` | `compile` | `guides/**/*.guide`, `guides/pack.json`, `data/forever` (including trainers, travel, professions, factions, races; never `dungeons.json`), the newest cached Forever AreaTable in `data/sources/wago/` (place areas) | yes | rerun; `tests/guides-parse.test.js` fails when a guide is added, renamed or removed without `compile` |
-| `addon/Polestar_Names_<locale>/` (9) | `i18n names` | DingDB pinned in `tools/lib/i18n/names.js` (cloned into `data/sources/ding`), pfQuest's `db/<locale>` (`data/sources/pfQuest`), the ids of `addon/Polestar_Guides/Guides.lua`, `addon/Polestar_QuestDB/` and `data/forever/codex/` | yes (always in the release zip) | rerun after `compile`, `questdb build` or `codex build` add ids; `tests/i18n-names.test.js` |
-| `addon/Polestar/Media/Nav/*.tga`, `addon/Polestar/Media/UI/*.tga` | `media` | `tools/media/*.js`, `tools/lib/tga.js`, `tools/media/fonts` (no data) | yes | rerun: the output is byte-identical, and CI fails when it differs from the committed files; `tests/media-refs.test.js` checks the addon names every texture |
-| `docs/preview/*.svg` | `preview` | the addon's Lua (Core, Theme, Nav, Quests, Gear, Maps, QoL, Lookup, Dungeons, Rares, UI), its generated files included; `tests/lua` (the client stubs, `stub_ui.lua`'s sample guides), `tests/fixtures`, among them six compiled Horde guides frozen in `tests/fixtures/preview/guides.lua`; no reference data and not the shipped `addon/Polestar_Guides`, so a guide recompile never changes the renders. `POLESTAR_CLIENT_ART` (with `POLESTAR_DUNGEONS_PACK`) renders local art and data into its own folder, never here | yes | rerun: the output is byte-identical, and CI fails when it differs from the committed files or a render is missing; a full run removes the renders of scenes that are gone |
+| `addon/SendaFH_Guides/` | `compile` | `guides/**/*.guide`, `guides/pack.json`, `data/forever` (including trainers, travel, professions, factions, races; never `dungeons.json`), the newest cached Forever AreaTable in `data/sources/wago/` (place areas) | yes | rerun; `tests/guides-parse.test.js` fails when a guide is added, renamed or removed without `compile` |
+| `addon/SendaFH_Names_<locale>/` (9) | `i18n names` | DingDB pinned in `tools/lib/i18n/names.js` (cloned into `data/sources/ding`), pfQuest's `db/<locale>` (`data/sources/pfQuest`), the ids of `addon/SendaFH_Guides/Guides.lua`, `addon/SendaFH_QuestDB/` and `data/forever/codex/` | yes (always in the release zip) | rerun after `compile`, `questdb build` or `codex build` add ids; `tests/i18n-names.test.js` |
+| `addon/SendaFH/Media/Nav/*.tga`, `addon/SendaFH/Media/UI/*.tga` | `media` | `tools/media/*.js`, `tools/lib/tga.js`, `tools/media/fonts` (no data) | yes | rerun: the output is byte-identical, and CI fails when it differs from the committed files; `tests/media-refs.test.js` checks the addon names every texture |
+| `docs/preview/*.svg` | `preview` | the addon's Lua (Core, Theme, Nav, Quests, Gear, Maps, QoL, Lookup, Dungeons, Rares, UI), its generated files included; `tests/lua` (the client stubs, `stub_ui.lua`'s sample guides), `tests/fixtures`, among them six compiled Horde guides frozen in `tests/fixtures/preview/guides.lua`; no reference data and not the shipped `addon/SendaFH_Guides`, so a guide recompile never changes the renders. `SENDAFH_CLIENT_ART` (with `SENDAFH_DUNGEONS_PACK`) renders local art and data into its own folder, never here | yes | rerun: the output is byte-identical, and CI fails when it differs from the committed files or a render is missing; a full run removes the renders of scenes that are gone |
 | `docs/assets/{banner-dark,banner-light,emblem,logo,download,curseforge,avatar}.svg` | `readme brand` | the emblem geometry, the wordmark fonts, the CurseForge mark | yes | rerun |
 | `docs/curseforge/images/{logo-1024,logo-400,banner,starts,levels}.png` | `readme brand` (all five), `readme charts` (the charts), with `rsvg-convert` (librsvg) installed; without it they print the `rsvg-convert` commands to run | `docs/assets/avatar.svg`, `banner-dark.svg`, `charts/{starts,levels}.svg` | yes | rerun |
 | `docs/assets/charts/{levels,starts}.svg` | `readme charts --draft v0.1.0` | `data/sim`, `guides/`, the guides of the first release (tag `v0.1.0`) | yes | rerun |
@@ -198,19 +198,19 @@ file's language written by `header()` in `lib/generated.js`:
 Each step reads only the data the steps above it wrote. After a new client
 build, new recordings or a change to an installed source addon:
 
-1. `node tools/polestar.js data build`
-2. `node tools/polestar.js dungeons build`
-3. `node tools/polestar.js profession build`
-4. `node tools/polestar.js trainers build` (and `talents build` after a new client build)
-5. `node tools/polestar.js travel build`
-6. `node tools/polestar.js maps build` and `node tools/polestar.js maps overlays`
-7. `node tools/polestar.js qol build`
-8. `node tools/polestar.js itemdb build`, then `node tools/polestar.js gear build`
-9. `node tools/polestar.js questdb build`
-10. `node tools/polestar.js codex build` (reads `professions.json`, `trainers.json` and the recorded `instances.json`; `dungeons.json` only with `--local-extras`)
-11. The generated guides: `node tools/polestar.js exploration build` (reads `travel.json`), `node tools/polestar.js profession gathering build` and `node tools/polestar.js profession draft <Profession> --out` for each crafting profession (read `professions.json`)
-12. `node tools/polestar.js lint`, then `node tools/polestar.js compile`
-13. `node tools/polestar.js preview`: it reads no reference data and no compiled guides, but the addon Lua that steps 4 to 8 write is part of what it draws
+1. `node tools/sendafh.js data build`
+2. `node tools/sendafh.js dungeons build`
+3. `node tools/sendafh.js profession build`
+4. `node tools/sendafh.js trainers build` (and `talents build` after a new client build)
+5. `node tools/sendafh.js travel build`
+6. `node tools/sendafh.js maps build` and `node tools/sendafh.js maps overlays`
+7. `node tools/sendafh.js qol build`
+8. `node tools/sendafh.js itemdb build`, then `node tools/sendafh.js gear build`
+9. `node tools/sendafh.js questdb build`
+10. `node tools/sendafh.js codex build` (reads `professions.json`, `trainers.json` and the recorded `instances.json`; `dungeons.json` only with `--local-extras`)
+11. The generated guides: `node tools/sendafh.js exploration build` (reads `travel.json`), `node tools/sendafh.js profession gathering build` and `node tools/sendafh.js profession draft <Profession> --out` for each crafting profession (read `professions.json`)
+12. `node tools/sendafh.js lint`, then `node tools/sendafh.js compile`
+13. `node tools/sendafh.js preview`: it reads no reference data and no compiled guides, but the addon Lua that steps 4 to 8 write is part of what it draws
 
 `maps overlays`, `itemdb build` and `media` read no reference data: they
 only need rerunning when the client's tables or `tools/media` change. The

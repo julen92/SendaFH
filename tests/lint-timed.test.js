@@ -162,7 +162,7 @@ function timedOf(text, data) {
 for (const o of ORDERS) {
 	test(`${o.name}: the old order warns, the fixed one does not`, { skip }, (t) => {
 		const data = realData();
-		if (!data) return t.skip('data/forever/items.json has no item durations: rebuild with `node tools/polestar.js data build`');
+		if (!data) return t.skip('data/forever/items.json has no item durations: rebuild with `node tools/sendafh.js data build`');
 		const old = timedOf(header('old', [...o.head, '', ...o.old]), data);
 		assert.equal(old.length, 1, 'the old order warns once');
 		assert.match(old[0].message, new RegExp(`^item ${o.item} \\(`));
@@ -172,7 +172,7 @@ for (const o of ORDERS) {
 
 test('every authored guide carries its timed items in time', { skip }, (t) => {
 	const data = realData();
-	if (!data) return t.skip('data/forever/items.json has no item durations: rebuild with `node tools/polestar.js data build`');
+	if (!data) return t.skip('data/forever/items.json has no item durations: rebuild with `node tools/sendafh.js data build`');
 	const { diag } = compileProject({ packDir: OFFICIAL_DIR, manifest: { id: 'guides' }, data });
 	assert.deepEqual(
 		diag.warnings.filter((w) => / lasts /.test(w.message)).map((w) => `${path.relative(OFFICIAL_DIR, w.file)}:${w.line}: ${w.message}`),

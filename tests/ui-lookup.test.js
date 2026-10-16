@@ -1,5 +1,5 @@
 'use strict';
-// The Lookup section of the hub (addon/Polestar/UI/Lookup.lua) and its rows in the guide
+// The Lookup section of the hub (addon/SendaFH/UI/Lookup.lua) and its rows in the guide
 // menu's search, against the fake Engine of tests/lua/stub_ui.lua and the fake
 // Search / Codex / Lookup runtime of tests/lua/stub_lookup.lua; the last test
 // runs the real runtime over the synthetic Codex pack (tests/fixtures/codex).
@@ -14,8 +14,8 @@ const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 function run(script) {
 	return runAddon({
 		stubs: ['stub_ui.lua', 'stub_lookup.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `uistub.install()\nlookupstub.install()\nstub.login()\nlocal UI, LK = Polestar.UI, Polestar.UI.Lookup\n${HELPERS}\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `uistub.install()\nlookupstub.install()\nstub.login()\nlocal UI, LK = SendaFH.UI, SendaFH.UI.Lookup\n${HELPERS}\n${script}`,
 	}).emitted;
 }
 
@@ -37,16 +37,16 @@ local function rowFor(parent, title)
 	for _, r in ipairs(shownRows(parent)) do if r.Title:GetText() == title then return r end end
 end
 local function nav(key)
-	for _, b in ipairs(PolestarPicker.navButtons) do if b.psKey == key and b:IsShown() then return b end end
+	for _, b in ipairs(SendaFHPicker.navButtons) do if b.psKey == key and b:IsShown() then return b end end
 end
-local function lookupShown() return PolestarPicker:IsShown() and Polestar.UI.Picker.Section() == "Lookup" end
+local function lookupShown() return SendaFHPicker:IsShown() and SendaFH.UI.Picker.Section() == "Lookup" end
 local function navKeys()
 	local out = {}
-	for _, b in ipairs(PolestarPicker.navButtons) do if b:IsShown() then out[#out + 1] = b.psKey end end
+	for _, b in ipairs(SendaFHPicker.navButtons) do if b:IsShown() then out[#out + 1] = b.psKey end end
 	return out
 end
 local function type_(text)
-	local box = Polestar.UI.Picker.search
+	local box = SendaFH.UI.Picker.search
 	box:SetText(text)
 	stub.RunScript(box, "OnTextChanged", true)
 end
@@ -54,13 +54,13 @@ end
 
 test('SHOW_LOOKUP opens the hub at Lookup on the query, results grouped by kind, the first selected', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show("saber")
+		SendaFH.Lookup.Show("saber")
 		local body = LK.results.Child
-		emit({ shown = lookupShown(), query = LK.Query(), box = Polestar.UI.Picker.search:GetText(), groups = LK.shown.groups, rows = rowTexts(body),
-			sel = LK.Selected() and LK.Selected().id, title = PolestarPicker.Title:GetText(), sub = PolestarPicker.Subtitle:GetText(),
-			navs = navKeys(), mounts = nav("mount").Count:GetText(), codex = LK.root.CodexLine:GetText(), tabRow = PolestarPicker.TabRow:IsShown(),
+		emit({ shown = lookupShown(), query = LK.Query(), box = SendaFH.UI.Picker.search:GetText(), groups = LK.shown.groups, rows = rowTexts(body),
+			sel = LK.Selected() and LK.Selected().id, title = SendaFHPicker.Title:GetText(), sub = SendaFHPicker.Subtitle:GetText(),
+			navs = navKeys(), mounts = nav("mount").Count:GetText(), codex = LK.root.CodexLine:GetText(), tabRow = SendaFHPicker.TabRow:IsShown(),
 			tip = rowFor(body, "Reins of the Striped Frostsaber").psTip,
-			special = (function() for _, n in ipairs(UISpecialFrames) do if n == "PolestarPicker" then return true end end end)() })`);
+			special = (function() for _, n in ipairs(UISpecialFrames) do if n == "SendaFHPicker" then return true end end end)() })`);
 	assert.equal(out.shown, true);
 	assert.equal(out.query, 'saber');
 	assert.equal(out.box, 'saber');
@@ -86,12 +86,12 @@ test('SHOW_LOOKUP opens the hub at Lookup on the query, results grouped by kind,
 
 test('Show all and the sidebar filter to one kind; arrows walk the results', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show("saber")
+		SendaFH.Lookup.Show("saber")
 		local body = LK.results.Child
 		rowFor(body, "Show all 6"):Click()
-		local filtered = { kind = LK.Kind(), rows = rowTexts(body), title = PolestarPicker.Title:GetText() }
+		local filtered = { kind = LK.Kind(), rows = rowTexts(body), title = SendaFHPicker.Title:GetText() }
 		nav("all"):Click()
-		local box = Polestar.UI.Picker.search
+		local box = SendaFH.UI.Picker.search
 		stub.RunScript(box, "OnArrowPressed", "DOWN")
 		stub.RunScript(box, "OnArrowPressed", "DOWN")
 		local two = LK.Selected().id
@@ -122,7 +122,7 @@ test('typing waits for a pause before searching', () => {
 
 test('what cannot be got: a muted chip carries it in the list and the hub search (the name keeps its colour), no guide in the details', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show("saber")
+		SendaFH.Lookup.Show("saber")
 		LK.SetKind("mount")
 		local function row(title)
 			local r = rowFor(LK.results.Child, title)
@@ -136,14 +136,14 @@ test('what cannot be got: a muted chip carries it in the list and the hub search
 		local buttons = { primary = LK.details.Primary:IsShown(), secondary = LK.details.Secondary:IsShown() }
 		LK.details.Rows[1]:Click()
 		local sourceGuide = LK.details.Rows[1].Guide:IsShown()
-		stub.RunScript(Polestar.UI.Picker.search, "OnEnterPressed")
+		stub.RunScript(SendaFH.UI.Picker.search, "OnEnterPressed")
 		LK.Guide(1)
 		local calls = #lookupstub.calls
 		UI.ShowPicker()
-		Polestar.UI.Picker.ShowSection("Guides")
-		Polestar.UI.Picker.SetQuery("reins of the frostsaber")
+		SendaFH.UI.Picker.ShowSection("Guides")
+		SendaFH.UI.Picker.SetQuery("reins of the frostsaber")
 		local hub = {}
-		for _, r in ipairs(shownRows(PolestarPicker.Scroll.Child)) do
+		for _, r in ipairs(shownRows(SendaFHPicker.Scroll.Child)) do
 			if r.psResult and r.psResult.id == 12302 then hub = { chip = r.Status:IsShown() and r.Status.Text:GetText(), alpha = r.Title:GetAlpha() } end
 		end
 		emit({ list = list, d = d, chip = chip, buttons = buttons, sourceGuide = sourceGuide, calls = calls, hub = hub })`);
@@ -163,7 +163,7 @@ test('what cannot be got: a muted chip carries it in the list and the hub search
 
 test('a vendor mount: facts, ranked sources with travel and price, the closed one dimmed with why', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show(nil, "mount", 8631)
+		SendaFH.Lookup.Show(nil, "mount", 8631)
 		emit({ query = LK.Query(), d = LK.detail, title = LK.details.Title:GetText(), color = { LK.details.Title:GetTextColor() } })`);
 	assert.equal(out.query, 'Reins of the Striped Frostsaber');
 	assert.equal(out.title, 'Reins of the Striped Frostsaber');
@@ -187,18 +187,18 @@ test('a vendor mount: facts, ranked sources with travel and price, the closed on
 
 test('Guide me and a source\'s own Guide call Lookup.Guide and open the guide window', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show(nil, "mount", 8631)
+		SendaFH.Lookup.Show(nil, "mount", 8631)
 		LK.details.Rows[2]:Click()
 		local pick = { sel = LK.detail.sources[2].guide, other = LK.detail.sources[1].guide }
 		LK.details.Rows[2].Guide:Click()
-		local afterSource = { call = lookupstub.calls[1], shown = lookupShown(), ui = Polestar.Get("ui.shown") }
-		Polestar.Set("ui.shown", false)
-		Polestar.Lookup.Show(nil, "mount", 8631)
+		local afterSource = { call = lookupstub.calls[1], shown = lookupShown(), ui = SendaFH.Get("ui.shown") }
+		SendaFH.Set("ui.shown", false)
+		SendaFH.Lookup.Show(nil, "mount", 8631)
 		LK.details.Primary:Click()
 		local primary = lookupstub.calls[2]
-		Polestar.Lookup.Show(nil, "mount", 8631)
-		stub.RunScript(Polestar.UI.Picker.search, "OnEnterPressed")
-		emit({ pick = pick, afterSource = afterSource, primary = primary, enter = lookupstub.calls[3], shown = lookupShown(), ui = Polestar.Get("ui.shown") })`);
+		SendaFH.Lookup.Show(nil, "mount", 8631)
+		stub.RunScript(SendaFH.UI.Picker.search, "OnEnterPressed")
+		emit({ pick = pick, afterSource = afterSource, primary = primary, enter = lookupstub.calls[3], shown = lookupShown(), ui = SendaFH.Get("ui.shown") })`);
 	assert.deepEqual(out.pick, { sel: true, other: false });
 	assert.deepEqual(out.afterSource, { call: ['mount', 8631, 2], shown: false, ui: true });
 	assert.deepEqual(out.primary, ['mount', 8631, false]);
@@ -209,14 +209,14 @@ test('Guide me and a source\'s own Guide call Lookup.Guide and open the guide wi
 
 test('a rare drop out of reach: chance, the reason, Guide me off; a curated guide says Open guide', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show("deathcharger")
+		SendaFH.Lookup.Show("deathcharger")
 		local drop = LK.detail
 		lookupstub.curated["mount:8631"] = "forever/alliance/02-westfall"
-		Polestar.Lookup.Show(nil, "mount", 8631)
+		SendaFH.Lookup.Show(nil, "mount", 8631)
 		local curated = LK.detail
 		LK.details.Primary:Click()
 		lookupstub.guideResult = "nosource"
-		Polestar.Lookup.Show(nil, "mount", 13335)
+		SendaFH.Lookup.Show(nil, "mount", 13335)
 		LK.details.Rows[1]:Click()
 		LK.details.Rows[1].Guide:Click()
 		emit({ drop = drop, curated = curated, call = lookupstub.calls[1], failed = LK.details.Note:GetText(), still = lookupShown() })`);
@@ -234,7 +234,7 @@ test('a rare drop out of reach: chance, the reason, Guide me off; a curated guid
 	assert.equal(out.curated.primary, 'Open guide');
 	// Neutral wording: the curated guide may come from a guide pack.
 	assert.match(out.curated.note, /^A guide covers this: .*Westfall.*\.$/);
-	assert.doesNotMatch(out.curated.note, /Polestar/);
+	assert.doesNotMatch(out.curated.note, /SendaFH/);
 	assert.deepEqual(out.call, ['mount', 8631, false]);
 	assert.match(out.failed, /nosource/);
 	assert.equal(out.still, true);
@@ -246,13 +246,13 @@ test('without the Codex pack the section says what is missing and still finds gu
 		UI.ShowLookup()
 		local idle = { title = LK.detail.empty, note = LK.detail.note, list = LK.shown.empty, codex = LK.root.CodexLine:GetText(),
 			navs = navKeys() }
-		Polestar.UI.Picker.SetQuery("saber"); stub.advance(0.3)
+		SendaFH.UI.Picker.SetQuery("saber"); stub.advance(0.3)
 		local none = LK.shown.empty
-		Polestar.UI.Picker.SetQuery("west"); stub.advance(0.3)
+		SendaFH.UI.Picker.SetQuery("west"); stub.advance(0.3)
 		emit({ idle = idle, none = none, rows = rowTexts(LK.results.Child), sel = LK.detail.primary })`);
 	assert.equal(out.idle.title, 'The Codex is not loaded');
-	assert.match(out.idle.note, /^The Polestar_Codex addon is not installed\. .*Releases page.*not "Source code"/, 'a missing Codex points at the release download, not the source zip');
-	assert.doesNotMatch(out.idle.note, /tools\/polestar|codex build/, 'no developer command in a player message');
+	assert.match(out.idle.note, /^The SendaFH_Codex addon is not installed\. .*Releases page.*not "Source code"/, 'a missing Codex points at the release download, not the source zip');
+	assert.doesNotMatch(out.idle.note, /tools\/sendafh|codex build/, 'no developer command in a player message');
 	assert.match(out.idle.list, /search the guides/);
 	assert.match(out.idle.codex, /Codex not installed/);
 	assert.deepEqual(out.idle.navs, ['all'], 'no kind is offered that nothing was found in');
@@ -261,7 +261,7 @@ test('without the Codex pack the section says what is missing and still finds gu
 	assert.equal(out.sel, 'Open in new tab');
 });
 
-test('a Codex that is installed but turned off says to enable it, not to download Polestar again', () => {
+test('a Codex that is installed but turned off says to enable it, not to download SendaFH again', () => {
 	const [out] = run(`
 		lookupstub.loaded, lookupstub.reason = false, "disabled"
 		UI.ShowLookup()
@@ -272,13 +272,13 @@ test('a Codex that is installed but turned off says to enable it, not to downloa
 
 test('a guide result opens in a new tab, or among the hub\'s guides', () => {
 	const [out] = run(`
-		Polestar.Lookup.Show("west")
+		SendaFH.Lookup.Show("west")
 		LK.details.Primary:Click()
 		local opened = uistub.calls[#uistub.calls]
-		Polestar.Lookup.Show("west")
+		SendaFH.Lookup.Show("west")
 		LK.details.Secondary:Click()
-		local P = Polestar.UI.Picker
-		emit({ opened = opened, lookup = lookupShown(), picker = PolestarPicker:IsShown(), section = P.Section(), view = P.View(), sel = P.Selected() })`);
+		local P = SendaFH.UI.Picker
+		emit({ opened = opened, lookup = lookupShown(), picker = SendaFHPicker:IsShown(), section = P.Section(), view = P.View(), sel = P.Selected() })`);
 	assert.deepEqual(out.opened, ['OpenTab', 'forever/alliance/02-westfall']);
 	assert.equal(out.lookup, false);
 	assert.equal(out.picker, true);
@@ -290,14 +290,14 @@ test('a guide result opens in a new tab, or among the hub\'s guides', () => {
 test('the hub\'s guide search lists Codex matches under its guides; one opens the Lookup section at it', () => {
 	const [out] = run(`
 		UI.ShowPicker()
-		Polestar.UI.Picker.SetQuery("saber"); stub.advance(0.3)
-		local body = PolestarPicker.Scroll.Child
+		SendaFH.UI.Picker.SetQuery("saber"); stub.advance(0.3)
+		local body = SendaFHPicker.Scroll.Child
 		local rows = {}
 		for _, r in ipairs(shownRows(body)) do rows[#rows + 1] = r.Title:GetText() .. " | " .. r.Sub:GetText() end
-		local empty = PolestarPicker.Empty and PolestarPicker.Empty:IsShown()
+		local empty = SendaFHPicker.Empty and SendaFHPicker.Empty:IsShown()
 		local count = UI.LookupCount()
 		rowFor(body, "Frostsaber Provisions"):Click()
-		emit({ rows = rows, count = count, empty = empty, picker = PolestarPicker:IsShown(), lookup = lookupShown(), sel = LK.Selected(), query = LK.Query() })`);
+		emit({ rows = rows, count = count, empty = empty, picker = SendaFHPicker:IsShown(), lookup = lookupShown(), sel = LK.Selected(), query = LK.Query() })`);
 	assert.deepEqual(out.rows, [
 		'Reins of the Striped Frostsaber | Mount  \u00b7  Vendor \u00b7 Darnassus',
 		'Reins of the Spotted Frostsaber | Mount  \u00b7  Vendor \u00b7 Darnassus',
@@ -317,10 +317,10 @@ test('the hub\'s guide search lists Codex matches under its guides; one opens th
 test('clearing the hub\'s search takes its Codex matches away: none stay drawn over the guide list', () => {
 	const [out] = run(`
 		UI.ShowPicker()
-		Polestar.UI.Picker.SetQuery("saber"); stub.advance(0.3)
-		local body = PolestarPicker.Scroll.Child
+		SendaFH.UI.Picker.SetQuery("saber"); stub.advance(0.3)
+		local body = SendaFHPicker.Scroll.Child
 		local before = rowFor(body, "Frostsaber Provisions") and true or false
-		Polestar.UI.Picker.SetQuery(""); stub.advance(0.3)
+		SendaFH.UI.Picker.SetQuery(""); stub.advance(0.3)
 		local stale = {}
 		for _, r in ipairs(shownRows(body)) do
 			local t = r.Title and r.Title:GetText() or ""
@@ -339,12 +339,12 @@ test('with the real Search, Codex and Lookup runtime over the sample pack', () =
 		const [out] = runAddon({
 			stubs: ['stub_ui.lua'],
 			before: pack.stubLua,
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Lookup/Lookup.xml', 'UI/UI.xml'] }],
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Lookup/Lookup.xml', 'UI/UI.xml'] }],
 			script: `uistub.install()\nstub.login()
-local LK = Polestar.UI.Lookup
-Polestar.Lookup.Show("saber")
+local LK = SendaFH.UI.Lookup
+SendaFH.Lookup.Show("saber")
 local search = { groups = LK.shown.groups, sel = LK.Selected().kind, codex = LK.root.CodexLine:GetText() }
-Polestar.Lookup.Show(nil, "mount", 13335)
+SendaFH.Lookup.Show(nil, "mount", 13335)
 emit({ search = search, title = LK.detail.title, query = LK.Query(), sources = LK.detail.sources, primary = LK.detail.primary })`,
 		}).emitted;
 		assert.deepEqual(out.search.groups, [{ kind: 'mount', count: 3, shown: 3 }]);
@@ -368,22 +368,22 @@ test('changing the suggestion source ranks a cached search again', () => {
 		const [before, after] = runAddon({
 			stubs: ['stub_ui.lua'],
 			before: pack.stubLua,
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Lookup/Lookup.xml', 'UI/UI.xml'] }],
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Lookup/Lookup.xml', 'UI/UI.xml'] }],
 			// The real registry: the ranking follows its suggestion source.
-			script: `uistub.install()\nPolestar.Guides = uistub.realGuides\nstub.login()
-local LK = Polestar.UI.Lookup
+			script: `uistub.install()\nSendaFH.Guides = uistub.realGuides\nstub.login()
+local LK = SendaFH.UI.Lookup
 ${HELPERS}
-Polestar.RegisterPack({ addon = "Polestar_Other", id = "other", format = 1, title = "Other", author = "O", version = "1", license = "MIT" })
+SendaFH.RegisterPack({ addon = "SendaFH_Other", id = "other", format = 1, title = "Other", author = "O", version = "1", license = "MIT" })
 local function g(id, extra)
 	local def = { id = id, pack = "other", title = id, steps = { { goals = { { t = "note", text = "x" } } } } }
 	for k, v in pairs(extra) do def[k] = v end
-	assert(Polestar.RegisterGuide(def))
+	assert(SendaFH.RegisterGuide(def))
 end
 g("other/sabers", { category = "Collectibles", collects = { 13086 } })
 g("other/route", { category = "Leveling", minLevel = 1, maxLevel = 60 })
-Polestar.Lookup.Show("frostsaber")
+SendaFH.Lookup.Show("frostsaber")
 emit(rowTexts(LK.results.Child)[1])
-Polestar.Set("behavior.suggestFrom", "other")
+SendaFH.Set("behavior.suggestFrom", "other")
 emit(rowTexts(LK.results.Child)[1])`,
 		}).emitted;
 		assert.notEqual(before, 'Reins of the Winterspring Frostsaber');
@@ -396,20 +396,20 @@ emit(rowTexts(LK.results.Child)[1])`,
 test('a dungeon also opens in the Dungeons section: beside the guide to its entrance, or alone', () => {
 	const [out] = run(`
 		local opened = {}
-		Polestar.Dungeons = { Open = function(key) opened[#opened + 1] = key end }
+		SendaFH.Dungeons = { Open = function(key) opened[#opened + 1] = key end }
 		table.insert(lookupstub.entities, { kind = "instance", id = "stratholme", title = "Stratholme", subtitle = "Dungeon \\194\\183 45-60" })
 		lookupstub.sources["instance:stratholme"] = {
 			{ type = "world", src = { type = "world" }, label = "Stratholme", detail = "Entrance \\194\\183 Eastern Plaguelands", map = 1423, x = 27, y = 11, available = true, guideable = true },
 		}
-		Polestar.Lookup.Show(nil, "instance", "stratholme")
+		SendaFH.Lookup.Show(nil, "instance", "stratholme")
 		local both = { primary = LK.detail.primary, secondary = LK.details.Secondary:IsShown() and LK.details.Secondary.Label:GetText() }
 		LK.details.Secondary:Click()
 		local after = { opened = opened[1], shown = lookupShown() }
 		lookupstub.sources["instance:stratholme"] = {}
-		Polestar.UI.Lookup.Select(nil)
-		Polestar.Lookup.Show(nil, "instance", "stratholme")
+		SendaFH.UI.Lookup.Select(nil)
+		SendaFH.Lookup.Show(nil, "instance", "stratholme")
 		local alone = { primary = LK.detail.primary, secondary = LK.details.Secondary:IsShown() }
-		stub.RunScript(Polestar.UI.Picker.search, "OnEnterPressed")
+		stub.RunScript(SendaFH.UI.Picker.search, "OnEnterPressed")
 		emit({ both = both, after = after, alone = alone, enter = opened[2] })`);
 	assert.deepEqual(out.both, { primary: 'Guide me', secondary: 'Open dungeon' });
 	// The Dungeons section takes over the hub itself; Lookup closes nothing.
@@ -422,17 +422,17 @@ test('an empty search lists the recent lookups (newest first, at most 10), never
 	const [out] = run(`
 		UI.ShowLookup()
 		local first = { rows = #rowTexts(LK.results.Child), empty = LK.shown.empty, queries = lookupstub.queries }
-		Polestar.Lookup.Show(nil, "mount", 8631)
-		Polestar.Lookup.Show(nil, "mount", 13335)
+		SendaFH.Lookup.Show(nil, "mount", 8631)
+		SendaFH.Lookup.Show(nil, "mount", 13335)
 		-- Typing selects the first result for you: that is no lookup of yours.
-		Polestar.UI.Picker.SetQuery("lelanai"); stub.advance(0.3)
+		SendaFH.UI.Picker.SetQuery("lelanai"); stub.advance(0.3)
 		local auto = #LK.Recent()
 		-- A click is.
 		rowFor(LK.results.Child, "Lelanai"):Click()
-		Polestar.UI.Picker.SetQuery(""); stub.advance(0.3)
+		SendaFH.UI.Picker.SetQuery(""); stub.advance(0.3)
 		local recent = { rows = rowTexts(LK.results.Child), folder = LK.shown.rows, empty = LK.shown.empty, navs = navKeys() }
-		for i = 1, 12 do Polestar.Lookup.Show(nil, "mount", 8631 + (i % 2)); Polestar.Lookup.Show(nil, "npc", 10440) end
-		emit({ first = first, auto = auto, recent = recent, saved = Polestar.CharState().ui.recentLookups[1].title, n = #LK.Recent() })`);
+		for i = 1, 12 do SendaFH.Lookup.Show(nil, "mount", 8631 + (i % 2)); SendaFH.Lookup.Show(nil, "npc", 10440) end
+		emit({ first = first, auto = auto, recent = recent, saved = SendaFH.CharState().ui.recentLookups[1].title, n = #LK.Recent() })`);
 	assert.equal(out.first.rows, 0);
 	assert.match(out.first.empty, /Type a name in the search box/);
 	assert.equal(out.first.queries, 0, 'nothing is searched for an empty box');
@@ -447,7 +447,7 @@ test('an empty search lists the recent lookups (newest first, at most 10), never
 test('one kind shows a page of 50 and Show more adds the next; only the rows in view are drawn and subtitled', () => {
 	const [out] = run(`
 		lookupstub.many(120)
-		Polestar.Lookup.Show("steed")
+		SendaFH.Lookup.Show("steed")
 		local all = { groups = LK.shown.groups, painted = LK.painted, subtitled = lookupstub.subtitled }
 		LK.SetKind("mount")
 		local page1 = { rows = LK.shown.rows, painted = LK.painted, more = rowTexts(LK.results.Child)[LK.painted] }
@@ -467,10 +467,10 @@ test('one kind shows a page of 50 and Show more adds the next; only the rows in 
 test('while the Codex loads the section says so, and searches again once it has', () => {
 	const [out] = run(`
 		lookupstub.loaded, lookupstub.reason = false, "loading"
-		Polestar.Lookup.Show("saber")
+		SendaFH.Lookup.Show("saber")
 		local loading = { empty = LK.shown.empty, codex = LK.root.CodexLine:GetText(), rows = #rowTexts(LK.results.Child) }
 		lookupstub.loaded, lookupstub.reason = true, nil
-		Polestar.Fire("CODEX_LOADED", {})
+		SendaFH.Fire("CODEX_LOADED", {})
 		emit({ loading = loading, rows = LK.shown.rows, empty = LK.shown.empty or false })`);
 	assert.equal(out.loading.empty, 'Loading the Codex\u2026');
 	assert.equal(out.loading.codex, 'Loading the Codex\u2026');
@@ -483,12 +483,12 @@ test('Lookup turned off in Options: guides only, the section says where to turn 
 	const [out] = run(`
 		lookupstub.loaded, lookupstub.reason = false, "off"
 		local loads = 0
-		Polestar.Codex.Load = function() loads = loads + 1; return false, "off" end
+		SendaFH.Codex.Load = function() loads = loads + 1; return false, "off" end
 		UI.ShowLookup()
 		local idle = { title = LK.detail.empty, note = LK.detail.note, codex = LK.root.CodexLine:GetText() }
-		Polestar.UI.Picker.SetQuery("saber"); stub.advance(0.3)
+		SendaFH.UI.Picker.SetQuery("saber"); stub.advance(0.3)
 		local none = LK.shown.empty
-		Polestar.Lookup.Show(nil, "mount", 8631)
+		SendaFH.Lookup.Show(nil, "mount", 8631)
 		emit({ idle = idle, none = none, loads = loads })`);
 	assert.equal(out.idle.title, 'Lookup is turned off');
 	assert.match(out.idle.note, /Options > Discovery > Lookup/);

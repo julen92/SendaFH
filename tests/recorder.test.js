@@ -1,16 +1,16 @@
 'use strict';
-// The in-game recorder (addon/Polestar_Recorder) against the quest/map/unit
+// The in-game recorder (addon/SendaFH_Recorder) against the quest/map/unit
 // world of tests/lua/stub_recorder.lua.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const REC = 'Polestar_Recorder';
+const REC = 'SendaFH_Recorder';
 
 // Lua helpers available to every script.
 const PRELUDE = `
-local function S() return PolestarRecorderDB.sessions[PolestarRecorderDB.current] end
+local function S() return SendaFHRecorderDB.sessions[SendaFHRecorderDB.current] end
 local function events(kind)
 	local out = {}
 	for _, e in ipairs(S().events) do
@@ -173,21 +173,21 @@ test('breadcrumbs are recorded only while moving, and only after enough distance
 
 test('every login starts a new session; a UI reload continues the current one', () => {
 	const [first] = run(`
-		SlashCmdList.POLESTARREC("mark first login")
-		emit(stub.serialize(PolestarRecorderDB))`);
+		SlashCmdList.SENDAFHREC("mark first login")
+		emit(stub.serialize(SendaFHRecorderDB))`);
 
 	const [second] = run(
 		`
-		SlashCmdList.POLESTARREC("mark second login")
+		SlashCmdList.SENDAFHREC("mark second login")
 		local keys = {}
-		for k, s in pairs(PolestarRecorderDB.sessions) do
+		for k, s in pairs(SendaFHRecorderDB.sessions) do
 			local marks = {}
 			for _, e in ipairs(s.events) do if e.e == "mark" then marks[#marks + 1] = e.text end end
 			keys[#keys + 1] = { key = k, marks = marks, char = s.char.name, started = s.started }
 		end
 		table.sort(keys, function(a, b) return a.started < b.started end)
-		emit({ sessions = keys, current = PolestarRecorderDB.current, db = stub.serialize(PolestarRecorderDB) })`,
-		{ before: 'stub.epoch = stub.epoch + 3600', saved: { [REC]: `PolestarRecorderDB = ${first}` } },
+		emit({ sessions = keys, current = SendaFHRecorderDB.current, db = stub.serialize(SendaFHRecorderDB) })`,
+		{ before: 'stub.epoch = stub.epoch + 3600', saved: { [REC]: `SendaFHRecorderDB = ${first}` } },
 	);
 	assert.deepEqual(
 		second.sessions.map((s) => [s.key, s.marks, s.char]),
@@ -202,12 +202,12 @@ test('every login starts a new session; a UI reload continues the current one', 
 		`
 		stub.fire("PLAYER_LOGIN")
 		stub.fire("PLAYER_ENTERING_WORLD", false, true)
-		SlashCmdList.POLESTARREC("mark after reload")
+		SlashCmdList.SENDAFHREC("mark after reload")
 		local n, marks = 0, {}
-		for _ in pairs(PolestarRecorderDB.sessions) do n = n + 1 end
+		for _ in pairs(SendaFHRecorderDB.sessions) do n = n + 1 end
 		for _, e in ipairs(S().events) do if e.e == "mark" then marks[#marks + 1] = { e.text, e.t } end end
-		emit({ n = n, current = PolestarRecorderDB.current, marks = marks })`,
-		{ login: false, before: 'stub.epoch = stub.epoch + 3700', saved: { [REC]: `PolestarRecorderDB = ${second.db}` } },
+		emit({ n = n, current = SendaFHRecorderDB.current, marks = marks })`,
+		{ login: false, before: 'stub.epoch = stub.epoch + 3700', saved: { [REC]: `SendaFHRecorderDB = ${second.db}` } },
 	);
 	assert.equal(reloaded.n, 2);
 	assert.equal(reloaded.current, '1791003600-Testchar');
@@ -215,22 +215,22 @@ test('every login starts a new session; a UI reload continues the current one', 
 	assert.ok(reloaded.marks[1][1] >= 100, 'event times keep counting from the session start');
 });
 
-test('a nil PolestarRecorderDB (cold-start bug) neither errors nor loses the live session', () => {
+test('a nil SendaFHRecorderDB (cold-start bug) neither errors nor loses the live session', () => {
 	const [out] = run(
 		`
-		SlashCmdList.POLESTARREC("on") -- a lost table also lost the opt-in
-		SlashCmdList.POLESTARREC("mark before")
-		PolestarRecorderDB = nil -- the table vanishes under the running session
-		SlashCmdList.POLESTARREC("mark after")
+		SlashCmdList.SENDAFHREC("on") -- a lost table also lost the opt-in
+		SlashCmdList.SENDAFHREC("mark before")
+		SendaFHRecorderDB = nil -- the table vanishes under the running session
+		SlashCmdList.SENDAFHREC("mark after")
 		stub.fire("PLAYER_LOGOUT")
 		local marks = {}
 		for _, e in ipairs(S().events) do if e.e == "mark" then marks[#marks + 1] = e.text end end
-		emit({ type = type(PolestarRecorderDB), schema = PolestarRecorderDB.schema, marks = marks, key = S().session })`,
-		{ saved: { [REC]: 'PolestarRecorderDB = nil' } },
+		emit({ type = type(SendaFHRecorderDB), schema = SendaFHRecorderDB.schema, marks = marks, key = S().session })`,
+		{ saved: { [REC]: 'SendaFHRecorderDB = nil' } },
 	);
 	assert.deepEqual(out, { type: 'table', schema: 1, marks: ['before', 'after'], key: '1791000000-Testchar' });
 
-	const [garbage] = run(`SlashCmdList.POLESTARREC("on")\nemit({ ok = type(S().events) == "table" })`, { saved: { [REC]: 'PolestarRecorderDB = "corrupt"' } });
+	const [garbage] = run(`SlashCmdList.SENDAFHREC("on")\nemit({ ok = type(S().events) == "table" })`, { saved: { [REC]: 'SendaFHRecorderDB = "corrupt"' } });
 	assert.deepEqual(garbage, { ok: true });
 });
 
@@ -240,18 +240,18 @@ test('a nil PolestarRecorderDB (cold-start bug) neither errors nor loses the liv
 test('recording is off until the player turns it on: no session, no events; on starts one, off stops writing', () => {
 	const [out] = run(
 		`
-		local function sessions() local n = 0 for _ in pairs(PolestarRecorderDB.sessions) do n = n + 1 end return n end
+		local function sessions() local n = 0 for _ in pairs(SendaFHRecorderDB.sessions) do n = n + 1 end return n end
 		stub.fire("PLAYER_LEVEL_UP", 2)
-		SlashCmdList.POLESTARREC("mark ignored")
-		local off = { sessions = sessions(), current = PolestarRecorderDB.current or false, enabled = PolestarRecorderDB.enabled or false }
-		SlashCmdList.POLESTARREC("on")
-		SlashCmdList.POLESTARREC("mark kept")
+		SlashCmdList.SENDAFHREC("mark ignored")
+		local off = { sessions = sessions(), current = SendaFHRecorderDB.current or false, enabled = SendaFHRecorderDB.enabled or false }
+		SlashCmdList.SENDAFHREC("on")
+		SlashCmdList.SENDAFHREC("mark kept")
 		local on = { sessions = sessions(), marks = #events("mark") }
-		SlashCmdList.POLESTARREC("off")
-		SlashCmdList.POLESTARREC("mark dropped")
-		SlashCmdList.POLESTARREC("on")
-		emit({ off = off, on = on, after = #events("mark"), enabled = PolestarRecorderDB.enabled })`,
-		{ saved: { [REC]: 'PolestarRecorderDB = nil' } },
+		SlashCmdList.SENDAFHREC("off")
+		SlashCmdList.SENDAFHREC("mark dropped")
+		SlashCmdList.SENDAFHREC("on")
+		emit({ off = off, on = on, after = #events("mark"), enabled = SendaFHRecorderDB.enabled })`,
+		{ saved: { [REC]: 'SendaFHRecorderDB = nil' } },
 	);
 	assert.deepEqual(out.off, { sessions: 0, current: false, enabled: false });
 	assert.deepEqual(out.on, { sessions: 1, marks: 1 });
@@ -390,7 +390,7 @@ test('quest XP rewards of quests already in the log are recorded once per sessio
 		stub.advance(1)
 		local qs = {}
 		for _, e in ipairs(events("reward")) do qs[#qs + 1] = { e.q, e.rewardXp, e.rewardXpBase, e.lvl } end
-		emit({ atLogin = atLogin, rewards = qs, db = stub.serialize(PolestarRecorderDB) })`,
+		emit({ atLogin = atLogin, rewards = qs, db = stub.serialize(SendaFHRecorderDB) })`,
 		{ before: LOG },
 	);
 	assert.equal(first.atLogin, 1);
@@ -406,14 +406,14 @@ test('quest XP rewards of quests already in the log are recorded once per sessio
 		stub.fire("QUEST_LOG_UPDATE")
 		stub.advance(3)
 		emit(#events("reward"))`,
-		{ login: false, before: `${LOG}\nstub.world.rewards[7] = { 450, 420 }`, saved: { [REC]: `PolestarRecorderDB = ${first.db}` } },
+		{ login: false, before: `${LOG}\nstub.world.rewards[7] = { 450, 420 }`, saved: { [REC]: `SendaFHRecorderDB = ${first.db}` } },
 	);
 	assert.equal(reloaded, 2);
 });
 
 test('/psrec: off pauses recording, maps dumps world bounds, talents dumps the trait tree, clear needs confirmation', () => {
 	const [out] = run(`
-		local cmd = SlashCmdList.POLESTARREC
+		local cmd = SlashCmdList.SENDAFHREC
 		cmd("off")
 		cmd("mark ignored")
 		cmd("on")
@@ -421,9 +421,9 @@ test('/psrec: off pauses recording, maps dumps world bounds, talents dumps the t
 		local marks = {}
 		for _, e in ipairs(events("mark")) do marks[#marks + 1] = e.text end
 		cmd("maps")
-		local elwynn = PolestarRecorderDB.maps[1429]
+		local elwynn = SendaFHRecorderDB.maps[1429]
 		local mapCount = 0
-		for _ in pairs(PolestarRecorderDB.maps) do mapCount = mapCount + 1 end
+		for _ in pairs(SendaFHRecorderDB.maps) do mapCount = mapCount + 1 end
 		stub.world.talents = {
 			configID = 9, treeIDs = { 400 },
 			groups = { { groupID = 1, treeID = 400, displayName = "Arms", orderIndex = 0, icon = 1, skillLineID = 26 } },
@@ -434,21 +434,21 @@ test('/psrec: off pauses recording, maps dumps world bounds, talents dumps the t
 			spells = { [12282] = "Improved Heroic Strike" },
 		}
 		cmd("talents")
-		local talents = PolestarRecorderDB.talents.WARRIOR
+		local talents = SendaFHRecorderDB.talents.WARRIOR
 		local before = #events()
 		cmd("clear")
-		local armed = PolestarRecorderDB.sessions[PolestarRecorderDB.current] ~= nil and #events() == before
+		local armed = SendaFHRecorderDB.sessions[SendaFHRecorderDB.current] ~= nil and #events() == before
 		stub.advance(31)
 		cmd("clear confirm") -- too late: re-arms instead
 		local stillThere = #events() == before
 		cmd("clear confirm")
 		local n = 0
-		for _ in pairs(PolestarRecorderDB.sessions) do n = n + 1 end
+		for _ in pairs(SendaFHRecorderDB.sessions) do n = n + 1 end
 		for i = 1, 600 do cmd("mark " .. i) end
 		emit({
 			marks = marks, elwynn = elwynn, mapCount = mapCount,
 			talent = { class = talents.class, nodes = #talents.trees[1].nodes, node = talents.trees[1].nodes[1], group = talents.trees[1].groups[1].name },
-			armed = armed, stillThere = stillThere, sessionsAfterClear = n, mapsAfterClear = next(PolestarRecorderDB.maps) == nil,
+			armed = armed, stillThere = stillThere, sessionsAfterClear = n, mapsAfterClear = next(SendaFHRecorderDB.maps) == nil,
 			markCount = #events("mark"), dropped = S().dropped.mark,
 		})`);
 

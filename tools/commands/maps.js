@@ -1,5 +1,5 @@
 'use strict';
-// node tools/polestar.js maps build | overlays
+// node tools/sendafh.js maps build | overlays
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -8,23 +8,23 @@ const { buildZoneLevels } = require('../lib/maps/zonelevels');
 const { ROOT, DATA, SOURCES } = require('../lib/paths');
 const overlays = require('../lib/maps/overlays');
 
-const usage = `usage: node tools/polestar.js maps <build|overlays> [options]
+const usage = `usage: node tools/sendafh.js maps <build|overlays> [options]
 
 build: zone level ranges for the world map (hostile creature levels per zone,
 spawn-weighted P10..P90; heuristic in tools/lib/maps/zonelevels.js) ->
-addon/Polestar/Maps/ZoneLevels.lua.
+addon/SendaFH/Maps/ZoneLevels.lua.
 
   --data <dir>    data/forever (npcs.json, zones.json)
-  --lua <file>    output (default: addon/Polestar/Maps/ZoneLevels.lua)
+  --lua <file>    output (default: addon/SendaFH/Maps/ZoneLevels.lua)
 
 overlays: every world map overlay of every zone map (the explored-area
 paintings), from the client's DB2 tables via wago.tools, so the zone art shows
-a map without fog of war -> addon/Polestar/UI/ZoneArtOverlays.lua.
+a map without fog of war -> addon/SendaFH/UI/ZoneArtOverlays.lua.
 
   --build <ver>     client build (default: ${overlays.BUILD}, the Forever client)
   --sources <dir>   source cache folder (default: data/sources)
   --offline         use cached tables only
-  --lua <file>      output (default: addon/Polestar/UI/ZoneArtOverlays.lua)`;
+  --lua <file>      output (default: addon/SendaFH/UI/ZoneArtOverlays.lua)`;
 
 function build(rest) {
 	const { values } = parseArgs({
@@ -32,7 +32,7 @@ function build(rest) {
 		options: { data: { type: 'string' }, lua: { type: 'string' } },
 	});
 	const dataDir = path.resolve(values.data || DATA);
-	const out = path.resolve(values.lua || path.join(ROOT, 'addon', 'Polestar', 'Maps', 'ZoneLevels.lua'));
+	const out = path.resolve(values.lua || path.join(ROOT, 'addon', 'SendaFH', 'Maps', 'ZoneLevels.lua'));
 	const { levels, lua } = buildZoneLevels({ dataDir });
 	fs.writeFileSync(out, lua);
 	console.log(`maps: ${Object.keys(levels).length} zone level ranges`);
@@ -47,7 +47,7 @@ async function buildOverlays(rest) {
 	});
 	const build = values.build || overlays.BUILD;
 	const sourcesDir = path.resolve(values.sources || SOURCES);
-	const out = path.resolve(values.lua || path.join(ROOT, 'addon', 'Polestar', 'UI', 'ZoneArtOverlays.lua'));
+	const out = path.resolve(values.lua || path.join(ROOT, 'addon', 'SendaFH', 'UI', 'ZoneArtOverlays.lua'));
 	const tables = await overlays.loadTables({ sourcesDir, build, offline: values.offline, log: (m) => console.log(m) });
 	const result = overlays.buildOverlays(tables);
 	for (const w of result.warnings) console.warn(`warning: ${w}`);

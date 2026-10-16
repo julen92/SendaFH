@@ -74,26 +74,26 @@ test('rewards: emitted Lua passes the engine registry and the step view carries 
 	const [out] = runAddon({
 		stubs: ['stub_world.lua'],
 		before: 'stub.world.addMap(1429, { name = "Elwynn Forest", c = 0, left = 1500, right = -1500, top = 500, bottom = -1500 })\nstub.world.moveTo(1429, 48, 42)',
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `
 			local res = {}
-			local real = Polestar.RegisterGuide
-			Polestar.RegisterGuide = function(g) local ok, e = real(g); res[#res + 1] = ok and "ok" or e; return ok, e end
+			local real = SendaFH.RegisterGuide
+			SendaFH.RegisterGuide = function(g) local ok, e = real(g); res[#res + 1] = ok and "ok" or e; return ok, e end
 			${TEST_PACK}
 			${TEST_SOURCE}
-			assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 			stub.login()
-			Polestar.Engine.SetGuide("test/main")
+			SendaFH.Engine.SetGuide("test/main")
 			stub.advance(0.6)
-			local view = Polestar.Engine.GetStepView(1)
+			local view = SendaFH.Engine.GetStepView(1)
 			emit({ res = res, rewards = view.goals[2].rewards })`,
 	}).emitted;
 	assert.deepEqual(out.res, ['ok']);
 	assert.deepEqual(out.rewards, turnin(r).rewards);
 	const bad = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `${TEST_PACK}
-${TEST_SOURCE}\nemit({ Polestar.RegisterGuide({ id = "test/bad", pack = "test", title = "B", steps = { { goals = { { t = "turnin", quest = 1, title = "Q", rewards = { choices = { { itemName = "x" } } } } } } } }) })`,
+${TEST_SOURCE}\nemit({ SendaFH.RegisterGuide({ id = "test/bad", pack = "test", title = "B", steps = { { goals = { { t = "turnin", quest = 1, title = "Q", rewards = { choices = { { itemName = "x" } } } } } } } }) })`,
 	}).emitted[0];
 	assert.deepEqual(bad, [false, 'step 1 goal 1: bad reward 1']);
 });
@@ -102,20 +102,20 @@ test('the guide window shows an open turn-in\'s rewards under it and in its tool
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
 		before: 'ITEM_QUALITY_COLORS = { [2] = { r = 0.12, g = 1, b = 0 }, [3] = { r = 0, g = 0.44, b = 0.87 } }',
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
 		script: `
-			local real = Polestar.Compat
+			local real = SendaFH.Compat
 			uistub.install()
 			stub.login()
 			-- The fake Compat keeps the real item-quality lookups (uncached items: compiled quality).
-			Polestar.Compat.GetItemQuality, Polestar.Compat.ItemQualityHex = real.GetItemQuality, real.ItemQualityHex
-			local UI = Polestar.UI
+			SendaFH.Compat.GetItemQuality, SendaFH.Compat.ItemQualityHex = real.GetItemQuality, real.ItemQualityHex
+			local UI = SendaFH.UI
 			local goal = { t = "turnin", status = "active", note = "Inside",
 				rewards = { choices = { { item = 1, itemName = "Cloak", quality = 3 }, { item = 2, itemName = "Boots", quality = 2 }, { item = 3, itemName = "Ring" } },
 					items = { { item = 4, itemName = "Map" } }, xp = 3570, money = 10750 } }
 			local done = { t = "turnin", status = "done", rewards = goal.rewards }
 			emit({ line = UI.GoalRewards(goal), sub = UI.GoalSubline(goal), done = UI.GoalSubline(done) or false,
-				none = UI.GoalRewards({ t = "turnin" }) or false, item = Polestar.Theme.Hex("item") })`,
+				none = UI.GoalRewards({ t = "turnin" }) or false, item = SendaFH.Theme.Hex("item") })`,
 	}).emitted;
 	const blue = 'ff0070de';
 	const green = 'ff1fff00';

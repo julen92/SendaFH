@@ -12,8 +12,8 @@
 //   quest  { type: 'quest', id, name, zoneId, level, reqLevel, side? (1 Alliance, 2 Horde, 3 both) }
 //   drop   { type: 'drop', npcId?, npc, zoneId, zone, pct }
 //   craft  { type: 'crafted', spellId, profession, skill }
-// Each item also carries `polestar`: its stats in Polestar.Gear's keys
-// (addon/Polestar/Gear/Weights.lua STAT_KEYS), weapon damage folded into
+// Each item also carries `sendafh`: its stats in SendaFH.Gear's keys
+// (addon/SendaFH/Gear/Weights.lua STAT_KEYS), weapon damage folded into
 // `dps` (melee) or `rdps` (ranged), so the generator never re-maps.
 
 const fs = require('node:fs');
@@ -24,7 +24,7 @@ const { addonVersion, readAddonLua, pairsToObject } = require('./lua');
 const ADDON = 'ForeverLevelingBiS';
 const FILES = ['Data/Tables.lua', 'Data/Items.lua', 'Data/Quests.lua', 'Data/Overrides.lua', 'Racials.lua'];
 
-// Wowhead stat keys (as the addon stores them) -> Polestar stat keys. A
+// Wowhead stat keys (as the addon stores them) -> SendaFH stat keys. A
 // "spell power" item (splpwr) raises damage and healing alike; spldmg is
 // damage only and splheal healing only. Resistances are not scored.
 const STAT_MAP = {
@@ -38,14 +38,14 @@ const STAT_MAP = {
 	defrtng: ['defense'], dodgertng: ['dodge'], parryrtng: ['parry'], blockrtng: ['block'], block: ['blockValue'],
 	hitrtng: ['hit'], critstrkrtng: ['crit'],
 };
-// Not scored by Polestar (recorded in meta.unmapped with counts when met).
+// Not scored by SendaFH (recorded in meta.unmapped with counts when met).
 const IGNORED = new Set(['arcres', 'firres', 'frores', 'natres', 'shares', 'holres', 'feratkpwr']);
 
 // Inventory types of ranged weapons (bow/gun/crossbow, thrown, wand): their
 // DPS is `rdps`.
 const RANGED_INV = new Set([15, 25, 26]);
 
-function polestarStats(item, unmapped) {
+function sendafhStats(item, unmapped) {
 	const out = {};
 	for (const [k, v] of Object.entries(item.stats || {})) {
 		if (typeof v !== 'number' || v === 0) continue;
@@ -63,19 +63,19 @@ function polestarStats(item, unmapped) {
 
 // Lua: every id-keyed table as sorted pairs (an id table that happens to
 // start at 1 must not become an array); records as they are.
-const EXPR = `local ns = POLESTAR_NS
+const EXPR = `local ns = SENDAFH_NS
 return {
   info = ns.DataInfo,
-  items = POLESTAR_pairs(ns.Items),
-  overrides = POLESTAR_pairs(ns.Overrides),
-  quests = POLESTAR_pairs(ns.Quests),
-  chains = POLESTAR_pairs(ns.QuestChains),
-  factions = POLESTAR_pairs(ns.FactionNames),
-  zones = POLESTAR_pairs(ns.ZoneNames),
+  items = SENDAFH_pairs(ns.Items),
+  overrides = SENDAFH_pairs(ns.Overrides),
+  quests = SENDAFH_pairs(ns.Quests),
+  chains = SENDAFH_pairs(ns.QuestChains),
+  factions = SENDAFH_pairs(ns.FactionNames),
+  zones = SENDAFH_pairs(ns.ZoneNames),
   races = ns.Races,
-  racials = POLESTAR_pairs(ns.Racials),
-  weaponProf = POLESTAR_pairs(ns.WeaponProficiencies),
-  armorProf = POLESTAR_pairs(ns.ArmorProficiencies),
+  racials = SENDAFH_pairs(ns.Racials),
+  weaponProf = SENDAFH_pairs(ns.WeaponProficiencies),
+  armorProf = SENDAFH_pairs(ns.ArmorProficiencies),
   dungeons = ns.Dungeons,
   patterns = ns.Patterns,
 }`;
@@ -114,7 +114,7 @@ function readForeverLevelingBiS({ dir, addons } = {}) {
 	for (const [id, rec] of Object.entries(items)) {
 		rec.id = Number(id);
 		rec.sources = Array.isArray(rec.sources) ? rec.sources : [];
-		rec.polestar = polestarStats(rec, unmapped);
+		rec.sendafh = sendafhStats(rec, unmapped);
 	}
 
 	const quests = {};
@@ -169,4 +169,4 @@ function readForeverLevelingBiS({ dir, addons } = {}) {
 	};
 }
 
-module.exports = { readForeverLevelingBiS, polestarStats, STAT_MAP, ADDON };
+module.exports = { readForeverLevelingBiS, sendafhStats, STAT_MAP, ADDON };

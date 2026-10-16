@@ -25,7 +25,7 @@ function builds(calls, { down = false } = {}) {
 // A cache: 1.60.1.70338 with every Codex table, 1.60.1.70374 with the map
 // tables only (what `data build` fetches), an Era build with everything.
 function cache() {
-	const sourcesDir = tmpdir('polestar-codex-build-');
+	const sourcesDir = tmpdir('sendafh-codex-build-');
 	const put = (build, tables) => {
 		const dir = path.join(sourcesDir, 'wago', build);
 		fs.mkdirSync(dir, { recursive: true });
@@ -59,5 +59,5 @@ test('offline, or with wago.tools down, the newest cached Forever build holding 
 	assert.match(down.warnings[0], /ENOTFOUND wago\.tools; using cached wow_classic_beta build 1\.60\.1\.70338/);
 	// data build's map tables alone are in the newer one.
 	assert.equal((await pickBuild({ sourcesDir, offline: true, product: 'forever' })).build, '1.60.1.70374');
-	await assert.rejects(pickForeverBuild({ sourcesDir: tmpdir('polestar-codex-build-'), offline: true }), /--offline: no cached wago\.tools build/);
+	await assert.rejects(pickForeverBuild({ sourcesDir: tmpdir('sendafh-codex-build-'), offline: true }), /--offline: no cached wago\.tools build/);
 });

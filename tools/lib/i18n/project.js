@@ -1,5 +1,5 @@
 'use strict';
-// The state of every interface translation (addon/Polestar/Locales), per
+// The state of every interface translation (addon/SendaFH/Locales), per
 // locale: translated, missing, stale and broken entries and glossary
 // warnings; and the files `i18n sync` writes. Adapted from Ding! by Yendi
 // (@moust4ki), GPL-3.0: https://github.com/moust4ki/DingGuideWoWForever

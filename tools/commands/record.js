@@ -1,5 +1,5 @@
 'use strict';
-// `record`: Polestar Recorder sessions -> data/recordings -> draft guides.
+// `record`: SendaFH Recorder sessions -> data/recordings -> draft guides.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -16,7 +16,7 @@ const { buildReport, formatReport } = require('../lib/recording/report');
 const { resolvePack } = require('../lib/pack/locate');
 const { printDiagnostics } = require('../lib/cli');
 
-const usage = `usage: node tools/polestar.js record <subcommand> [options]
+const usage = `usage: node tools/sendafh.js record <subcommand> [options]
 
   import                 Archive and convert the recorder's SavedVariables:
                          raw copy -> data/recordings/raw/<timestamp>-<account>.lua,
@@ -31,7 +31,7 @@ const usage = `usage: node tools/polestar.js record <subcommand> [options]
                          pack is --pack, else the nearest pack.json, else our
                          guides/; another pack's draft id starts with "<pack id>/"
   list                   List imported sessions
-  report                 Measure the guides from recorded play (Polestar + Recorder):
+  report                 Measure the guides from recorded play (SendaFH + Recorder):
                          per step passes, median/p75 time, XP, XP/hr, combat share,
                          deaths, turn-ins, travel; per guide time, levels, XP/hr;
                          the slowest steps, steps far over the guide's median step
@@ -41,7 +41,7 @@ options:
   --sv <file>            SavedVariables file to use (repeatable); skips auto-detection
   --wtf <dir>            WTF folder to search (default: the detected Forever client's,
                          e.g. <Wine prefix>/drive_c/Program Files (x86)/World of Warcraft/_forever_/WTF;
-                         POLESTAR_WTF overrides)
+                         SENDAFH_WTF overrides)
   --out <dir|file>       import/watch/list: recordings folder (default data/recordings);
                          draft: output .guide file or folder (default <pack>/drafts)
   --pack <dir>           draft: the guide pack the draft belongs to
@@ -84,7 +84,7 @@ function svFiles(opts) {
 	const files = findSavedVariables({ sv: opts.sv, wtf: opts.wtf });
 	if (!files.length) {
 		const searched = opts.wtf ? [opts.wtf] : defaultWtfDirs();
-		console.error(`no Polestar_Recorder SavedVariables found; searched:\n${searched.map((d) => `  ${d}/Account/*/SavedVariables/`).join('\n')}\nUse --sv <file> or --wtf <dir>.`);
+		console.error(`no SendaFH_Recorder SavedVariables found; searched:\n${searched.map((d) => `  ${d}/Account/*/SavedVariables/`).join('\n')}\nUse --sv <file> or --wtf <dir>.`);
 	}
 	return files;
 }
@@ -224,7 +224,7 @@ function doReport(opts) {
 
 module.exports = {
 	name: 'record',
-	summary: 'Polestar Recorder sessions: import, watch, draft guides, measure routes (report)',
+	summary: 'SendaFH Recorder sessions: import, watch, draft guides, measure routes (report)',
 	usage,
 	async run(argv) {
 		const [sub, ...rest] = argv;

@@ -1,5 +1,5 @@
 'use strict';
-// The journey panel (addon/Polestar/UI/JourneyPanel.lua) in the guide window,
+// The journey panel (addon/SendaFH/UI/JourneyPanel.lua) in the guide window,
 // against the real Core + Theme + UI manifests, the fake Engine of
 // tests/lua/stub_ui.lua and a fake route: Nav.GetRoute, Nav.travel (Active,
 // Progress), Nav.prompts (the skip menu) and ns.Transit (departures).
@@ -16,8 +16,8 @@ const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 // SPF's own example: 36:48 and 8.0k yd over a walk to the Great Lift, the
 // lift, and the walk to Silithus.
 const ROUTE = `
-local Nav = Polestar.Nav
-Polestar.RegisterDefaults("nav", { distanceUnit = "yards", journeySteps = true, journeyOpen = true })
+local Nav = SendaFH.Nav
+SendaFH.RegisterDefaults("nav", { distanceUnit = "yards", journeySteps = true, journeyOpen = true })
 R = { ci = 1, ps = 670, py = 3000, timed = false, wait = 15, ride = 10, active = true }
 R.legs = {
 	{ kind = "walk", step = "lift", label = "Walk to The Great Lift, Top", seconds = 670, yards = 3000, to = { name = "The Great Lift, Top" } },
@@ -31,13 +31,13 @@ Nav.travel = {
 function Nav.GetRoute() return R.legs, R.legs and R.ci end
 MENU = 0
 Nav.prompts = { MenuItems = function() return { { text = "Mark this leg done" } } end, OpenMenu = function() MENU = MENU + 1 end }
-Polestar.Transit = {
+SendaFH.Transit = {
 	Now = function() return 1000 + GetTime() end,
 	NextDeparture = function(kind, id, at, side) DEP = { kind, id, side }; return R.wait, R.ride, R.timed end,
 }
 uistub.target = { label = "Silithus" }
-JP = Polestar.UI.JourneyPanel
-GF = Polestar.UI.GuideFrame
+JP = SendaFH.UI.JourneyPanel
+GF = SendaFH.UI.GuideFrame
 LAYOUTS = 0
 local layout = GF.Layout
 GF.Layout = function(...) LAYOUTS = LAYOUTS + 1; return layout(...) end
@@ -59,8 +59,8 @@ end
 function run(script) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `uistub.install()\nstub.login()\n${ROUTE}\nuistub.setGuide(uistub.elwynn, 3)\nPolestar.Fire("ROUTE_CHANGED", R.legs)\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `uistub.install()\nstub.login()\n${ROUTE}\nuistub.setGuide(uistub.elwynn, 3)\nSendaFH.Fire("ROUTE_CHANGED", R.legs)\n${script}`,
 	}).emitted;
 }
 
@@ -91,7 +91,7 @@ test('times read 0:15, 11:10, 1:02:03; nothing unreadable reaches the screen', (
 });
 
 test('16: distances follow nav.distanceUnit: 8.0k yd, or 7.3 km in metres', () => {
-	const [s] = run('Polestar.Set("nav.distanceUnit", "metres"); emit(shot())');
+	const [s] = run('SendaFH.Set("nav.distanceUnit", "metres"); emit(shot())');
 	assert.equal(s.dist, '7.3 km');
 });
 
@@ -106,24 +106,24 @@ test('countdown: the current step and the total tick down once a second from Tra
 });
 
 test('countdown without Travel.Progress: the planned time less the time since the step began', () => {
-	const [s] = run('Polestar.Nav.travel.Progress = nil; R.legs = { R.legs[1], R.legs[2], R.legs[3] }; Polestar.Fire("ROUTE_CHANGED", R.legs); stub.advance(3); emit(shot())');
+	const [s] = run('SendaFH.Nav.travel.Progress = nil; R.legs = { R.legs[1], R.legs[2], R.legs[3] }; SendaFH.Fire("ROUTE_CHANGED", R.legs); stub.advance(3); emit(shot())');
 	assert.equal(s.rows[0].time, '11:07');
 });
 
 test('the current step advances: the finished step drops off, numbers keep their place in the route', () => {
-	const [s] = run('R.ci = 2; R.ps = 25; Polestar.Fire("ROUTE_ADVANCED", R.legs, 2); emit(shot())');
+	const [s] = run('R.ci = 2; R.ps = 25; SendaFH.Fire("ROUTE_ADVANCED", R.legs, 2); emit(shot())');
 	assert.deepEqual(s.rows.map((r) => [r.num, r.text, r.bar]), [['2', 'Take The Great Lift', true], ['3', 'Walk to Silithus', false]]);
 	assert.equal(s.time, '25:38');
 });
 
 test('5: hidden with no route, a lone walk, the setting off or compact mode; back when the route returns', () => {
 	const out = run(`
-		R.legs = { R.legs[3] }; R.ci = 1; Polestar.Fire("ROUTE_CHANGED", R.legs); emit(shot())
-		R.legs = nil; Polestar.Fire("ROUTE_CHANGED", nil); emit(shot())
-		R.legs = { { kind = "walk", label = "a", seconds = 5 }, { kind = "walk", label = "b", seconds = 5 } }; Polestar.Fire("ROUTE_CHANGED", R.legs); emit(shot())
-		Polestar.Set("nav.journeySteps", false); emit(shot())
-		Polestar.Set("nav.journeySteps", true); Polestar.Set("ui.compact", true); emit(shot())
-		Polestar.Set("ui.compact", false); emit(shot())`);
+		R.legs = { R.legs[3] }; R.ci = 1; SendaFH.Fire("ROUTE_CHANGED", R.legs); emit(shot())
+		R.legs = nil; SendaFH.Fire("ROUTE_CHANGED", nil); emit(shot())
+		R.legs = { { kind = "walk", label = "a", seconds = 5 }, { kind = "walk", label = "b", seconds = 5 } }; SendaFH.Fire("ROUTE_CHANGED", R.legs); emit(shot())
+		SendaFH.Set("nav.journeySteps", false); emit(shot())
+		SendaFH.Set("nav.journeySteps", true); SendaFH.Set("ui.compact", true); emit(shot())
+		SendaFH.Set("ui.compact", false); emit(shot())`);
 	assert.deepEqual(out.map((s) => [s.has, s.shown]), [
 		[false, false], [false, false], [true, true], [false, false], [true, false], [true, true],
 	]);
@@ -149,7 +149,7 @@ test('more than eight steps: eight rows and a count of the rest', () => {
 	const [s] = run(`
 		local legs = {}
 		for i = 1, 11 do legs[i] = { kind = "walk", label = "Step " .. i, seconds = 10, yards = 10 } end
-		R.legs = legs; R.ps = 10; R.py = 10; Polestar.Fire("ROUTE_CHANGED", legs); emit(shot())`);
+		R.legs = legs; R.ps = 10; R.py = 10; SendaFH.Fire("ROUTE_CHANGED", legs); emit(shot())`);
 	assert.equal(s.rows.length, 8);
 	assert.equal(s.more, '3 more steps');
 	assert.equal(s.time, '1:50');
@@ -162,7 +162,7 @@ test('K1/C9: a step without a caption reads its kind and place, never "Unknown"'
 			{ kind = "tram", seconds = 60, transport = { id = 3 }, to = { map = 1451 } },
 			{ kind = "fly", seconds = 90, to = { name = "Ironforge" } },
 		}
-		Polestar.Fire("ROUTE_CHANGED", R.legs); emit(shot())`);
+		SendaFH.Fire("ROUTE_CHANGED", R.legs); emit(shot())`);
 	const texts = s.rows.map((r) => r.text);
 	for (const t of texts) {
 		assert.ok(t && t.trim().length > 0);
@@ -175,8 +175,8 @@ test('K1/C9: a step without a caption reads its kind and place, never "Unknown"'
 
 test('K3: a lift says "leaves in about" until timed, then "leaves in"; walks, gates and bridges carry no wait', () => {
 	const [about, timed] = run(`
-		R.legs[1].step = "gate"; R.legs[3].step = "bridge"; Polestar.Fire("ROUTE_CHANGED", R.legs); emit(shot())
-		R.timed = true; Polestar.Fire("NAV_TRANSIT"); emit(shot())`);
+		R.legs[1].step = "gate"; R.legs[3].step = "bridge"; SendaFH.Fire("ROUTE_CHANGED", R.legs); emit(shot())
+		R.timed = true; SendaFH.Fire("NAV_TRANSIT"); emit(shot())`);
 	assert.equal(about.rows[1].sub, 'leaves in about 0:15 \u00b7 ride 0:10');
 	assert.equal(timed.rows[1].sub, 'leaves in 0:15 \u00b7 ride 0:10');
 	assert.equal(about.rows[0].sub, false);
@@ -208,7 +208,7 @@ test('1/K7: zero-yard, zero-second and NaN legs keep every time and distance fin
 			{ kind = "walk", label = "c", seconds = math.huge, yards = -5 },
 		}
 		R.ps, R.py = 0/0, 0/0
-		Polestar.Fire("ROUTE_CHANGED", R.legs); stub.advance(1); emit(shot())`);
+		SendaFH.Fire("ROUTE_CHANGED", R.legs); stub.advance(1); emit(shot())`);
 	assert.equal(s.time, '0:00');
 	assert.equal(s.dist, false);
 	for (const r of s.rows) assert.equal(r.time, '0:00');
@@ -216,14 +216,14 @@ test('1/K7: zero-yard, zero-second and NaN legs keep every time and distance fin
 
 test('the countdown stops while the guide window is hidden and resumes with it', () => {
 	const [hidden, shown] = run(`
-		PolestarGuideFrame:Hide(); stub.advance(2); emit(JP.Ticking())
-		PolestarGuideFrame:Show(); stub.advance(1); emit(JP.Ticking())`);
+		SendaFHGuideFrame:Hide(); stub.advance(2); emit(JP.Ticking())
+		SendaFHGuideFrame:Show(); stub.advance(1); emit(JP.Ticking())`);
 	assert.equal(hidden, false);
 	assert.equal(shown, true);
 });
 
 test('6: the panel makes no protected calls (no secure templates, SuperTrack or gamepad focus)', () => {
-	const src = fs.readFileSync(path.join(ROOT, 'addon', 'Polestar', 'UI', 'JourneyPanel.lua'), 'utf8');
+	const src = fs.readFileSync(path.join(ROOT, 'addon', 'SendaFH', 'UI', 'JourneyPanel.lua'), 'utf8');
 	assert.doesNotMatch(src, /Secure|C_SuperTrack|Gamepad|SetBinding|InCombatLockdown/);
 });
 
@@ -232,9 +232,9 @@ test('review P2-4: the current flight counts down, and the header with it, even 
 		R.legs = { { kind = "fly", label = "Fly to Ironforge", seconds = 300, yards = 2000, to = { name = "Ironforge" } },
 			{ kind = "walk", label = "Walk to the bank", seconds = 100, yards = 300 } }
 		R.ci = 1; R.ps, R.py = 300, 2000 -- a Progress that never moves for non-walk legs
-		Polestar.Fire("ROUTE_CHANGED", R.legs); emit(shot())
+		SendaFH.Fire("ROUTE_CHANGED", R.legs); emit(shot())
 		stub.advance(5); emit(shot())
-		PolestarGuideFrame:Hide(); stub.advance(10); PolestarGuideFrame:Show(); stub.advance(0.05); emit(shot())`);
+		SendaFHGuideFrame:Hide(); stub.advance(10); SendaFHGuideFrame:Show(); stub.advance(0.05); emit(shot())`);
 	assert.equal(a.rows[0].time, '5:00');
 	assert.equal(a.time, '6:40');
 	assert.equal(b.rows[0].time, '4:55');
@@ -243,7 +243,7 @@ test('review P2-4: the current flight counts down, and the header with it, even 
 });
 
 test('review P3-11: no empty second line when the departure is unknown', () => {
-	const [s] = run('R.wait = nil; Polestar.Fire("NAV_TRANSIT"); emit(shot())');
+	const [s] = run('R.wait = nil; SendaFH.Fire("NAV_TRANSIT"); emit(shot())');
 	assert.equal(s.rows[1].sub, false);
 	assert.equal(s.rows[1].h, s.rows[0].h);
 	assert.equal(s.rows[1].time, '0:25', 'the planned time stands in');
@@ -255,11 +255,11 @@ test('review P3-11: at the dock, a boat leaving within the boarding window shows
 				from = { c = 0, wx = 100, wy = 200 }, to = { name = "Auberdine" } },
 			{ kind = "walk", label = "Walk to the inn", seconds = 60, yards = 200 } }
 		R.ci = 1; R.timed = true; R.wait = 600; R.ride = 120
-		Polestar.Transit.NextArrival = function() return 0, 8, true end
+		SendaFH.Transit.NextArrival = function() return 0, 8, true end
 		local here = { 0, 110, 205 }
-		Polestar.Compat.GetPlayerWorldPosition = function() return here[1], here[2], here[3] end
-		Polestar.Fire("ROUTE_CHANGED", R.legs); emit(shot())
-		here = { 0, 400, 205 }; Polestar.Fire("NAV_TRANSIT"); emit(shot())`);
+		SendaFH.Compat.GetPlayerWorldPosition = function() return here[1], here[2], here[3] end
+		SendaFH.Fire("ROUTE_CHANGED", R.legs); emit(shot())
+		here = { 0, 400, 205 }; SendaFH.Fire("NAV_TRANSIT"); emit(shot())`);
 	assert.equal(docked.rows[0].sub, 'leaves in 0:08 \u00b7 ride 2:00');
 	assert.equal(docked.rows[0].time, '2:08');
 	assert.equal(away.rows[0].sub, 'leaves in 10:00 \u00b7 ride 2:00');

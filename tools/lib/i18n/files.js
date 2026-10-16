@@ -1,5 +1,5 @@
 'use strict';
-// The interface's translation files, addon/Polestar/Locales/<locale>.lua, in
+// The interface's translation files, addon/SendaFH/Locales/<locale>.lua, in
 // the layout their translators write:
 //
 //   -- German (deDE). ...                <- the file's own header comments
@@ -48,7 +48,7 @@ function localeFile(addonDir, locale) {
 }
 
 // Loads translation files in one Lua run, each with GetLocale() answering its
-// locale and ns = { L, locale, AddTranslations }. Reads Polestar's layout
+// locale and ns = { L, locale, AddTranslations }. Reads SendaFH's layout
 // (assignments to ns.L), Ding!'s (ns.AddTranslations(locale, t)) and a file
 // that returns a table. -> [{ file, ok, error, layout ('L' | 'AddTranslations'
 // | 'return'), strings: { key: value }, bad: [key], twice: [key] }] in order.
@@ -72,7 +72,7 @@ for i, e in ipairs(list) do
 	})
 	local ns = { L = L, locale = e.locale }
 	function ns.AddTranslations(locale, t) got = t end
-	local ok, ret = __polestar_loaddata(e.path, "Polestar", ns)
+	local ok, ret = __sendafh_loaddata(e.path, "SendaFH", ns)
 	local r = { ok = ok }
 	if not ok then
 		r.error = tostring(ret)
@@ -273,7 +273,7 @@ function updateLocaleText({ text, file, keys, fill = {}, retire = {} }) {
 function newLocaleText({ locale, keys, fill = {}, retire = {} }) {
 	const meta = LOCALES[locale];
 	const head = [
-		`-- ${meta ? meta.language : locale} (${locale}): Polestar's interface strings.`,
+		`-- ${meta ? meta.language : locale} (${locale}): SendaFH's interface strings.`,
 		'-- Keys are the English strings exactly as the code writes them; a key',
 		'-- missing here, or commented out, shows in English. Grouped by the file that',
 		'-- first uses each key. docs/TRANSLATING.md explains the rest.',

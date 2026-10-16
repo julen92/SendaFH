@@ -1,8 +1,8 @@
 'use strict';
-// `i18n names`: the quest, NPC, object and item names of Polestar's data in
+// `i18n names`: the quest, NPC, object and item names of SendaFH's data in
 // each client language, as one load-on-demand addon per language,
-// addon/Polestar_Names_<locale> (docs/ARCHITECTURE.md, "Names"; the runtime
-// side is addon/Polestar/Core/Names.lua).
+// addon/SendaFH_Names_<locale> (docs/ARCHITECTURE.md, "Names"; the runtime
+// side is addon/SendaFH/Core/Names.lua).
 //
 // Sources, first one with a name wins:
 //   1. DingDB (Ding/DB/Locales/<locale>.lua of Ding! by Yendi, GPL-3.0, used
@@ -15,9 +15,9 @@
 //      `data build` uses (data/sources/pfQuest), for the names DingDB lacks.
 //      A pfQuest name equal to its English one is no translation and is
 //      skipped.
-// Only the ids Polestar's data names are kept: the compiled guides
-// (addon/Polestar_Guides/Guides.lua), the quest database
-// (addon/Polestar_QuestDB) and the Codex's data (data/forever/codex).
+// Only the ids SendaFH's data names are kept: the compiled guides
+// (addon/SendaFH_Guides/Guides.lua), the quest database
+// (addon/SendaFH_QuestDB) and the Codex's data (data/forever/codex).
 
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -31,7 +31,7 @@ const { luaString } = require('./files');
 const { LOCALES, LOCALE_CODES } = require('./locales');
 
 const NAME_KINDS = ['quest', 'npc', 'object', 'item'];
-const ADDON_PREFIX = 'Polestar_Names_';
+const ADDON_PREFIX = 'SendaFH_Names_';
 const CHUNK = 1000; // names per add() call
 
 // DingDB at Ding v1.8.1. CREDITS.md ships beside the names.
@@ -58,8 +58,8 @@ const dingFile = (locale) => `Ding/DB/Locales/${locale}.lua`;
 const DEFAULTS = {
 	ding: path.join(SOURCES, 'ding'),
 	pfquest: path.join(SOURCES, 'pfQuest'),
-	guides: path.join(ROOT, 'addon', 'Polestar_Guides', 'Guides.lua'),
-	questdb: path.join(ROOT, 'addon', 'Polestar_QuestDB'),
+	guides: path.join(ROOT, 'addon', 'SendaFH_Guides', 'Guides.lua'),
+	questdb: path.join(ROOT, 'addon', 'SendaFH_QuestDB'),
 	codex: path.join(DATA, 'codex'),
 	out: path.join(ROOT, 'addon'),
 };
@@ -142,7 +142,7 @@ end
 local function read(file, locale)
   GetLocale = function() return locale end
   local Ding = { DB = { names = { quests = {}, npcs = {}, objects = {}, items = {} } } }
-  local ok, err = __polestar_loaddata(file, "Ding", Ding)
+  local ok, err = __sendafh_loaddata(file, "Ding", Ding)
   if not ok then error(err, 0) end
   local n = Ding.DB.names
   out[locale] = { quest = list(n.quests), npc = list(n.npcs), object = list(n.objects), item = list(n.items) }
@@ -159,7 +159,7 @@ return out`,
 	return out;
 }
 
-// --- The ids Polestar's data names -------------------------------------------
+// --- The ids SendaFH's data names -------------------------------------------
 
 const LIST = `
 local function list(set)
@@ -189,13 +189,13 @@ local function walk(t)
     if type(v) == "table" then walk(v) end
   end
 end
-Polestar = { RegisterGuide = function(g) if type(g) == "table" then walk(g) end return true end }
+SendaFH = { RegisterGuide = function(g) if type(g) == "table" then walk(g) end return true end }
 `;
 
 const QUESTDB_ADD = `
 __ids = { quest = {}, npc = {}, object = {}, item = {} }
 local KIND = { quests = "quest", npcs = "npc", objects = "object", items = "item" }
-Polestar = { QuestDB = { AddData = function(kind, records)
+SendaFH = { QuestDB = { AddData = function(kind, records)
   local into = KIND[kind] and __ids[KIND[kind]]
   if into and type(records) == "table" then for id in pairs(records) do if type(id) == "number" then into[id] = true end end end
 end } }
@@ -211,14 +211,14 @@ function toSets(raw) {
 // { guides: Guides.lua, questdb: addon folder, codex: data/forever/codex }
 // -> { quest, npc, object, item: Set of ids, counts: { guides, questdb, codex: { kind: n } } }
 function usedIds({ guides = DEFAULTS.guides, questdb = DEFAULTS.questdb, codex = DEFAULTS.codex } = {}) {
-	if (!fs.existsSync(guides)) throw new Error(`no compiled guides at ${guides}: run node tools/polestar.js compile, or pass --guides <Guides.lua>`);
+	if (!fs.existsSync(guides)) throw new Error(`no compiled guides at ${guides}: run node tools/sendafh.js compile, or pass --guides <Guides.lua>`);
 	const qFiles = QUESTDB_FILES.map((f) => path.join(questdb, f));
 	if (qFiles.some((f) => !fs.existsSync(f))) {
-		throw new Error(`the quest database is not built (no ${path.join(questdb, 'Quests.lua')}): run node tools/polestar.js questdb build, or pass --questdb <Polestar_QuestDB folder>`);
+		throw new Error(`the quest database is not built (no ${path.join(questdb, 'Quests.lua')}): run node tools/sendafh.js questdb build, or pass --questdb <SendaFH_QuestDB folder>`);
 	}
 	const cFiles = Object.fromEntries(Object.entries(CODEX_FILES).map(([k, f]) => [k, path.join(codex, f)]));
 	if (Object.values(cFiles).some((f) => !fs.existsSync(f))) {
-		throw new Error(`the Codex data is not built (no ${cFiles.quest}): run node tools/polestar.js codex build, or pass --codex <data/forever/codex folder>`);
+		throw new Error(`the Codex data is not built (no ${cFiles.quest}): run node tools/sendafh.js codex build, or pass --codex <data/forever/codex folder>`);
 	}
 	const sources = {
 		guides: toSets(luaToJson({ files: [guides], prelude: GUIDE_WALK, expr: LIST })),
@@ -288,11 +288,11 @@ function licenseText(locale, built, sources) {
 	const { language } = LOCALES[locale];
 	const counts = (src) => NAME_KINDS.map((k) => `${built.from[k][src]} ${k === 'npc' ? 'NPC' : k}${built.from[k][src] === 1 ? '' : 's'}`).join(', ');
 	const out = [
-		`Polestar names (${locale}): third-party notices`,
-		'='.repeat(`Polestar names (${locale}): third-party notices`.length),
+		`SendaFH names (${locale}): third-party notices`,
+		'='.repeat(`SendaFH names (${locale}): third-party notices`.length),
 		'',
 		`The quest, NPC, object and item names in this folder are the game's names in`,
-		`${language}, for Polestar's guides. Names and texts of the game belong to`,
+		`${language}, for SendaFH's guides. Names and texts of the game belong to`,
 		'Blizzard Entertainment. They come from the sources below, the first one',
 		'with a name winning.',
 		'',
@@ -303,8 +303,8 @@ function licenseText(locale, built, sources) {
 		out.push(`URL: ${ding.pin.repo}`, `Version: ${ding.pin.version}, commit ${ding.pin.commit}`);
 		for (const f of ding.files.filter((x) => x.path === dingFile(locale) || x.path === CREDITS)) out.push(`File: ${f.path} (sha256 ${f.sha256})`);
 		out.push(
-			'License: GPL-3.0 (Copyright Yendi), used in Polestar with his permission',
-			'(THIRD_PARTY.md in the Polestar repository).',
+			'License: GPL-3.0 (Copyright Yendi), used in SendaFH with his permission',
+			'(THIRD_PARTY.md in the SendaFH repository).',
 			`Names taken: ${counts('ding')}.`,
 			'DingDB\'s base data is generated from Questie and QuestieDB: see CREDITS.md',
 			'beside this file.',
@@ -332,24 +332,24 @@ function emitNamesAddon(locale, built, { version = require('../../../package.jso
 	const files = {};
 	files[`${name}.toc`] = [
 		`## Interface: ${iface || coreInterface()}`,
-		`## Title: Polestar Names (${locale})`,
-		`## Notes: Quest, NPC, object and item names in ${language} for Polestar's guides. Loaded on demand on a ${language} client.`,
-		'## Author: Polestar',
+		`## Title: SendaFH Names (${locale})`,
+		`## Notes: Quest, NPC, object and item names in ${language} for SendaFH's guides. Loaded on demand on a ${language} client.`,
+		'## Author: SendaFH',
 		'## X-License: GPL-3.0-only',
 		`## Version: ${version}`,
 		'## Category: Quests',
 		'## LoadOnDemand: 1',
-		'## Dependencies: Polestar',
+		'## Dependencies: SendaFH',
 		'',
 		'Names.lua',
 		'',
 	].join('\n');
 	const lines = [
 		header('lua', 'i18n names', from),
-		`-- Quest, NPC, object and item names in ${language} (${locale}) for Polestar.Names`,
-		'-- (addon/Polestar/Core/Names.lua). Sources and licences: LICENSE-DATA.txt.',
+		`-- Quest, NPC, object and item names in ${language} (${locale}) for SendaFH.Names`,
+		'-- (addon/SendaFH/Core/Names.lua). Sources and licences: LICENSE-DATA.txt.',
 		'',
-		'local add = Polestar and Polestar.Names and Polestar.Names.Add',
+		'local add = SendaFH and SendaFH.Names and SendaFH.Names.Add',
 		'if not add then return end',
 		'',
 	];
@@ -367,7 +367,7 @@ function emitNamesAddon(locale, built, { version = require('../../../package.jso
 	return files;
 }
 
-// Writes each language with names into addonsDir/Polestar_Names_<locale>
+// Writes each language with names into addonsDir/SendaFH_Names_<locale>
 // (files the folder no longer gets are removed) and removes the folder of a
 // language left without any. -> [{ locale, dir, bytes }] for those written.
 function writeNamesAddons(out, addonsDir, { sources, version, iface } = {}) {

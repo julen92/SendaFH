@@ -16,7 +16,7 @@ const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Maps/Maps.xml
 // holds three overlays: a 300 x 200 one at (600, 100) (two tiles, the second
 // 44 wide), a 100 x 100 one at (50, 300) and a 64 x 64 one at (0, 0).
 const SETUP = `
-local M, m = Polestar.Maps, stub.maps
+local M, m = SendaFH.Maps, stub.maps
 C_Map.GetMapArtLayers = function(id)
 	if id == 9000 then return { { layerWidth = 1002, layerHeight = 668, tileWidth = 256, tileHeight = 256 } } end
 	return {}
@@ -25,12 +25,12 @@ ART = 9001
 C_Map.GetMapArtID = function(id) return id == 9000 and ART or nil end
 EXPLORED = {}
 C_MapExplorationInfo = { GetExploredMapTextures = function() return EXPLORED end }
-Polestar.UI.ZoneArt.RegisterOverlays("test", { [9001] = { 256, 256,
+SendaFH.UI.ZoneArt.RegisterOverlays("test", { [9001] = { 256, 256,
 	{ 300, 200, 600, 100, 501, 502 },
 	{ 100, 100, 50, 300, 503 },
 	{ 64, 64, 0, 0, 504 },
 } })
--- Every shown texture under a Polestar frame on the canvas.
+-- Every shown texture under a SendaFH frame on the canvas.
 function revealed()
 	local out = {}
 	for _, f in ipairs(stub.frames) do
@@ -58,7 +58,7 @@ function run(script, { before = '', saved } = {}) {
 	return runAddon({
 		stubs: ['stub_world.lua', 'stub_maps.lua'],
 		before: `stub.maps.useWorld(); stub.maps.withMapCanvas(); stub.maps.place(0, 800); ${before}`,
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		saved,
 		login: true,
 		script: SETUP + script,
@@ -73,7 +73,7 @@ const files = (list) => list.map((t) => t.file);
 
 test('unexplored = every overlay of the art minus the explored ones, matched on offset and size', () => {
 	const [out] = run(`
-		local art = Polestar.UI.ZoneArt.overlays[9001]
+		local art = SendaFH.UI.ZoneArt.overlays[9001]
 		local function ids(list) local t = {}; for i, o in ipairs(list) do t[i] = o[5] end; return t end
 		local none = ids(M.UnexploredOverlays(art, nil))
 		local empty = ids(M.UnexploredOverlays(art, {}))
@@ -112,8 +112,8 @@ test('the world map shows unexplored overlays tinted, split into tiles as Blizza
 		EXPLORED = { { textureWidth = 64, textureHeight = 64, offsetX = 0, offsetY = 0, isShownByMouseOver = false, fileDataIDs = { 504 } } }
 		m.showMap(9000)
 		local tint = revealed()
-		local r, g, b = Polestar.Theme.Color("mapUnexplored")
-		Polestar.Set("maps.reveal", "on")
+		local r, g, b = SendaFH.Theme.Color("mapUnexplored")
+		SendaFH.Set("maps.reveal", "on")
 		local plain = revealed()
 		-- Exploring an area: the client fires MAP_EXPLORATION_UPDATED.
 		table.insert(EXPLORED, { textureWidth = 100, textureHeight = 100, offsetX = 50, offsetY = 300, isShownByMouseOver = false, fileDataIDs = { 503 } })
@@ -140,16 +140,16 @@ test('off costs nothing: no provider, no frames, until it is turned on; a map wh
 		local before = providerCount()
 		m.showMap(9000)
 		local offShown = #revealed()
-		Polestar.Set("maps.reveal", "tint")
+		SendaFH.Set("maps.reveal", "tint")
 		local on = providerCount()
 		local shown = #revealed()
-		Polestar.Set("maps.reveal", "off")
+		SendaFH.Set("maps.reveal", "off")
 		local cleared = #revealed()
-		Polestar.Set("maps.reveal", "tint")
+		SendaFH.Set("maps.reveal", "tint")
 		ART = 7777 -- the client shows other art than the table was built for
 		m.showMap(9000)
 		emit({ before = before, offShown = offShown, on = on, shown = shown, cleared = cleared, other = #revealed() })`,
-	{ saved: { Polestar: 'PolestarDB = { schema = 1, settings = { maps = { reveal = "off" } } }' } });
+	{ saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { maps = { reveal = "off" } } }' } });
 	assert.equal(out.offShown, 0);
 	assert.equal(out.on, out.before + 1, 'the provider is added when the reveal is first turned on');
 	assert.equal(out.shown, 4);
@@ -176,19 +176,19 @@ test('coordinates format to one decimal, rounded half up on the tenth; no positi
 
 test('the minimap readout exists only once turned on, follows the player and blanks without a position', () => {
 	const [out] = run(`
-		local before = stub.frame("PolestarMinimapCoords")
-		Polestar.Set("maps.minimapCoords", true)
-		local f = stub.frame("PolestarMinimapCoords")
+		local before = stub.frame("SendaFHMinimapCoords")
+		SendaFH.Set("maps.minimapCoords", true)
+		local f = stub.frame("SendaFHMinimapCoords")
 		local first = f.Text:GetText()
 		m.place(0, 600) -- 10 map percent further on
 		stub.advance(0.3)
 		local moved = f.Text:GetText()
-		local getPos = Polestar.Compat.GetPlayerMapPosition
-		Polestar.Compat.GetPlayerMapPosition = function() return nil end
+		local getPos = SendaFH.Compat.GetPlayerMapPosition
+		SendaFH.Compat.GetPlayerMapPosition = function() return nil end
 		stub.advance(0.3)
 		local none = f.Text:GetText()
-		Polestar.Compat.GetPlayerMapPosition = getPos
-		Polestar.Set("maps.minimapCoords", false)
+		SendaFH.Compat.GetPlayerMapPosition = getPos
+		SendaFH.Set("maps.minimapCoords", false)
 		emit({ before = before ~= nil, first = first, moved = moved, none = none, hidden = not f:IsShown() })`);
 	assert.equal(out.before, false, 'no frame while off');
 	assert.equal(out.first, '10.0, 50.0');
@@ -209,27 +209,27 @@ local recs = {
 	molten = { key = "molten", name = "Molten Core", kind = "raid", levels = { 60, 60, 60 } }, -- no entrance known
 }
 local loaded = false
-Polestar.Codex = {
+SendaFH.Codex = {
 	IsLoaded = function() return loaded end,
-	Load = function() CODEX_LOADS = CODEX_LOADS + 1; loaded = true; Polestar.Fire("CODEX_LOADED", {}); return true end,
+	Load = function() CODEX_LOADS = CODEX_LOADS + 1; loaded = true; SendaFH.Fire("CODEX_LOADED", {}); return true end,
 	Each = function(kind, fn) if kind == "instance" then for k, r in pairs(recs) do fn(k, r.name) end end end,
 	Instance = function(k) return recs[k] end,
 }
 `;
-const DUNGEON_PINS = { saved: { Polestar: 'PolestarDB = { schema = 1, settings = { maps = { dungeonPins = true } } }' } };
+const DUNGEON_PINS = { saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { maps = { dungeonPins = true } } }' } };
 
 test('dungeon pins: the Codex loads only when the world map opens, one pin per known entrance', () => {
 	const [out] = run(CODEX + `
-		local P = Polestar.Pins
+		local P = SendaFH.Pins
 		local atLogin = { loads = CODEX_LOADS, layer = P.GetLayer("maps.dungeons") ~= nil }
 		WorldMapFrame:Hide()
 		WorldMapFrame:Show()
 		local layer = P.GetLayer("maps.dungeons")
 		local keys = {}
 		for _, p in ipairs(layer) do keys[#keys + 1] = p.key .. "@" .. p.x .. "," .. p.y .. ":" .. p.icon end
-		local r, g, b = Polestar.Theme.Color("dungeon")
+		local r, g, b = SendaFH.Theme.Color("dungeon")
 		local color = layer[1].color[1] == r and layer[1].color[2] == g and layer[1].color[3] == b
-		Polestar.Set("maps.dungeonPins", false)
+		SendaFH.Set("maps.dungeonPins", false)
 		local off = P.GetLayer("maps.dungeons") == nil
 		emit({ atLogin = atLogin, loads = CODEX_LOADS, keys = keys, color = color, off = off })`, DUNGEON_PINS);
 	assert.deepEqual(out.atLogin, { loads: 0, layer: false }, 'nothing loads at login');
@@ -241,7 +241,7 @@ test('dungeon pins: the Codex loads only when the world map opens, one pin per k
 
 test('with dungeon pins off the world map opening never loads the Codex', () => {
 	const [out] = run(CODEX + `
-		Polestar.Set("maps.dungeonPins", false)
+		SendaFH.Set("maps.dungeonPins", false)
 		WorldMapFrame:Hide()
 		WorldMapFrame:Show()
 		emit({ loads = CODEX_LOADS })`);
@@ -250,14 +250,14 @@ test('with dungeon pins off the world map opening never loads the Codex', () => 
 
 test('a dungeon pin opens its dungeon page; without the Dungeons module, or with Shift, it sets a waypoint', () => {
 	const [out] = run(CODEX + `
-		Polestar.Codex.Load()
+		SendaFH.Codex.Load()
 		local opened = {}
-		Polestar.Dungeons = { IsEnabled = function() return true end, Open = function(key) opened[#opened + 1] = key; return true end }
+		SendaFH.Dungeons = { IsEnabled = function() return true end, Open = function(key) opened[#opened + 1] = key; return true end }
 		local targets = {}
-		Polestar.Nav.SetTarget = function(map, x, y, label) targets[#targets + 1] = label .. "@" .. map .. ":" .. x .. "," .. y end
-		Polestar.Maps.RefreshDungeonPins()
+		SendaFH.Nav.SetTarget = function(map, x, y, label) targets[#targets + 1] = label .. "@" .. map .. ":" .. x .. "," .. y end
+		SendaFH.Maps.RefreshDungeonPins()
 		local byKey = {}
-		for _, p in ipairs(Polestar.Pins.GetLayer("maps.dungeons")) do byKey[p.key] = p end
+		for _, p in ipairs(SendaFH.Pins.GetLayer("maps.dungeons")) do byKey[p.key] = p end
 		local dm, hot = byKey.deadmines, byKey["hall-of-thanes"]
 		local tip = {}
 		local t = {}
@@ -269,9 +269,9 @@ test('a dungeon pin opens its dungeon page; without the Dungeons module, or with
 		stub.keys.shift = true
 		dm.onClick("LeftButton")
 		stub.keys.shift = false
-		Polestar.Dungeons = nil
-		Polestar.Maps.RefreshDungeonPins()
-		for _, p in ipairs(Polestar.Pins.GetLayer("maps.dungeons")) do if p.key == "deadmines" then p.onClick("LeftButton") end end
+		SendaFH.Dungeons = nil
+		SendaFH.Maps.RefreshDungeonPins()
+		for _, p in ipairs(SendaFH.Pins.GetLayer("maps.dungeons")) do if p.key == "deadmines" then p.onClick("LeftButton") end end
 		emit({ page = dm.page, opened = opened, targets = targets, tip = tip })`, DUNGEON_PINS);
 	assert.equal(out.page, true);
 	assert.deepEqual(out.opened, ['deadmines', 'hall-of-thanes']);

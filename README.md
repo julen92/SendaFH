@@ -35,11 +35,25 @@ Las funciones de la base son trabajo de Polestar y de los proyectos que integra.
 
 **Versión enviada a CurseForge: `0.5.0-beta.1`, basada en Polestar `v0.2.5-test.1`.**
 
-La primera beta se ha enviado a CurseForge y está en procesamiento, antes de su revisión. **Aún debe aprobarla su equipo de moderación**; mientras tanto, la ficha puede no estar visible para otros usuarios. Cuando la aprueben, estará en **[SendaFH en CurseForge](https://www.curseforge.com/wow/addons/sendafh)**. Al estar clasificada como beta, puede requerir activar el filtro de archivos beta o entrar desde el enlace directo.
+La primera beta se ha enviado a CurseForge y figura como **Under Review** (comprobado el 16 de octubre de 2026). **Aún debe aprobarla su equipo de moderación**; mientras tanto, la ficha puede no estar visible para otros usuarios. Cuando la aprueben, estará en **[SendaFH en CurseForge](https://www.curseforge.com/wow/addons/sendafh)**. Al estar clasificada como beta, puede requerir activar el filtro de archivos beta o entrar desde el enlace directo.
 
-El instalable incluye las ocho carpetas del addon y las fuentes editables, catálogos y herramientas en `SendaFH/Source/`. **Code → Download ZIP descarga esta rama de GitHub; no es el instalable de SendaFH.** Esta rama contiene la portada y el soporte sobre el código heredado de Polestar; la publicación del código completo de la adaptación en GitHub está pendiente. Las fuentes de la versión publicada acompañan al ZIP de CurseForge.
+El instalable incluye las ocho carpetas del addon y las fuentes editables, catálogos y herramientas en `SendaFH/Source/`. **Code → Download ZIP descarga esta rama de GitHub; no es el instalable de SendaFH.** Esta rama contiene las fuentes de los ocho módulos de la distribución, los catálogos editables, las herramientas de construcción y las pruebas. Las fuentes también acompañan al ZIP de CurseForge. Los módulos opcionales de otros idiomas y el grabador original no forman parte del instalable publicado.
 
 Parte de la traducción está asistida por IA y necesita revisión jugando. Algunos nombres exclusivos de Forever pueden seguir en inglés. Las rutas también están en beta: si una flecha te manda por un sitio imposible, [repórtalo](https://github.com/julen92/SendaFH/issues/new?template=wrong-step.yml).
+
+## Pruebas y desarrollo
+
+- [Plan de pruebas de la beta](docs/sendafh/PRUEBAS-BETA.md): rutas, checklist y criterios para preparar una Release.
+- [Cómo contribuir y mantener las updates](CONTRIBUTING.md).
+- [Guion para grabar la demo dentro del juego](docs/sendafh/GRABAR-DEMO.md).
+
+Requisitos: Node.js 24+, Lua 5.1 y Python 3. Para reconstruir el ZIP instalable desde este repositorio:
+
+```sh
+python tools/sendafh-curseforge.py --output ../dist
+```
+
+Las fuentes del addon están en `addon/`; los catálogos de traducción en `locales/` y las guías editables en `guides/`. La compilación del ZIP usa los datos generados que ya acompañan a la versión. Regenerar datos originales de WoW requiere las entradas locales indicadas por las herramientas.
 
 ## Así se ve
 

@@ -9,7 +9,7 @@ function required(env, name) {
 }
 
 function botConfig(env = process.env) {
-	const repo = (env.GITHUB_REPO || 'fitzforge/polestar').trim();
+	const repo = (env.GITHUB_REPO || 'fitzforge/sendafh').trim();
 	const since = (env.SYNC_SINCE || '').trim();
 	const sinceMs = since ? Date.parse(since) : null;
 	if (since && Number.isNaN(sinceMs)) throw new Error(`SYNC_SINCE is not a date: ${since}`);

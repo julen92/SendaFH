@@ -66,9 +66,9 @@ function scan() {
 
 const where = (file, text, index) => `${path.relative(ROOT, file)}:${text.slice(0, index).split('\n').length}`;
 
-// The names addons hold the game's own names in each language, not Polestar's
+// The names addons hold the game's own names in each language, not SendaFH's
 // words: a Portuguese NPC may share a first name with a product.
-const GAME_NAMES = /[/\\]addon[/\\]Polestar_Names_[A-Za-z]{4}[/\\]Names\.lua$/;
+const GAME_NAMES = /[/\\]addon[/\\]SendaFH_Names_[A-Za-z]{4}[/\\]Names\.lua$/;
 
 test('no other guide product is named', () => {
 	const files = scan();
@@ -98,7 +98,7 @@ test('the checks catch what they are for, and the game\'s rested XP passes', () 
 	assert.deepEqual(namedTokens('You have rested XP; Rested XP doubles kill XP', NAME_HASHES), []);
 	assert.match('Import your existing guides here', INVITE);
 	assert.match('converting paid guides is easy', INVITE);
-	assert.match('Bring your paid guides into Polestar', INVITE);
+	assert.match('Bring your paid guides into SendaFH', INVITE);
 	assert.doesNotMatch('Guide packs are addons made by other players.', INVITE);
 	assert.doesNotMatch('Report other guides\' problems to their authors', INVITE);
 });

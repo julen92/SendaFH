@@ -1,5 +1,5 @@
 'use strict';
-// The planner's HTTP server (node tools/polestar.js planner): the page in
+// The planner's HTTP server (node tools/sendafh.js planner): the page in
 // tools/planner/public, the local map art, and the command registry over one
 // Workspace (tools/planner/workspace.js). Local only: it binds 127.0.0.1.
 //
@@ -14,12 +14,12 @@
 //   GET  /nav/index.json               the navigation grid: { build, continents: { [c]: ['col_row'] } } (tiles built), or 404
 //   GET  /nav/tile/<c>/<col>_<row>.png the Walkable layer of an ADT tile (navpool.js walkable), 256x256
 //   GET  /nav/aids.json                the arrow aids (data/local/nav/aids.json) as world points (Workspace.navAids), or 404
-//   GET  /glyph/<name>.png?px=<24..256>  a Polestar glyph, white on transparent (default 96 px)
-//   GET  /emblem.png?px=               the Polestar emblem
+//   GET  /glyph/<name>.png?px=<24..256>  a SendaFH glyph, white on transparent (default 96 px)
+//   GET  /emblem.png?px=               the SendaFH emblem
 //   GET  /band.png, /band-stars.png    the night-sky header layers (1024x128)
 //   GET  /icon/<kind>/<key>.png        a game icon (tools/planner/icons.js), local only
-//   GET  /fonts/<file>.ttf             the Inter faces of addon/Polestar/Media/Fonts
-//   GET  /media/<UI|Nav>/<name>.png    an addon texture (addon/Polestar/Media/*/<name>.tga)
+//   GET  /fonts/<file>.ttf             the Inter faces of addon/SendaFH/Media/Fonts
+//   GET  /media/<UI|Nav>/<name>.png    an addon texture (addon/SendaFH/Media/*/<name>.tga)
 //
 // Commands that edit files run one at a time; a failing command answers
 // { ok: false } and never stops the server.
@@ -51,7 +51,7 @@ const TYPES = {
 };
 const HEARTBEAT_MS = 20000;
 const TILE_CACHE = 'max-age=604800';
-const FONTS = path.join(__dirname, '..', '..', 'addon', 'Polestar', 'Media', 'Fonts');
+const FONTS = path.join(__dirname, '..', '..', 'addon', 'SendaFH', 'Media', 'Fonts');
 // The Inter faces shipped with the addon, read once.
 const FONT_FILES = new Set(fs.readdirSync(FONTS).filter((f) => /^[A-Za-z0-9-]+\.ttf$/.test(f)));
 
@@ -163,10 +163,10 @@ async function startServer(opts = {}) {
 
 	function artFile(res, pathname) {
 		let m;
-		if (!art) return json(res, 404, { error: 'no map art: run node tools/polestar.js planner art' });
+		if (!art) return json(res, 404, { error: 'no map art: run node tools/sendafh.js planner art' });
 		if (pathname === '/art/index.json') {
 			if (staticFile(res, art, 'index.json', 'no-cache')) return undefined;
-			return json(res, 404, { error: 'no map art: run node tools/polestar.js planner art' });
+			return json(res, 404, { error: 'no map art: run node tools/sendafh.js planner art' });
 		}
 		if ((m = /^\/art\/tiles\/(\d+)\/(\d+)\/(\d+)_(\d+)\.bc1$/.exec(pathname))) {
 			const rel = path.join('tiles', m[1], m[2], `${m[3]}_${m[4]}.bc1.gz`);
@@ -186,13 +186,13 @@ async function startServer(opts = {}) {
 		if (pathname === '/nav/index.json') {
 			const nav = ws.navRoutes();
 			const info = nav ? nav.info() : null;
-			if (!info || !info.available) return json(res, 404, { error: 'no navigation grid: run node tools/polestar.js nav build' });
+			if (!info || !info.available) return json(res, 404, { error: 'no navigation grid: run node tools/sendafh.js nav build' });
 			const continents = Object.fromEntries(Object.entries(nav.index.continents).map(([c, v]) => [c, v.tiles || []]));
 			return jsonFor(req, res, 200, { build: info.build, continents });
 		}
 		if (pathname === '/nav/aids.json') {
 			const aids = ws.navAids();
-			return aids ? jsonFor(req, res, 200, aids) : json(res, 404, { error: 'no arrow aids: run node tools/polestar.js nav aids' });
+			return aids ? jsonFor(req, res, 200, aids) : json(res, 404, { error: 'no arrow aids: run node tools/sendafh.js nav aids' });
 		}
 		if ((m = /^\/nav\/tile\/(\d+)\/(\d+)_(\d+)\.png$/.exec(pathname))) {
 			const nav = ws.navRoutes();
@@ -203,7 +203,7 @@ async function startServer(opts = {}) {
 	}
 
 	const png = (res, data) => send(res, 200, 'image/png', data, TILE_CACHE);
-	// Polestar's own art (/glyph, /emblem, /band) and the addon's fonts and textures.
+	// SendaFH's own art (/glyph, /emblem, /band) and the addon's fonts and textures.
 	function ownArt(res, pathname, url) {
 		let m;
 		if ((m = /^\/glyph\/([a-z0-9-]+)\.png$/.exec(pathname))) {

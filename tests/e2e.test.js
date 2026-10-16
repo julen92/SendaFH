@@ -51,20 +51,20 @@ function compilePack() {
 test('a compiled guide drives the real engine, guide window and arrow through a quest flow', () => {
 	const { dir, order } = compilePack();
 	try {
-		const loads = `do local ns = {}\n${order.map((f) => `assert(loadfile(${JSON.stringify(f)}))("Polestar_Guides", ns)`).join('\n')}\nend`;
+		const loads = `do local ns = {}\n${order.map((f) => `assert(loadfile(${JSON.stringify(f)}))("SendaFH_Guides", ns)`).join('\n')}\nend`;
 		const { emitted } = runAddon({
 			stubs: ['stub_world.lua'],
 			before: `
 				local w = stub.world
 				w.addMap(1429, { name = "Elwynn Forest", c = 1415, left = 1535.4166, right = -1941.6666, top = 1300.0, bottom = -1060.4166 })
 				w.moveTo(1429, 48.5, 42.5)`,
-			addons: ['Polestar'],
+			addons: ['SendaFH'],
 			script: `
 				${loads}
 				stub.login()
 				stub.advance(0.5)
 				local w = stub.world
-				local GF = Polestar.UI.GuideFrame
+				local GF = SendaFH.UI.GuideFrame
 				local function snap(label)
 					local rows = {}
 					for i, r in ipairs(GF.rows) do
@@ -73,18 +73,18 @@ test('a compiled guide drives the real engine, guide window and arrow through a 
 							rows[#rows + 1] = { text = plain, progress = plain:match("(%d+/%d+)$") or "" }
 						end
 					end
-					local t = Polestar.Nav.GetTarget()
+					local t = SendaFH.Nav.GetTarget()
 					emit({
 						label = label,
-						guide = Polestar.Engine.GetGuide() and Polestar.Engine.GetGuide().id,
-						step = Polestar.Engine.GetStepIndex(),
+						guide = SendaFH.Engine.GetGuide() and SendaFH.Engine.GetGuide().id,
+						step = SendaFH.Engine.GetStepIndex(),
 						card = GF.parts.person.Name:GetText(),
 						cardShown = GF.parts.card:IsShown(),
 						emptyTitle = GF.parts.empty:IsShown() and GF.parts.empty.Title:GetText() or nil,
 						rows = rows,
 						target = t and { x = t.x, y = t.y, label = t.label } or false,
-						arrow = PolestarNavArrow:IsShown(),
-						distance = Polestar.Nav.GetDistance() and math.floor(Polestar.Nav.GetDistance() + 0.5) or false,
+						arrow = SendaFHNavArrow:IsShown(),
+						distance = SendaFH.Nav.GetDistance() and math.floor(SendaFH.Nav.GetDistance() + 0.5) or false,
 					})
 				end
 				snap("login")
@@ -175,20 +175,20 @@ test('a compiled guide with group content shows the group line once per run and 
 	assert.deepEqual(diag.errors.map(format), []);
 	const { dir, scripts } = writeTestPack(guides, data);
 	try {
-		const loads = `do local ns = {}\n${scripts.map((f) => `assert(loadfile(${JSON.stringify(f)}))("Polestar_Guides", ns)`).join('\n')}\nend`;
+		const loads = `do local ns = {}\n${scripts.map((f) => `assert(loadfile(${JSON.stringify(f)}))("SendaFH_Guides", ns)`).join('\n')}\nend`;
 		const { emitted } = runAddon({
 			stubs: ['stub_world.lua'],
 			before: `
 				local w = stub.world
 				w.addMap(1429, { name = "Elwynn Forest", c = 1415, left = 1535.4166, right = -1941.6666, top = 1300.0, bottom = -1060.4166 })
 				w.moveTo(1429, 48.5, 42.5)`,
-			addons: ['Polestar'],
+			addons: ['SendaFH'],
 			script: `
 				${loads}
 				stub.login()
 				stub.advance(0.5)
-				local w, GF = stub.world, Polestar.UI.GuideFrame
-				local DUNGEON = "|c" .. Polestar.Theme.Hex("dungeon")
+				local w, GF = stub.world, SendaFH.UI.GuideFrame
+				local DUNGEON = "|c" .. SendaFH.Theme.Hex("dungeon")
 				local function subs()
 					local out = {}
 					for _, r in ipairs(GF.rows) do
@@ -199,23 +199,23 @@ test('a compiled guide with group content shows the group line once per run and 
 					end
 					return out
 				end
-				Polestar.Engine.SetGuide("forever/class/hollow")
+				SendaFH.Engine.SetGuide("forever/class/hollow")
 				stub.advance(0.5)
 				local accepts = subs()
 				for _, q in ipairs({ 9600, 9603, 9601, 9602 }) do w.accept(q, {}) end
 				stub.advance(0.5)
 				local kills = subs()
-				Polestar.UI.ShowPicker()
-				Polestar.UI.Picker.SetCategory("All")
+				SendaFH.UI.ShowPicker()
+				SendaFH.UI.Picker.SetCategory("All")
 				local chips = {}
 				for _, f in ipairs(stub.frames) do
 					if f.psGuide and rawget(f, "Range") and f:IsShown() then
 						chips[f.psGuide.id] = f.Group:IsShown() and f.Group.Text:GetText() or false
 					end
 				end
-				Polestar.UI.Picker.Select("forever/class/hollow")
+				SendaFH.UI.Picker.Select("forever/class/hollow")
 				local details = {}
-				for _, c in ipairs(Polestar.UI.Picker.details.Chips) do if c:IsShown() then details[#details + 1] = c.Text:GetText() end end
+				for _, c in ipairs(SendaFH.UI.Picker.details.Chips) do if c:IsShown() then details[#details + 1] = c.Text:GetText() end end
 				emit({ accepts = accepts, kills = kills, chips = chips, details = details })`,
 		});
 		const [out] = emitted;
@@ -239,11 +239,11 @@ test('a compiled guide with group content shows the group line once per run and 
 test('the Map page gathers every map setting from its modules into the declared tabs and sections', () => {
 	const { emitted } = runAddon({
 		stubs: ['stub_world.lua'],
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 			stub.login()
-			local O = Polestar.UI.Options
-			Polestar.UI.ShowOptions("map")
+			local O = SendaFH.UI.Options
+			SendaFH.UI.ShowOptions("map")
 			local tabs = {}
 			for _, p in ipairs(O.Pages()) do if p.key == "map" then tabs = p.tabs end end
 			local out = { tabs = tabs, sections = {}, keys = {} }

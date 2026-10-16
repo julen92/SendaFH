@@ -1,7 +1,7 @@
 'use strict';
 // `itemdb build` (tools/lib/itemdb): stat extraction from client-table rows,
-// the compact entry format and its Lua parser (addon/Polestar/Gear/ItemDB.lua),
-// an offline end-to-end build, and the generated Polestar_ItemDB addon.
+// the compact entry format and its Lua parser (addon/SendaFH/Gear/ItemDB.lua),
+// an offline end-to-end build, and the generated SendaFH_ItemDB addon.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -147,15 +147,15 @@ test('entry format: letters-then-digits tokens round-trip, mp5/hp5 aliased', () 
 
 test('the addon parser reads what the toolchain writes (Gear/ItemDB.lua vs encode)', () => {
 	const { items } = extractItems(TABLES);
-	const file = path.join(os.tmpdir(), `polestar-itemdb-${process.pid}-${Date.now()}.lua`);
+	const file = path.join(os.tmpdir(), `sendafh-itemdb-${process.pid}-${Date.now()}.lua`);
 	fs.writeFileSync(file, emitLua(items, '1.15.test'));
 	try {
 		const [got, meta] = runAddon({
-			addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Gear/ItemDB.lua'] }],
+			addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Gear/ItemDB.lua'] }],
 			script: `dofile(${JSON.stringify(file)})
 				local out = {}
-				for _, id in ipairs({ ${items.map((r) => r.id).join(', ')} }) do out[tostring(id)] = Polestar.ItemDB.Get(id) end
-				emit(out); emit(Polestar.ItemDB.Meta())`,
+				for _, id in ipairs({ ${items.map((r) => r.id).join(', ')} }) do out[tostring(id)] = SendaFH.ItemDB.Get(id) end
+				emit(out); emit(SendaFH.ItemDB.Meta())`,
 		}).emitted;
 		assert.deepEqual(meta, { schema: 1, build: '1.15.test', count: items.length });
 		for (const rec of items) {
@@ -178,14 +178,14 @@ function toCsv(rows) {
 }
 
 test('itemdb build: offline from cached CSVs to a TOC and Items.lua, byte-identical on rerun', async () => {
-	const dir = tmpdir('polestar-itemdb-');
+	const dir = tmpdir('sendafh-itemdb-');
 	const cache = path.join(dir, 'sources', 'wago', '1.15.9.1');
 	fs.mkdirSync(cache, { recursive: true });
 	for (const [name, rows] of Object.entries(TABLES)) {
 		const withId = rows.map((r, i) => ({ ID: r.ID ?? String(i + 1), ...r }));
 		fs.writeFileSync(path.join(cache, `${name}.csv`), toCsv(withId));
 	}
-	const out = path.join(dir, 'Polestar_ItemDB');
+	const out = path.join(dir, 'SendaFH_ItemDB');
 	const res = await buildItemDb({ sourcesDir: path.join(dir, 'sources'), offline: true, outDir: out });
 	assert.equal(res.build, '1.15.9.1');
 	assert.equal(res.count, 6);
@@ -193,24 +193,24 @@ test('itemdb build: offline from cached CSVs to a TOC and Items.lua, byte-identi
 	await buildItemDb({ sourcesDir: path.join(dir, 'sources'), offline: true, outDir: out });
 	assert.equal(fs.readFileSync(path.join(out, 'Items.lua'), 'utf8'), first);
 	assert.match(first, /\[1482\]="21 24 19 3 2 7 dmin33 dmax63 speed2700",/);
-	const toc = fs.readFileSync(path.join(out, 'Polestar_ItemDB.toc'), 'utf8');
+	const toc = fs.readFileSync(path.join(out, 'SendaFH_ItemDB.toc'), 'utf8');
 	assert.match(toc, /^## Interface: 16001$/m);
 	assert.match(toc, /^## LoadOnDemand: 1$/m);
-	assert.match(toc, /^## Dependencies: Polestar$/m);
+	assert.match(toc, /^## Dependencies: SendaFH$/m);
 	assert.match(toc, /^Items\.lua$/m);
 });
 
-const GENERATED = path.join(ROOT, 'addon', 'Polestar_ItemDB', 'Items.lua');
+const GENERATED = path.join(ROOT, 'addon', 'SendaFH_ItemDB', 'Items.lua');
 
-test('the generated Polestar_ItemDB addon loads on demand, stays within budget and knows Shadowfang', { skip: !fs.existsSync(GENERATED) && 'run itemdb build first' }, () => {
+test('the generated SendaFH_ItemDB addon loads on demand, stays within budget and knows Shadowfang', { skip: !fs.existsSync(GENERATED) && 'run itemdb build first' }, () => {
 	assert.ok(fs.statSync(GENERATED).size <= SIZE_BUDGET, `Items.lua over ${SIZE_BUDGET} bytes`);
 	const [loaded, sword, count] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Gear/ItemDB.lua'] }],
-		script: `local before = Polestar.ItemDB.IsLoaded()
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Gear/ItemDB.lua'] }],
+		script: `local before = SendaFH.ItemDB.IsLoaded()
 			dofile(${JSON.stringify(GENERATED)})
-			emit({ before, Polestar.ItemDB.IsLoaded() })
-			emit(Polestar.ItemDB.Get(1482))
-			emit(Polestar.ItemDB.Meta().count)`,
+			emit({ before, SendaFH.ItemDB.IsLoaded() })
+			emit(SendaFH.ItemDB.Get(1482))
+			emit(SendaFH.ItemDB.Meta().count)`,
 	}).emitted;
 	assert.deepEqual(loaded, [false, true]);
 	assert.deepEqual([sword.inv, sword.req, sword.class, sword.subclass, sword.stats.dps], [21, 19, 2, 7, 17.8]);
@@ -219,18 +219,18 @@ test('the generated Polestar_ItemDB addon loads on demand, stays within budget a
 
 test('the data addon is loaded on first lookup, once, and never in combat', () => {
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Gear/ItemDB.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Gear/ItemDB.lua'] }],
 		script: `local calls = 0
 			C_AddOns.LoadAddOn = function(name)
 				calls = calls + 1
-				if name == "Polestar_ItemDB" then Polestar.ItemDB.Register({ count = 1 }, { [5] = "1 5 1 1 4 1 sta1" }) end
+				if name == "SendaFH_ItemDB" then SendaFH.ItemDB.Register({ count = 1 }, { [5] = "1 5 1 1 4 1 sta1" }) end
 				return true
 			end
 			stub.inCombat = true
-			local inCombat = Polestar.ItemDB.Get(5) == nil
+			local inCombat = SendaFH.ItemDB.Get(5) == nil
 			stub.inCombat = false
-			local after = Polestar.ItemDB.Get(5).stats.sta
-			Polestar.ItemDB.Get(6)
+			local after = SendaFH.ItemDB.Get(5).stats.sta
+			SendaFH.ItemDB.Get(6)
 			emit({ inCombat, after, calls })`,
 	}).emitted;
 	assert.deepEqual(out, [true, 1, 1]);

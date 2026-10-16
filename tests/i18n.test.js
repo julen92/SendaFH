@@ -20,8 +20,8 @@ const { LOCALES, LOCALE_CODES } = require('../tools/lib/i18n/locales');
 const { localeState } = require('../tools/lib/i18n/project');
 const { TERMS, GLOSSARY_DIR, readGlossary, glossaryWarnings } = require('../tools/lib/i18n/glossary');
 
-const POLESTAR = path.join(ADDONS, 'Polestar');
-const shipped = LOCALE_CODES.filter((l) => fs.existsSync(path.join(POLESTAR, 'Locales', `${l}.lua`)));
+const SENDAFH = path.join(ADDONS, 'SendaFH');
+const shipped = LOCALE_CODES.filter((l) => fs.existsSync(path.join(SENDAFH, 'Locales', `${l}.lua`)));
 
 test('the keys are every literal L[...] and LC("context", "text") in the code, grouped by first use, plus the text that comes from data; a key in a comment or inside a string is none', () => {
 	const dir = tmpdir();
@@ -61,15 +61,15 @@ test('the format check refuses what the client would show broken, and allows reo
 	assert.deepEqual(formatProblems('Done', 'Fini à 100 %'), [], 'a plain string is shown as it is');
 });
 
-// A small addon: its code, and a German file in Polestar's layout with a
+// A small addon: its code, and a German file in SendaFH's layout with a
 // stale translation, a stale "to do", and keys missing from a group it has
 // and from a file it has no group for.
 function miniAddon() {
 	const dir = tmpdir();
 	fs.mkdirSync(path.join(dir, 'Locales'));
 	fs.mkdirSync(path.join(dir, 'UI'));
-	fs.writeFileSync(path.join(dir, 'Main.lua'), 'local L = Polestar.L\nprint(L["Hello %s"], L["Bye"], L["New in Main"], Polestar.LC("slot", "Back"))\n-- L["In a comment"]\n');
-	fs.writeFileSync(path.join(dir, 'UI', 'Window.lua'), 'local L = Polestar.L\nprint(L["Close the window"])\n');
+	fs.writeFileSync(path.join(dir, 'Main.lua'), 'local L = SendaFH.L\nprint(L["Hello %s"], L["Bye"], L["New in Main"], SendaFH.LC("slot", "Back"))\n-- L["In a comment"]\n');
+	fs.writeFileSync(path.join(dir, 'UI', 'Window.lua'), 'local L = SendaFH.L\nprint(L["Close the window"])\n');
 	return dir;
 }
 
@@ -145,7 +145,7 @@ test('a new file has every key commented out under its file; filled keys are tra
 	assert.equal(updateLocaleText({ text: out.text, file, keys }).text, out.text, 'a sync changes nothing');
 });
 
-test('the reader takes Polestar\'s layout, Ding!\'s ns.AddTranslations and a returned table', () => {
+test('the reader takes SendaFH\'s layout, Ding!\'s ns.AddTranslations and a returned table', () => {
 	const dir = tmpdir();
 	const write = (name, text) => {
 		fs.writeFileSync(path.join(dir, name), text);
@@ -171,7 +171,7 @@ test('glossary: a translation without its locale\'s word warns, its forms count 
 	assert.deepEqual(w.map((x) => x.key), ['Fly from the flight master']);
 	for (const f of fs.readdirSync(GLOSSARY_DIR).filter((n) => n.endsWith('.json'))) {
 		const locale = f.replace(/\.json$/, '');
-		assert.ok(LOCALES[locale], `${f}: not a locale Polestar ships`);
+		assert.ok(LOCALES[locale], `${f}: not a locale SendaFH ships`);
 		const read = readGlossary(locale);
 		for (const id of Object.keys(read)) assert.ok(TERMS[id], `${f}: ${id}`);
 	}
@@ -192,7 +192,7 @@ test('the checker reports stale keys, broken formats, a key set twice and a file
 });
 
 test('i18n status lists every locale with its status and translators', () => {
-	const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'polestar.js'), 'i18n', 'status', '--json'], { encoding: 'utf8', cwd: ROOT });
+	const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'sendafh.js'), 'i18n', 'status', '--json'], { encoding: 'utf8', cwd: ROOT });
 	assert.equal(r.status, 0, r.stderr);
 	const out = JSON.parse(r.stdout);
 	assert.deepEqual(out.locales.map((l) => [l.locale, l.status, l.translators]), LOCALE_CODES.map((l) => [l, LOCALES[l].status, LOCALES[l].translators]));
@@ -201,23 +201,23 @@ test('i18n status lists every locale with its status and translators', () => {
 });
 
 test('every shipped interface file loads, has no stale key or key set twice, and keeps the English formats', () => {
-	const files = fs.readdirSync(path.join(POLESTAR, 'Locales')).filter((f) => f.endsWith('.lua'));
+	const files = fs.readdirSync(path.join(SENDAFH, 'Locales')).filter((f) => f.endsWith('.lua'));
 	assert.ok(files.length > 0);
 	for (const f of files) assert.ok(LOCALES[f.replace(/\.lua$/, '')], `Locales/${f}: not a locale of tools/lib/i18n/locales.js`);
-	const st = localeState(POLESTAR, shipped);
+	const st = localeState(SENDAFH, shipped);
 	for (const locale of shipped) {
 		const s = st.locales[locale];
 		assert.equal(s.error, null, `${locale}: ${s.error}`);
-		assert.deepEqual(Object.keys(s.stale), [], `${locale}: stale keys (run \`node tools/polestar.js i18n sync ${locale}\`)`);
+		assert.deepEqual(Object.keys(s.stale), [], `${locale}: stale keys (run \`node tools/sendafh.js i18n sync ${locale}\`)`);
 		assert.deepEqual(s.problems, [], `${locale}: broken translations`);
 		assert.ok(Object.keys(s.translated).length > 1000, `${locale}: ${Object.keys(s.translated).length} translations`);
 	}
 });
 
 test('sync keeps every translation line of the shipped files byte for byte', () => {
-	const keys = extractKeys(POLESTAR);
+	const keys = extractKeys(SENDAFH);
 	for (const locale of shipped) {
-		const file = path.join(POLESTAR, 'Locales', `${locale}.lua`);
+		const file = path.join(SENDAFH, 'Locales', `${locale}.lua`);
 		const text = fs.readFileSync(file, 'utf8');
 		const out = updateLocaleText({ text, file, keys });
 		const after = new Set(out.text.split('\n'));
@@ -233,8 +233,8 @@ test('game terms come in the client\'s words: a standing in the character\'s gen
 function UnitSex() return 3 end
 FACTION_STANDING_LABEL8, FACTION_STANDING_LABEL8_FEMALE = "Exalté", "Exaltée"
 ITEM_QUALITY3_DESC, FACTION_HORDE, BACKSLOT = "Rare", "Horde", "Dos"`,
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Gear/Gear.xml'] }],
-		script: 'emit({ Polestar.StandingName(8), Polestar.QualityName(3), Polestar.FactionName("H"), Polestar.Gear.SlotName(15), Polestar.StandingName(9) or false })',
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Gear/Gear.xml'] }],
+		script: 'emit({ SendaFH.StandingName(8), SendaFH.QualityName(3), SendaFH.FactionName("H"), SendaFH.Gear.SlotName(15), SendaFH.StandingName(9) or false })',
 	}).emitted;
 	assert.deepEqual(out, ['Exaltée', 'Rare', 'Horde', 'Dos', false]);
 });
@@ -244,24 +244,24 @@ test('race names come in the client\'s words by ChrRaces ID; Skyborne, named onl
 		before: `${fakeLocale('itIT', { Skyborne: 'Celestiale', Human: 'Umano (chiave)' })}
 local NAMES = { [1] = "Umano", [5] = "Non morto", [23] = "Gilneano", [95] = "Celestiale dell'Ordine Supremo" }
 C_CreatureInfo = { GetRaceInfo = function(id) return NAMES[id] and { raceName = NAMES[id], raceID = id } end }`,
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
-		script: 'local U = Polestar.UI\nemit({ U.RaceName("Human"), U.RaceName("Scourge"), U.RaceName("Skyborne"), U.RaceName("Orc") })',
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
+		script: 'local U = SendaFH.UI\nemit({ U.RaceName("Human"), U.RaceName("Scourge"), U.RaceName("Skyborne"), U.RaceName("Orc") })',
 	}).emitted;
 	assert.deepEqual(out, ['Umano', 'Non morto', 'Celestiale', 'Orc']);
 });
 
 test('each shipped language loads before the code that reads L at load: the key binding labels are translated', () => {
-	const st = localeState(POLESTAR, shipped);
+	const st = localeState(SENDAFH, shipped);
 	for (const locale of shipped) {
-		const [label] = runAddon({ before: `function GetLocale() return "${locale}" end`, addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }], script: 'emit(BINDING_NAME_POLESTAR_TOGGLE)' }).emitted;
+		const [label] = runAddon({ before: `function GetLocale() return "${locale}" end`, addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }], script: 'emit(BINDING_NAME_SENDAFH_TOGGLE)' }).emitted;
 		assert.equal(label, st.locales[locale].translated['Toggle guide window'], locale);
 	}
-	const [en] = runAddon({ addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }], script: 'emit(BINDING_NAME_POLESTAR_TOGGLE)' }).emitted;
+	const [en] = runAddon({ addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }], script: 'emit(BINDING_NAME_SENDAFH_TOGGLE)' }).emitted;
 	assert.equal(en, 'Toggle guide window');
 });
 
 test('the Lua list of AI-made locales is locales.js\'s', () => {
-	const [ai] = runAddon({ addons: [{ name: 'Polestar', files: ['Core/Init.lua'] }], script: 'emit(Polestar.AI_LOCALES)' }).emitted;
+	const [ai] = runAddon({ addons: [{ name: 'SendaFH', files: ['Core/Init.lua'] }], script: 'emit(SendaFH.AI_LOCALES)' }).emitted;
 	assert.deepEqual(Object.keys(ai).sort(), LOCALE_CODES.filter((l) => LOCALES[l].status === 'ai'));
 });
 
@@ -270,18 +270,18 @@ function aboutNote(before, between = '') {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before,
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
-		script: `${between}\nuistub.install()\nstub.login()\nPolestar.UI.ShowOptions("about")
-		local v = Polestar.UI.Options.view
-		emit(v.AINote:IsShown() and { note = v.AINote:GetText(), link = v.AILink.Label:GetText(), url = Polestar.DiscordURL } or false)`,
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
+		script: `${between}\nuistub.install()\nstub.login()\nSendaFH.UI.ShowOptions("about")
+		local v = SendaFH.UI.Options.view
+		emit(v.AINote:IsShown() and { note = v.AINote:GetText(), link = v.AILink.Label:GetText(), url = SendaFH.DiscordURL } or false)`,
 	}).emitted[0];
 }
 
 test('Options > About says an AI-made translation is one, with the Discord invite; a reviewed one and English say nothing', () => {
-	const ai = aboutNote(fakeLocale('itIT', { 'A translated text': 'Un testo tradotto' }), 'Polestar.AI_LOCALES.itIT = true');
+	const ai = aboutNote(fakeLocale('itIT', { 'A translated text': 'Un testo tradotto' }), 'SendaFH.AI_LOCALES.itIT = true');
 	assert.ok(ai && typeof ai.note === 'string' && ai.note !== '', 'the note shows');
 	assert.equal(ai.link, ai.url.replace(/^\w+:\/\//, ''), 'with the Discord invite');
-	assert.equal(aboutNote(fakeLocale('itIT', {}), 'Polestar.AI_LOCALES.itIT = true'), false, 'no translation loaded: English, no note');
+	assert.equal(aboutNote(fakeLocale('itIT', {}), 'SendaFH.AI_LOCALES.itIT = true'), false, 'no translation loaded: English, no note');
 	assert.equal(aboutNote('function GetLocale() return "deDE" end'), false, 'reviewed');
 	assert.equal(aboutNote(''), false, 'English');
 });

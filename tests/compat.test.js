@@ -1,12 +1,12 @@
 'use strict';
-// Compat (addon/Polestar/Core/Compat.lua): map frames and world coordinates,
+// Compat (addon/SendaFH/Core/Compat.lua): map frames and world coordinates,
 // quest objective normalization, NPC IDs, player info, against the stub world.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 function run(script, before = '') {
 	return runAddon({
@@ -16,7 +16,7 @@ w.addMap(1429, { name = "Elwynn Forest", c = 0, left = 1500, right = -1500, top 
 w.addMap(1411, { name = "Durotar", c = 1, left = 0, right = -3000, top = 0, bottom = -3000 })
 ${before}`,
 		addons: [CORE],
-		script: `C = Polestar.Compat\n${script}`,
+		script: `C = SendaFH.Compat\n${script}`,
 	}).emitted;
 }
 
@@ -24,7 +24,7 @@ const round = (list) => list.map((v) => (typeof v === 'number' ? Math.round(v * 
 
 test('MapToWorld uses registered Era bounds for frame "e" and the live client otherwise', () => {
 	const [out] = run(`
-		Polestar.RegisterMapFrames({ era = { [1429] = { c = 0, left = 1600, right = -1400, top = 600, bottom = -1400 } } })
+		SendaFH.RegisterMapFrames({ era = { [1429] = { c = 0, left = 1600, right = -1400, top = 600, bottom = -1400 } } })
 		emit({ { C.MapToWorld(1429, 50, 50, "e") }, { C.MapToWorld(1429, 50, 50) }, { C.MapToWorld(9998, 50, 50, "e") },
 			{ C.MapToWorld(9999, 50, 50) } })
 	`);
@@ -36,7 +36,7 @@ test('MapToWorld uses registered Era bounds for frame "e" and the live client ot
 
 test('an Era point converts back to the live map percent with WorldToMap, with or without GetMapPosFromWorldPos', () => {
 	const script = `
-		Polestar.RegisterMapFrames({ era = { [1429] = { c = 0, left = 1600, right = -1400, top = 600, bottom = -1400 } } })
+		SendaFH.RegisterMapFrames({ era = { [1429] = { c = 0, left = 1600, right = -1400, top = 600, bottom = -1400 } } })
 		local c, wx, wy = C.MapToWorld(1429, 50, 50, "e")
 		emit({ { C.WorldToMap(c, wx, wy, 1429) }, { C.WorldToMap(1, wx, wy, 1429) } })
 	`;
@@ -282,7 +282,7 @@ test('C3 (NAV_QA): no addon code outside Core/Compat.lua opens or moves the worl
 		for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
 			const p = path.join(dir, e.name);
 			if (e.isDirectory()) walk(p);
-			else if (e.name.endsWith('.lua') && path.relative(ADDONS, p) !== path.join('Polestar', 'Core', 'Compat.lua')) {
+			else if (e.name.endsWith('.lua') && path.relative(ADDONS, p) !== path.join('SendaFH', 'Core', 'Compat.lua')) {
 				fs.readFileSync(p, 'utf8')
 					.split('\n')
 					.forEach((line, i) => {

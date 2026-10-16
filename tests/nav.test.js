@@ -1,5 +1,5 @@
 'use strict';
-// Navigation (addon/Polestar/Nav): target model, arrow geometry and states,
+// Navigation (addon/SendaFH/Nav): target model, arrow geometry and states,
 // minimap projection, world map pins, TomTom/Blizzard bridges, live settings.
 // Runs the real Core/Init.lua + Nav/Nav.xml against tests/lua/stub_nav.lua.
 
@@ -7,14 +7,14 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 const PI = Math.PI;
 
 // Shared Lua locals for every script.
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local A = N.arrow
-local Pins = Polestar.Pins
+local Pins = SendaFH.Pins
 local function targetPin() return Pins.GetMinimapFrames("nav.target")[1] end
 local nav = stub.nav
 local function target(wx, wy, label)
@@ -70,7 +70,7 @@ test('arrow points at the target relative to facing in all four quadrants, in bo
 		}
 		local out = {}
 		for _, style in ipairs({ "3d", "flat" }) do
-			Polestar.Set("nav.arrowStyle", style)
+			SendaFH.Set("nav.arrowStyle", style)
 			for _, c in ipairs(cases) do
 				nav.facing = c[4]
 				target(c[2], c[3])
@@ -167,16 +167,16 @@ test('switching nav.arrowStyle live keeps heading, colour and the arrived state'
 		target(0, 100)                      -- west: heading +90 degrees
 		stub.advance(1)
 		r.solid = snap()
-		Polestar.Set("nav.arrowStyle", "flat")
+		SendaFH.Set("nav.arrowStyle", "flat")
 		r.flat = snap()
-		Polestar.Set("nav.arrowStyle", "3d")
+		SendaFH.Set("nav.arrowStyle", "3d")
 		r.back = snap()
 		nav.place(0, 96)                    -- arrive
 		stub.advance(0.2)
 		r.arrived3d = snap()
-		Polestar.Set("nav.arrowStyle", "flat")
+		SendaFH.Set("nav.arrowStyle", "flat")
 		r.arrivedFlat = snap()
-		r.default = Polestar.GetDefault("nav.arrowStyle")
+		r.default = SendaFH.GetDefault("nav.arrowStyle")
 		emit(r)`);
 	assert.equal(out.default, '3d');
 	assert.deepEqual([out.solid.style, out.solid.sheet, out.solid.spec, out.solid.body, out.solid.frame], ['3d', true, true, false, 25]);
@@ -214,7 +214,7 @@ test('in metres the arrow redraws its distance at once, without waiting for it t
 		target(300, 400)                   -- 500 yd
 		stub.advance(0.2)
 		local yards = A.distText:GetText()
-		Polestar.Set("nav.distanceUnit", "metres")
+		SendaFH.Set("nav.distanceUnit", "metres")
 		emit({ yards = yards, metres = A.distText:GetText() })`);
 	assert.deepEqual(out, { yards: '500 yd', metres: '457 m' });
 });
@@ -222,7 +222,7 @@ test('in metres the arrow redraws its distance at once, without waiting for it t
 test('Era-frame targets convert through the registered Era bounds', () => {
 	const [out] = run(`
 		-- Era frame of map 9000 is offset from the live one: era (50, 50) is world (30, -40).
-		Polestar.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
+		SendaFH.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
 		N.SetTarget(9000, 50, 50, "Era point", "e")
 		local era = N.GetDistance()
 		local _, _, rel = N.Sample()
@@ -249,7 +249,7 @@ test('reaching the target switches to the arrived state, with hysteresis and one
 		nav.place(0, 0)                    -- 20 yd: travelling again
 		stub.advance(0.2)
 		seen[#seen + 1] = { A.GetMode(), A.distText:GetText(), A.ring:IsShown() }
-		Polestar.Set("nav.arrivalSound", false)
+		SendaFH.Set("nav.arrivalSound", false)
 		nav.place(18, 0)
 		stub.advance(0.2)
 		seen[#seen + 1] = { A.GetMode(), #stub.sounds }
@@ -270,17 +270,17 @@ test('reaching the target switches to the arrived state, with hysteresis and one
 test('chosen arrow colours: far and near, both styles and the arrival ring; the target pin follows; dark picks stay legible', () => {
 	const { emitted } = runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Theme/Theme.xml', 'Nav/Nav.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Theme/Theme.xml', 'Nav/Nav.xml'] }],
 		login: true,
 		script: `${PRELUDE}
-		local T = Polestar.Theme
+		local T = SendaFH.Theme
 		local function rgb(t) local r, g, b = t:GetVertexColor() return { r, g, b } end
-		Polestar.Set("nav.arrowColor", { 0.2, 0.45, 1 })
-		Polestar.Set("nav.arrowNearColor", { 1, 0.4, 0.8 })
+		SendaFH.Set("nav.arrowColor", { 0.2, 0.45, 1 })
+		SendaFH.Set("nav.arrowNearColor", { 1, 0.4, 0.8 })
 		target(300, 400)
 		stub.advance(0.2)
 		local out = { far3d = rgb(A.sheet), pinFar = rgb(targetPin().edge) }
-		Polestar.Set("nav.arrowStyle", "flat")
+		SendaFH.Set("nav.arrowStyle", "flat")
 		out.farFlat = rgb(A.body)
 		nav.place(299, 399)
 		stub.advance(0.2)
@@ -288,20 +288,20 @@ test('chosen arrow colours: far and near, both styles and the arrival ring; the 
 		local r, g, b = A.distText:GetTextColor()
 		out.arrivedText, out.nearText = { r, g, b }, { T.Color("arrowNearText") }
 		out.arrivedContrast = T.Contrast(out.arrivedText, T.LightestGround())
-		Polestar.Set("nav.arrowColor", { 0.9, 0.3, 0.1 })
+		SendaFH.Set("nav.arrowColor", { 0.9, 0.3, 0.1 })
 		stub.advance(0.1)
 		out.pinLive = rgb(targetPin().edge)
 		-- A navy pick: the arrow keeps it, the text that wears it is lifted.
-		Polestar.Set("nav.arrowNearColor", { 0.05, 0.05, 0.2 })
+		SendaFH.Set("nav.arrowNearColor", { 0.05, 0.05, 0.2 })
 		local dark = { T.Color("arrowNear") }
 		local text = { T.Color("arrowNearText") }
 		out.darkKept = { dark[1], dark[2], dark[3] }
 		out.darkContrast = T.Contrast(text, T.LightestGround())
-		Polestar.Set("nav.arrowNearColor", { 0.95, 0.95, 0.85 })
+		SendaFH.Set("nav.arrowNearColor", { 0.95, 0.95, 0.85 })
 		local light = { T.Color("arrowNearText") }
 		out.lightText = { light[1], light[2], light[3] }
-		Polestar.Set("nav.arrowColor", nil)
-		Polestar.Set("nav.arrowNearColor", nil)
+		SendaFH.Set("nav.arrowColor", nil)
+		SendaFH.Set("nav.arrowNearColor", nil)
 		out.resetFar, out.resetNear, out.accent, out.success = { T.Color("arrow") }, { T.Color("arrowNear") }, { T.Accent() }, { T.Color("success") }
 		emit(out)`,
 	});
@@ -335,7 +335,7 @@ test('an area target is arrived anywhere inside it, shows the distance to its ed
 		nav.place(260, 0); stub.advance(0.2); snap()  -- 60 on the far side: on the edge
 		nav.place(125, 0); stub.advance(0.2); snap()  -- 75: 15 past the edge
 		nav.showWorldMap(9000)
-		local areas = nav.pins("PolestarPinsAreaTemplate")
+		local areas = nav.pins("SendaFHPinsAreaTemplate")
 		local r = { seen = seen, areas = #areas }
 		r.size = math.floor(areas[1].width + 0.5)
 		r.at = { areas[1].normalizedX, areas[1].normalizedY }
@@ -343,7 +343,7 @@ test('an area target is arrived anywhere inside it, shows the distance to its ed
 			if pin.data.layer.name == "nav.target" then r.pin = { pin.normalizedX, pin.normalizedY } end
 		end
 		nav.setWaypoint(wp(100, 0, "A point"))
-		r.pointAreas = #nav.pins("PolestarPinsAreaTemplate")
+		r.pointAreas = #nav.pins("SendaFHPinsAreaTemplate")
 		emit(r)`);
 	assert.deepEqual(out.seen, [
 		['travel', '140 yd', 'Kill Bristlebacks', 140],
@@ -437,7 +437,7 @@ test('the world map marks every other spot of an area objective; clicking one se
 		local after = 0
 		for _, pin in ipairs(nav.pins()) do if pin.data.layer.name == "nav.spots" then after = after + 1 end end
 		r.after = after
-		Polestar.Set("nav.worldPins", false)
+		SendaFH.Set("nav.worldPins", false)
 		r.off = #nav.pins()
 		emit(r)`);
 	assert.deepEqual(out.marks, [
@@ -503,7 +503,7 @@ test("the regions the step's open goals spawn in are on the map; the target's go
 		nav.showWorldMap(9000)
 		stub.advance(0.3)
 		local r = {}
-		r.world = { #nav.pins("PolestarPinsHullTemplate"), #nav.pins("PolestarPinsAreaTemplate") }
+		r.world = { #nav.pins("SendaFHPinsHullTemplate"), #nav.pins("SendaFHPinsAreaTemplate") }
 		r.own, r.others = alphas("nav.areas"), alphas("nav.goalAreas")
 		local ar, ag, ab = N.RGB("arrow")
 		local pr = N.RGB("place")
@@ -517,11 +517,11 @@ test("the regions the step's open goals spawn in are on the map; the target's go
 		stub.advance(0.3)
 		r.manual = { Pins.GetLayer("nav.areas") ~= nil, #Pins.GetLayer("nav.goalAreas") }
 		N.ReleaseTarget()
-		Polestar.Set("nav.minimapPins", false)
+		SendaFH.Set("nav.minimapPins", false)
 		stub.advance(0.3)
 		r.minimapOff = minimap()
-		Polestar.Set("nav.worldPins", false)
-		r.worldOff = #nav.pins("PolestarPinsHullTemplate")
+		SendaFH.Set("nav.worldPins", false)
+		r.worldOff = #nav.pins("SendaFHPinsHullTemplate")
 		emit(r)`);
 	assert.deepEqual(out.world, [6, 0], "every open goal's regions, none for a done goal; no disc under the target: its region covers it");
 	assert.deepEqual(out.own, [[8, 100, true], [8, 100, true], [8, 60, true]], "the target's goal: a region per place (too far apart to join; small ones are 8-gons), the other places it spawns fainter");
@@ -605,13 +605,13 @@ test("a Teldrassil step's spawn regions cover every spawn of its goals and read 
 		nav.showWorldMap(1438)
 		stub.advance(0.3)
 		r.world = {}
-		for _, pin in ipairs(nav.pins("PolestarPinsHullTemplate")) do
+		for _, pin in ipairs(nav.pins("SendaFHPinsHullTemplate")) do
 			local _, _, _, fill = pin.texs[1]:GetVertexColor()
 			local _, _, _, rim = pin.texs[pin.used]:GetVertexColor()
 			r.world[#r.world + 1] = { pin.data.layer.name, math.floor(pin.width + 0.5), math.floor(pin.height + 0.5),
 				math.floor(fill * 100 + 0.5), math.floor(rim * 100 + 0.5) }
 		end
-		r.target = { #nav.pins("PolestarPinsAreaTemplate"), Pins.GetLayer("nav.target")[1].area == nil }
+		r.target = { #nav.pins("SendaFHPinsAreaTemplate"), Pins.GetLayer("nav.target")[1].area == nil }
 		r.stats = Pins.AreaStats()
 		emit(r)`);
 	for (const [g, goal] of out.goals.entries()) assert.equal(goal.covered, goal.spots, `goal ${g + 1}: every spot's spawns lie in a region`);
@@ -644,7 +644,7 @@ test('hidden on a taxi, in an instance and without a target; zone name on anothe
 		nav.taxi = false
 		stub.advance(1.1); snap("landed")
 		nav.instance = true
-		Polestar.Nav.Refresh(); snap("instance")
+		SendaFH.Nav.Refresh(); snap("instance")
 		nav.instance = false
 		stub.advance(1.1); snap("left instance")
 		nav.place(0, 0, 1)                 -- other continent
@@ -717,7 +717,7 @@ test('ReleaseTarget drops only the override and guides to the engine waypoint ag
 test('SetTarget overrides the engine waypoint until the step changes', () => {
 	const [out] = run(`
 		local announced = {}
-		Polestar.On("WAYPOINT_CHANGED", function(w) announced[#announced + 1] = w and w.label or "nil" end)
+		SendaFH.On("WAYPOINT_CHANGED", function(w) announced[#announced + 1] = w and w.label or "nil" end)
 		local seen = {}
 		local function snap() local t = N.GetTarget(); seen[#seen + 1] = t and t.label or "nil" end
 		nav.setWaypoint(wp(100, 0, "Engine A")); snap()
@@ -735,13 +735,13 @@ test('SetTarget overrides the engine waypoint until the step changes', () => {
 	assert.equal(out.override, false);
 });
 
-test('/polestar way: decimal points or commas in both, a comma separator, labels, range 0..100, empty clears; a decimal comma in one is refused (it could be x,y and a numeric label)', () => {
+test('/sendafh way: decimal points or commas in both, a comma separator, labels, range 0..100, empty clears; a decimal comma in one is refused (it could be x,y and a numeric label)', () => {
 	const [out] = run(`
 		nav.place(0, 0)
 		local function way(line)
 			N.SetTarget(9000, 1, 1, "Before")
 			local before = #stub.messages
-			SlashCmdList.POLESTAR("way " .. line)
+			SlashCmdList.SENDAFH("way " .. line)
 			local t = N.GetTarget()
 			return { t and t.x or false, t and t.y or false, t and t.label or false, #stub.messages > before }
 		end
@@ -829,15 +829,15 @@ test('minimap projection honours view radius, rotation and clamps to the rim', (
 test('TomTom mirrors the target: one waypoint, replaced on change, removed when cleared or disabled', () => {
 	const [out] = run(`
 		nav.withTomTom()
-		Polestar.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
+		SendaFH.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
 		target(100, 0, "First")
 		target(0, 100, "Second")
 		N.SetTarget(9000, 50, 50, "Era", "e")
 		N.ClearTarget()
 		target(-100, 0, "Third")
-		Polestar.Set("nav.useTomTomArrow", true)
+		SendaFH.Set("nav.useTomTomArrow", true)
 		local arrowWithTomTom = A.frame:IsShown()
-		Polestar.Set("nav.tomtom", false)
+		SendaFH.Set("nav.tomtom", false)
 		emit({ calls = TomTom.calls, arrowWithTomTom = arrowWithTomTom, arrowAfter = A.frame:IsShown() })`);
 	const calls = out.calls.map((c) => (c.op === 'add' ? `add#${c.id} ${c.title} ${c.x},${c.y} crazy=${c.crazy}` : `remove#${c.id}`));
 	assert.deepEqual(calls, [
@@ -852,7 +852,7 @@ test('TomTom mirrors the target: one waypoint, replaced on change, removed when 
 		'add#5 Third 0.5,0.55 crazy=true',
 		'remove#5',
 	]);
-	// Polestar draws its own pins, so TomTom's are off.
+	// SendaFH draws its own pins, so TomTom's are off.
 	assert.equal(out.calls[0].minimap, false);
 	assert.equal(out.calls[0].world, false);
 	assert.equal(out.arrowWithTomTom, false, 'TomTom arrow replaces ours');
@@ -903,40 +903,40 @@ test('settings apply live: scale, alpha, visibility, pins, position and Blizzard
 		local r = {}
 		target(100, 0)
 		stub.advance(0.1)
-		Polestar.Set("nav.arrowScale", 1.5)
-		Polestar.Set("nav.arrowAlpha", 0.6)
+		SendaFH.Set("nav.arrowScale", 1.5)
+		SendaFH.Set("nav.arrowAlpha", 0.6)
 		-- A lock saved by an older build is ignored: the arrow takes the mouse and drags.
-		PolestarDB.settings.nav.arrowLocked = true
-		Polestar.Set("nav.arrowScale", 1.5)
+		SendaFHDB.settings.nav.arrowLocked = true
+		SendaFH.Set("nav.arrowScale", 1.5)
 		r.scale, r.alpha, r.mouse = A.frame:GetScale(), A.frame:GetAlpha(), A.frame:IsMouseEnabled()
 		stub.RunScript(A.frame, "OnDragStart")
 		r.drags = A.frame:IsMovable() and A.frame.moving == true
 		A.frame:StopMovingOrSizing()
-		Polestar.Set("nav.arrow", false)
+		SendaFH.Set("nav.arrow", false)
 		r.hidden = not A.frame:IsShown()
-		Polestar.Set("nav.arrow", true)
+		SendaFH.Set("nav.arrow", true)
 		r.back = A.frame:IsShown()
-		Polestar.Set("nav.minimapPins", false)
+		SendaFH.Set("nav.minimapPins", false)
 		r.pinOff = targetPin() == nil
-		Polestar.Set("nav.minimapPins", true)
+		SendaFH.Set("nav.minimapPins", true)
 		r.pinOn = targetPin() ~= nil and targetPin():IsShown()
 
 		-- Dragging saves the position; it is re-applied from settings.
 		A.frame:ClearAllPoints()
 		A.frame:SetPoint("CENTER", UIParent, "CENTER", 120, -40)
 		stub.RunScript(A.frame, "OnDragStop")
-		r.saved = PolestarDB.settings.nav.arrowPos
+		r.saved = SendaFHDB.settings.nav.arrowPos
 		A.frame:ClearAllPoints()
-		Polestar.Set("nav.arrowScale", 1)
+		SendaFH.Set("nav.arrowScale", 1)
 		local p, _, rp, x, y = A.frame:GetPoint(1)
 		r.reapplied = { p, rp, x, y }
 		N.ResetArrowPosition()
 		p, _, rp, x, y = A.frame:GetPoint(1)
 		r.reset = { p, rp, x, y }
 
-		Polestar.Set("nav.blizzardWaypoint", true)
+		SendaFH.Set("nav.blizzardWaypoint", true)
 		target(0, 100, "Blizz")
-		Polestar.Set("nav.blizzardWaypoint", false)
+		SendaFH.Set("nav.blizzardWaypoint", false)
 		r.userWaypoints = nav.userWaypoints
 		emit(r)`);
 	assert.equal(out.scale, 1.5);
@@ -971,7 +971,7 @@ test('ETA appears while closing in at running speed', () => {
 		local shown, text = A.etaText:IsShown(), A.etaText:GetText()
 		local _, size = A.etaText:GetFont()
 		local color = { A.etaText:GetTextColor() }
-		Polestar.Set("nav.arrowEta", false)
+		SendaFH.Set("nav.arrowEta", false)
 		emit({ before = before, shown = shown, text = text, off = not A.etaText:IsShown(), size = size, color = color,
 			mover = { N.Wash("mover") } })`);
 	assert.equal(out.before, false);
@@ -1008,10 +1008,10 @@ test('world map pins: target and open goals on the viewed map, with tooltip and 
 		pins[2]:OnMouseClickAction("LeftButton")
 		r.retarget = N.GetTarget().label
 		r.after = #nav.pins()
-		Polestar.Set("nav.worldPins", false)
+		SendaFH.Set("nav.worldPins", false)
 		r.off = #nav.pins()
 		nav.showWorldMap(9001)
-		Polestar.Set("nav.worldPins", true)
+		SendaFH.Set("nav.worldPins", true)
 		r.otherMap = #nav.pins()
 		emit(r)`);
 	assert.equal(out.count, 2);
@@ -1028,14 +1028,14 @@ test('a step change waits for the Engine waypoint: no stale re-apply, no second 
 	const [out] = run(`
 		nav.withTomTom()
 		local announced = {}
-		Polestar.On("WAYPOINT_CHANGED", function(w) announced[#announced + 1] = w and w.label or "nil" end)
+		SendaFH.On("WAYPOINT_CHANGED", function(w) announced[#announced + 1] = w and w.label or "nil" end)
 		-- The real Engine order: STEP_CHANGED while the old waypoint is still stored,
 		-- then the new waypoint and WAYPOINT_CHANGED.
 		local function engineStep(i, w)
 			nav.engine.step = i
-			Polestar.Fire("STEP_CHANGED", i)
+			SendaFH.Fire("STEP_CHANGED", i)
 			nav.engine.waypoint = w
-			Polestar.Fire("WAYPOINT_CHANGED", w)
+			SendaFH.Fire("WAYPOINT_CHANGED", w)
 		end
 		nav.setWaypoint(wp(20, 0, "Goto A"))
 		nav.place(15, 0)                                 -- arrive at A
@@ -1058,7 +1058,7 @@ test('a step change waits for the Engine waypoint: no stale re-apply, no second 
 		-- Same waypoint, no WAYPOINT_CHANGED: the override still goes, after the dispatch.
 		N.SetTarget(m, x, y, "Mine again")
 		nav.engine.step = 4
-		Polestar.Fire("STEP_CHANGED", 4)
+		SendaFH.Fire("STEP_CHANGED", 4)
 		r.duringDispatch = N.GetTarget().label
 		stub.advance(0.1)
 		r.settled = N.GetTarget().label
@@ -1093,11 +1093,11 @@ test('the ETA closing speed ignores out-of-band refreshes', () => {
 	for (const s of secs) assert.ok(Math.abs(s - expected) <= 4, `ETA ${s} s vs ${expected.toFixed(0)} s (${out.etas})`);
 });
 
-test('/polestar way without a position here says so, not how to type it', () => {
+test('/sendafh way without a position here says so, not how to type it', () => {
 	const [out] = run(`
 		local function way(msg)
 			stub.messages = {}
-			SlashCmdList.POLESTAR(msg)
+			SlashCmdList.SENDAFH(msg)
 			local t = N.GetTarget()
 			return { msgs = #stub.messages > 0 and stub.messages or "none", target = t and t.label or "nil" }
 		end
@@ -1109,9 +1109,9 @@ test('/polestar way without a position here says so, not how to type it', () => 
 		r.valid = way("way 40 60 Mine")
 		emit(r)`);
 	assert.deepEqual(out.noPosition, {
-		msgs: ['|cff4fd1c5Polestar|r: No position here: the game gives none in instances and on some maps.'],
+		msgs: ['|cff4fd1c5SendaFH|r: No position here: the game gives none in instances and on some maps.'],
 		target: 'nil',
 	});
-	assert.deepEqual(out.malformed, { msgs: ['|cff4fd1c5Polestar|r: Usage: /polestar way <x> <y> [label]'], target: 'nil' });
+	assert.deepEqual(out.malformed, { msgs: ['|cff4fd1c5SendaFH|r: Usage: /sendafh way <x> <y> [label]'], target: 'nil' });
 	assert.deepEqual(out.valid, { msgs: 'none', target: 'Mine' });
 });

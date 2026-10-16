@@ -1,5 +1,5 @@
 'use strict';
-// Engine scenarios (addon/Polestar/Core/Engine.lua + Guides.lua + Commands.lua)
+// Engine scenarios (addon/SendaFH/Core/Engine.lua + Guides.lua + Commands.lua)
 // against the stub world in tests/lua/stub_world.lua, loading the real Core
 // manifest.
 
@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const WORLD = `
 local w = stub.world
@@ -22,7 +22,7 @@ w.titles[783] = "A Threat Within"; w.titles[7] = "Kobold Camp Cleanup"
 // A Northshire-shaped route: accept -> turn in -> accept -> goto + kill ->
 // class training (one step per class) -> turn in + level.
 const NORTHSHIRE = `
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
 	id = "test/01-northshire", pack = "test", title = "Northshire Valley",
 	faction = "Alliance", races = { "Human" }, minLevel = 1, maxLevel = 6,
 	zone = 1429, next = "test/02-elwynn",
@@ -55,7 +55,7 @@ Polestar.RegisterGuide({
 `;
 
 const ELWYNN = `
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
 	id = "test/02-elwynn", pack = "test", title = "Elwynn Forest",
 	faction = "Alliance", minLevel = 5, maxLevel = 12, zone = 1429,
 	steps = {
@@ -69,7 +69,7 @@ Polestar.RegisterGuide({
 const RECORDER = `
 LOG = {}
 for _, m in ipairs({ "GUIDE_CHANGED", "STEP_CHANGED", "STEP_UPDATED", "WAYPOINT_CHANGED", "GUIDE_COMPLETED" }) do
-	Polestar.On(m, function(a)
+	SendaFH.On(m, function(a)
 		local v = a
 		if m == "WAYPOINT_CHANGED" then v = a and (a.stepIndex .. ":" .. a.goalIndex) or "nil" end
 		LOG[#LOG + 1] = m .. " " .. tostring(v)
@@ -82,7 +82,7 @@ function activeTickers()
 	for _, t in ipairs(stub.timers) do if t.handle and not t.cancelled then n = n + 1 end end
 	return n
 end
-E = Polestar.Engine
+E = SendaFH.Engine
 `;
 
 function run({ guides = NORTHSHIRE, before = '', saved, script, login = true }) {
@@ -232,7 +232,7 @@ test('goto is done once a later goal in its step is done, without arriving', () 
 test('a kill goal with spawn areas points at the area nearest the player, switching only once another is clearly nearer', () => {
 	// Elwynn here is 30 yd per map percent across: the two areas are 600 yd apart, radius 30.
 	const SPOTS = `
-Polestar.RegisterGuide({ id = "test/spots", pack = "test", title = "Spots", zone = 1429, steps = {
+SendaFH.RegisterGuide({ id = "test/spots", pack = "test", title = "Spots", zone = 1429, steps = {
 	{ goals = { { t = "kill", target = "Kobold Vermin", npc = 6, count = 10, quest = 7, oi = 1, map = 1429, x = 40, y = 50,
 		spots = { { x = 40, y = 50, r = 30, n = 5 }, { x = 60, y = 50, r = 30, n = 4 } } } } },
 	{ goals = { { t = "level", level = 60 } } },
@@ -274,7 +274,7 @@ Polestar.RegisterGuide({ id = "test/spots", pack = "test", title = "Spots", zone
 // An area objective: three spots along y = 50 (Elwynn here: 30 yd per map
 // percent across), radius 30 each.
 const SEARCH = `
-Polestar.RegisterGuide({ id = "test/search", pack = "test", title = "Search", zone = 1429, steps = {
+SendaFH.RegisterGuide({ id = "test/search", pack = "test", title = "Search", zone = 1429, steps = {
 	{ goals = { { t = "collect", item = 5062, itemName = "Raptor Head", count = 12, quest = 7, oi = 1, map = 1429, x = 20, y = 50, spread = true,
 		spots = { { x = 20, y = 50, r = 30, n = 3 }, { x = 40, y = 50, r = 30, n = 2 }, { x = 80, y = 50, r = 30, n = 1 } } } } },
 	{ goals = { { t = "level", level = 60 } } },
@@ -346,7 +346,7 @@ test('CycleSpot moves an area objective on by hand, to the next spot or a chosen
 test('another place the target spawns (alt) is never picked on its own; moving on by hand reaches it and every other place', () => {
 	// Camps at 40 and 60 along y = 50, and another place at 30 (alt), radius 30 each. The player stands inside the alt.
 	const ALT = `
-Polestar.RegisterGuide({ id = "test/alt", pack = "test", title = "Alt", zone = 1429, steps = {
+SendaFH.RegisterGuide({ id = "test/alt", pack = "test", title = "Alt", zone = 1429, steps = {
 	{ goals = { { t = "kill", target = "Kobold Vermin", npc = 6, count = 10, quest = 7, oi = 1, map = 1429, x = 40, y = 50,
 		spots = { { x = 40, y = 50, r = 30, n = 5 }, { x = 60, y = 50, r = 30, n = 4 }, { x = 30, y = 50, r = 30, n = 1, alt = true } } } } },
 	{ goals = { { t = "level", level = 60 } } },
@@ -392,7 +392,7 @@ test('a circuit of waypoints in one step costs one pass over the step, and a lat
 	const n = 22;
 	const gotos = Array.from({ length: n }, (_, i) => `{ t = "goto", map = 1429, x = ${10 + i * 3}, y = 70, r = 5 }`).join(',\n');
 	const guide = `
-		Polestar.RegisterGuide({ id = "test/circuit", pack = "test", title = "Circuit", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/circuit", pack = "test", title = "Circuit", minLevel = 1, maxLevel = 60, steps = {
 			{ goals = { ${gotos}, { t = "level", level = 3 } } },
 			{ goals = { { t = "level", level = 60 } } },
 		} })
@@ -423,8 +423,8 @@ test('a circuit of waypoints in one step costs one pass over the step, and a lat
 
 test('Era-frame goto coordinates convert through the registered Era bounds', () => {
 	const guide = `
-		Polestar.RegisterMapFrames({ era = { [1429] = { c = 0, left = 1600, right = -1400, top = 600, bottom = -1400 } } }, "guides")
-		Polestar.RegisterGuide({ id = "test/era", pack = "test", title = "Era", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterMapFrames({ era = { [1429] = { c = 0, left = 1600, right = -1400, top = 600, bottom = -1400 } } }, "guides")
+		SendaFH.RegisterGuide({ id = "test/era", pack = "test", title = "Era", minLevel = 1, maxLevel = 60, steps = {
 			{ goals = { { t = "goto", map = 1429, x = 50, y = 50, f = "e" } } },
 			{ goals = { { t = "level", level = 60 } } },
 		} })
@@ -445,7 +445,7 @@ test('Era-frame goto coordinates convert through the registered Era bounds', () 
 
 test('check-offs are stored per guide, survive recomputes and a reload, and toggle off; any goal ticks, not only manual ones', () => {
 	const guide = `
-		Polestar.RegisterGuide({ id = "test/manual", pack = "test", title = "Manual", minLevel = 1, maxLevel = 10, steps = {
+		SendaFH.RegisterGuide({ id = "test/manual", pack = "test", title = "Manual", minLevel = 1, maxLevel = 10, steps = {
 			{ goals = { { t = "talk", npc = 197, npcName = "Marshal McBride" } } },
 			{ goals = { { t = "kill", target = "Young Wolf", count = 5 }, { t = "level", level = 2 } } },
 			{ goals = { { t = "hearth", location = "Goldshire" } } },
@@ -463,7 +463,7 @@ test('check-offs are stored per guide, survive recomputes and a reload, and togg
 			w.setLevel(2); flush()
 			w.accept(5, { 1 }); w.addItem(1, 1); flush() -- unrelated recomputes
 			emit({ levelTick = levelTick, ok = ok, afterTalk = afterTalk, manualFlags = { view.goals[1].manual, view.goals[2].manual },
-				index = E.GetStepIndex(), saved = PolestarCharDB.manual["test/manual"] })
+				index = E.GetStepIndex(), saved = SendaFHCharDB.manual["test/manual"] })
 		`,
 	});
 	assert.deepEqual(first, {
@@ -478,11 +478,11 @@ test('check-offs are stored per guide, survive recomputes and a reload, and togg
 	const [second] = run({
 		guides: guide,
 		before: 'w.level = 2',
-		saved: { Polestar: `PolestarCharDB = { schema = 1, guide = "test/manual", manual = { ["test/manual"] = { ["1:1"] = true, ["2:1"] = true } } }` },
+		saved: { SendaFH: `SendaFHCharDB = { schema = 1, guide = "test/manual", manual = { ["test/manual"] = { ["1:1"] = true, ["2:1"] = true } } }` },
 		script: `
 			local resumed = E.GetStepIndex()
 			E.ToggleGoal(1, 1)
-			emit({ resumed = resumed, untoggled = E.GetStepIndex(), saved = PolestarCharDB.manual["test/manual"] })
+			emit({ resumed = resumed, untoggled = E.GetStepIndex(), saved = SendaFHCharDB.manual["test/manual"] })
 		`,
 	});
 	assert.deepEqual(second, { resumed: 3, untoggled: 1, saved: { '2:1': true } });
@@ -492,22 +492,22 @@ test('nil SavedVariables at login still resume the right step from live quest st
 	const [cold] = run({
 		guides: NORTHSHIRE + ELWYNN,
 		before: 'w.level = 2; w.complete({ 783 }); w.onQuest(7, { 10 })',
-		saved: { Polestar: 'PolestarDB = nil; PolestarCharDB = nil' },
-		script: `emit({ guide = E.GetGuide().id, index = E.GetStepIndex(), stored = PolestarCharDB.guide })`,
+		saved: { SendaFH: 'SendaFHDB = nil; SendaFHCharDB = nil' },
+		script: `emit({ guide = E.GetGuide().id, index = E.GetStepIndex(), stored = SendaFHCharDB.guide })`,
 	});
 	assert.deepEqual(cold, { guide: 'test/01-northshire', index: 3, stored: 'test/01-northshire' });
 
 	const [warm] = run({
 		guides: NORTHSHIRE + ELWYNN,
 		before: 'w.level = 2',
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, guide = "test/02-elwynn" }' },
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, guide = "test/02-elwynn" }' },
 		script: `emit({ guide = E.GetGuide().id, index = E.GetStepIndex() })`,
 	});
 	assert.deepEqual(warm, { guide: 'test/02-elwynn', index: 1 });
 
 	const [off] = run({
 		guides: NORTHSHIRE,
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }' },
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }' },
 		script: `emit({ guide = E.GetGuide() == nil, index = E.GetStepIndex() == nil })`,
 	});
 	assert.deepEqual(off, { guide: true, index: true });
@@ -515,7 +515,7 @@ test('nil SavedVariables at login still resume the right step from live quest st
 
 test('Suggest matches faction, race and class, then level, preferring specific and narrow guides', () => {
 	const guides = `
-		local function g(id, t) t.id = "test/" .. id; t.pack = "test"; t.title = id; t.steps = { { goals = { { t = "level", level = 60 } } } }; Polestar.RegisterGuide(t) end
+		local function g(id, t) t.id = "test/" .. id; t.pack = "test"; t.title = id; t.steps = { { goals = { { t = "level", level = 60 } } } }; SendaFH.RegisterGuide(t) end
 		g("human-1", { faction = "Alliance", races = { "Human" }, minLevel = 1, maxLevel = 6 })
 		g("dwarf-1", { faction = "Alliance", races = { "Dwarf", "Gnome" }, minLevel = 1, maxLevel = 6 })
 		g("alliance-5", { faction = "Alliance", minLevel = 5, maxLevel = 12 })
@@ -531,7 +531,7 @@ test('Suggest matches faction, race and class, then level, preferring specific a
 			local w = stub.world
 			local function s(race, class, faction, level)
 				w.race, w.class, w.faction, w.level = race, class, faction, level
-				return Polestar.Guides.Suggest()
+				return SendaFH.Guides.Suggest()
 			end
 			emit({
 				s("Human", "MAGE", "Alliance", 1), s("Dwarf", "MAGE", "Alliance", 3), s("Human", "MAGE", "Alliance", 6),
@@ -550,7 +550,7 @@ test('Suggest matches faction, race and class, then level, preferring specific a
 // non-leveling one; when nothing fits, the nearest upcoming guide alone.
 test('Suggestions lists every leveling guide for the level, best first; else the nearest upcoming one', () => {
 	const guides = `
-		local function g(id, t) t.id = "test/" .. id; t.pack = "test"; t.title = id; t.steps = { { goals = { { t = "level", level = 60 } } } }; Polestar.RegisterGuide(t) end
+		local function g(id, t) t.id = "test/" .. id; t.pack = "test"; t.title = id; t.steps = { { goals = { { t = "level", level = 60 } } } }; SendaFH.RegisterGuide(t) end
 		g("human-1", { faction = "Alliance", races = { "Human" }, minLevel = 1, maxLevel = 6 })
 		g("alliance-5", { faction = "Alliance", minLevel = 5, maxLevel = 12 })
 		g("alliance-wide", { faction = "Alliance", minLevel = 1, maxLevel = 20 })
@@ -566,7 +566,7 @@ test('Suggestions lists every leveling guide for the level, best first; else the
 			local w = stub.world
 			local function s(level)
 				w.race, w.class, w.faction, w.level = "Human", "MAGE", "Alliance", level
-				return Polestar.Guides.Suggestions()
+				return SendaFH.Guides.Suggestions()
 			end
 			emit({ s(5), s(25) })
 		`,
@@ -579,7 +579,7 @@ test('Suggestions lists every leveling guide for the level, best first; else the
 // says which of the two rows stands for both, and how the item is got.
 test('a quest started by a dropped item is one line: the collect stands for it, then the accept; a Go to naming the step is its header', () => {
 	const guides = `
-		Polestar.RegisterGuide({ id = "test/fog", pack = "test", title = "Field", faction = "Horde", minLevel = 10, maxLevel = 20, steps = {
+		SendaFH.RegisterGuide({ id = "test/fog", pack = "test", title = "Field", faction = "Horde", minLevel = 10, maxLevel = 20, steps = {
 			{ title = "Field of Giants", goals = {
 				{ t = "goto", text = "Field of Giants", map = 1429, x = 44.7, y = 70.7 },
 				{ t = "collect", item = 10621, itemName = "Runed Scroll", count = 1, map = 1429, x = 46, y = 70, note = "Aean Swiftriver",
@@ -620,7 +620,7 @@ test('a quest started by a dropped item is one line: the collect stands for it, 
 // says where it comes from.
 test('a collect with a known source names it: kill an enemy for the item, collect from a friend or an object', () => {
 	const guides = `
-		Polestar.RegisterGuide({ id = "test/src", pack = "test", title = "Src", faction = "Alliance", minLevel = 1, maxLevel = 10, steps = {
+		SendaFH.RegisterGuide({ id = "test/src", pack = "test", title = "Src", faction = "Alliance", minLevel = 1, maxLevel = 10, steps = {
 			{ title = "Woods", goals = {
 				{ t = "collect", quest = 459, title = "The Woodland Protector", item = 3297, itemName = "Fel Moss", count = 8, oi = 1, map = 1438, x = 56, y = 45,
 					from = "Grell", fromAlso = "Grellkin", fromKind = "npc", fromFaction = "H" },
@@ -660,9 +660,9 @@ test('RegisterGuide rejects malformed guides with a debug message instead of err
 		guides: '',
 		login: false,
 		script: `
-			Polestar.debug = true
+			SendaFH.debug = true
 			local results = {}
-			local function try(def) local ok, err = Polestar.RegisterGuide(def); results[#results + 1] = ok and "ok" or err end
+			local function try(def) local ok, err = SendaFH.RegisterGuide(def); results[#results + 1] = ok and "ok" or err end
 			try("nope")
 			try({ title = "No id", steps = { { goals = { { t = "level", level = 2 } } } } })
 			try({ id = "test/a", pack = "test", title = "No steps", steps = {} })
@@ -672,7 +672,7 @@ test('RegisterGuide rejects malformed guides with a debug message instead of err
 			try({ id = "test/e", pack = "test", title = "Bad coords", steps = { { goals = { { t = "goto", map = 1, x = 120, y = 5 } } } } })
 			try({ id = "test/f", pack = "test", title = "Good", minLevel = 1, maxLevel = 2, steps = { { goals = { { t = "note", text = "hi", extra = 1 } } } } })
 			local ids = {}
-			for i, h in ipairs(Polestar.Guides.List()) do ids[i] = h.id .. ":" .. h.stepCount .. ":" .. tostring(h.steps) end
+			for i, h in ipairs(SendaFH.Guides.List()) do ids[i] = h.id .. ":" .. h.stepCount .. ":" .. tostring(h.steps) end
 			emit({ results = results, ids = ids, debugLines = #stub.messages })
 		`,
 	});
@@ -692,13 +692,13 @@ test('RegisterGuide rejects malformed guides with a debug message instead of err
 
 test('completing a guide chains to `next` when autoNextGuide is on, and not when it is off', () => {
 	const guides = `
-		Polestar.RegisterGuide({ id = "test/a", pack = "test", title = "A", minLevel = 1, maxLevel = 2, next = "test/b", steps = { { goals = { { t = "level", level = 2 } } } } })
-		Polestar.RegisterGuide({ id = "test/b", pack = "test", title = "B", minLevel = 2, maxLevel = 3, steps = { { goals = { { t = "level", level = 3 } } } } })
+		SendaFH.RegisterGuide({ id = "test/a", pack = "test", title = "A", minLevel = 1, maxLevel = 2, next = "test/b", steps = { { goals = { { t = "level", level = 2 } } } } })
+		SendaFH.RegisterGuide({ id = "test/b", pack = "test", title = "B", minLevel = 2, maxLevel = 3, steps = { { goals = { { t = "level", level = 3 } } } } })
 	`;
 	const [on] = run({
 		guides,
 		script: `takeLog(); stub.world.setLevel(2); flush()
-			emit({ log = takeLog(), guide = E.GetGuide().id, stored = PolestarCharDB.guide, index = E.GetStepIndex() })`,
+			emit({ log = takeLog(), guide = E.GetGuide().id, stored = SendaFHCharDB.guide, index = E.GetStepIndex() })`,
 	});
 	assert.deepEqual(on, {
 		log: ['STEP_CHANGED nil', 'GUIDE_COMPLETED test/a', 'GUIDE_CHANGED test/b', 'STEP_CHANGED 1'],
@@ -709,7 +709,7 @@ test('completing a guide chains to `next` when autoNextGuide is on, and not when
 
 	const [off] = run({
 		guides,
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { behavior = { autoNextGuide = false } } }' },
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { behavior = { autoNextGuide = false } } }' },
 		script: `takeLog(); stub.world.setLevel(2); flush()
 			emit({ log = takeLog(), guide = E.GetGuide().id })`,
 	});
@@ -718,7 +718,7 @@ test('completing a guide chains to `next` when autoNextGuide is on, and not when
 	const [atLogin] = run({
 		guides,
 		before: 'w.level = 2',
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, guide = "test/a" }' },
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, guide = "test/a" }' },
 		script: `emit({ log = takeLog(), guide = E.GetGuide().id })`,
 	});
 	assert.deepEqual(atLogin, {
@@ -730,7 +730,7 @@ test('completing a guide chains to `next` when autoNextGuide is on, and not when
 	const [picked] = run({
 		guides,
 		before: 'w.level = 2',
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }' },
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }' },
 		script: `takeLog(); E.SetGuide("test/a")
 			emit({ log = takeLog(), guide = E.GetGuide().id })`,
 	});
@@ -749,16 +749,16 @@ test('Prev, Next, Skip and Goto move the current step; only Skip saves a skip, G
 			E.Next(); mark("next")
 			E.Skip(); mark("skip")
 			local skippedStatus = E.GetStepView(3).status
-			local stored = PolestarCharDB.skipped["test/01-northshire"][3]
+			local stored = SendaFHCharDB.skipped["test/01-northshire"][3]
 			E.Goto(3); mark("goto3")
 			E.Goto(6); mark("goto6")
 			local jumped = { E.GetStepView(3).status, E.GetStepView(4).status, E.GetStepView(5).status, E.GetLiveStep() }
 			E.Prev(); mark("prev")
 			E.Next(); mark("next")
-			SlashCmdList.POLESTAR("reset")
+			SlashCmdList.SENDAFH("reset")
 			mark("reset")
 			emit({ trail = trail, pinnedStatus = pinnedStatus, skippedStatus = skippedStatus, stored = stored, jumped = jumped,
-				skipped = PolestarCharDB.skipped["test/01-northshire"] == nil })
+				skipped = SendaFHCharDB.skipped["test/01-northshire"] == nil })
 		`,
 	});
 	assert.deepEqual(out, {
@@ -779,7 +779,7 @@ test('Prev walks back over every applicable step, done or skipped, and Next walk
 			for k, v in pairs(extra or {}) do step[k] = v end
 			return step
 		end
-		Polestar.RegisterGuide({ id = "test/walk", pack = "test", title = "Walk", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/walk", pack = "test", title = "Walk", minLevel = 1, maxLevel = 60, steps = {
 			accept(901),                                 -- done (turned in)
 			accept(902),                                 -- open, skipped earlier
 			accept(903, { only = { classes = { "MAGE" } } }), -- not for a Warrior
@@ -791,18 +791,18 @@ test('Prev walks back over every applicable step, done or skipped, and Next walk
 	const [out] = run({
 		guides,
 		before: 'w.complete({ 901 }); w.onQuest(904, {})',
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, guide = "test/walk", skipped = { ["test/walk"] = { [2] = true } } }' },
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, guide = "test/walk", skipped = { ["test/walk"] = { [2] = true } } }' },
 		script: `
 			local back, forward = {}, {}
 			local start = E.GetStepIndex()
 			for k = 1, 4 do E.Prev(); flush(); back[k] = E.GetStepIndex() .. ":" .. E.GetStepView(E.GetStepIndex()).goals[1].status end
 			for k = 1, 3 do E.Next(); flush(); forward[k] = E.GetStepIndex() end
 			local skips = {}
-			for s in pairs(PolestarCharDB.skipped["test/walk"]) do skips[#skips + 1] = s end
+			for s in pairs(SendaFHCharDB.skipped["test/walk"]) do skips[#skips + 1] = s end
 			table.sort(skips)
 			E.Next(); flush()
 			local after = {}
-			for s in pairs(PolestarCharDB.skipped["test/walk"]) do after[#after + 1] = s end
+			for s in pairs(SendaFHCharDB.skipped["test/walk"]) do after[#after + 1] = s end
 			emit({ start = start, back = back, forward = forward, skips = skips, skipNext = E.GetStepIndex(), live = E.GetLiveStep(), after = after })
 		`,
 	});
@@ -820,7 +820,7 @@ test('Prev walks back over every applicable step, done or skipped, and Next walk
 
 test('talk, sethome, getfp, fly, vendor, buy, collect and hearth complete from interactions', () => {
 	const guide = `
-		Polestar.RegisterGuide({ id = "test/actions", pack = "test", title = "Actions", minLevel = 1, maxLevel = 10, steps = {
+		SendaFH.RegisterGuide({ id = "test/actions", pack = "test", title = "Actions", minLevel = 1, maxLevel = 10, steps = {
 			{ goals = { { t = "talk", npc = 197, npcName = "Marshal McBride" } } },
 			{ goals = { { t = "sethome", location = "Goldshire", npc = 295, npcName = "Innkeeper Farley" } } },
 			{ goals = { { t = "getfp", location = "Stormwind", npc = 352, npcName = "Dungar Longdrink" } } },
@@ -855,7 +855,7 @@ test('talk, sethome, getfp, fly, vendor, buy, collect and hearth complete from i
 			w.setZone("Westfall", "Sentinel Hill"); flush(); mark("moved-on")
 			local texts = {}
 			for i = 1, 8 do texts[i] = E.GetStepView(i).goals[1].text end
-			emit({ trail = trail, fp = PolestarCharDB.flags.fp, progress = progress, texts = texts })
+			emit({ trail = trail, fp = SendaFHCharDB.flags.fp, progress = progress, texts = texts })
 		`,
 	});
 	assert.deepEqual(out.trail, [
@@ -877,7 +877,7 @@ test('talk, sethome, getfp, fly, vendor, buy, collect and hearth complete from i
 
 test('a step that hearths and then flies completes when the flight lands: the hearth counts as done once a later goal is', () => {
 	const guide = `
-		Polestar.RegisterGuide({ id = "test/travel", pack = "test", title = "Travel", minLevel = 1, maxLevel = 10, steps = {
+		SendaFH.RegisterGuide({ id = "test/travel", pack = "test", title = "Travel", minLevel = 1, maxLevel = 10, steps = {
 			{ goals = { { t = "hearth", location = "Goldshire" }, { t = "fly", location = "Stormwind City" } } },
 			{ goals = { { t = "level", level = 99 } } },
 		} })
@@ -901,8 +901,8 @@ test('bursts of quest events are coalesced to at most 10 evaluations per second'
 	const [out] = run({
 		script: `
 			local n = 0
-			local real = Polestar.Compat.GetPlayerInfo
-			Polestar.Compat.GetPlayerInfo = function() n = n + 1; return real() end
+			local real = SendaFH.Compat.GetPlayerInfo
+			SendaFH.Compat.GetPlayerInfo = function() n = n + 1; return real() end
 			for i = 1, 100 do
 				stub.fire("QUEST_LOG_UPDATE")
 				stub.advance(0.01)
@@ -919,24 +919,24 @@ test('slash commands drive the engine and report status', () => {
 		before: `w.complete({ 783 }); w.onQuest(7, { { required = 10, fulfilled = 4 } })`,
 		script: `
 			stub.messages = {}
-			SlashCmdList.POLESTAR("status")
+			SlashCmdList.SENDAFH("status")
 			local status = stub.messages
 			stub.messages = {}
-			SlashCmdList.POLESTAR("skip")
+			SlashCmdList.SENDAFH("skip")
 			local afterSkip = E.GetStepIndex()
-			SlashCmdList.POLESTAR("prev")
+			SlashCmdList.SENDAFH("prev")
 			local afterPrev = E.GetStepIndex()
-			SlashCmdList.POLESTAR("guide nope")
-			SlashCmdList.POLESTAR("guide test/02-elwynn")
+			SlashCmdList.SENDAFH("guide nope")
+			SlashCmdList.SENDAFH("guide test/02-elwynn")
 			local exact = E.GetGuide().id
-			SlashCmdList.POLESTAR("guide test/01-northshire")
-			SlashCmdList.POLESTAR("guide Test/02-Elwynn")
+			SlashCmdList.SENDAFH("guide test/01-northshire")
+			SlashCmdList.SENDAFH("guide Test/02-Elwynn")
 			emit({ status = status, afterSkip = afterSkip, afterPrev = afterPrev, exact = exact, guide = E.GetGuide().id, msgs = stub.messages,
-				header = BINDING_HEADER_POLESTAR, binding = BINDING_NAME_POLESTAR_NEXT })
+				header = BINDING_HEADER_SENDAFH, binding = BINDING_NAME_SENDAFH_NEXT })
 		`,
 	});
 	assert.deepEqual(out.status, [
-		'|cff4fd1c5Polestar|r: Northshire Valley: step 3 of 6 (2/5 done)',
+		'|cff4fd1c5SendaFH|r: Northshire Valley: step 3 of 6 (2/5 done)',
 		'  [ ] Go to Kobold camp',
 		'  [ ] Kill Kobold Vermin (4/10)',
 	]);
@@ -946,12 +946,12 @@ test('slash commands drive the engine and report status', () => {
 	// A mixed-case id finds the lower-case guide.
 	assert.equal(out.guide, 'test/02-elwynn');
 	assert.deepEqual(out.msgs, [
-		"|cff4fd1c5Polestar|r: Unknown guide 'nope'.",
-		'|cff4fd1c5Polestar|r: Guide: Elwynn Forest',
-		'|cff4fd1c5Polestar|r: Guide: Northshire Valley',
-		'|cff4fd1c5Polestar|r: Guide: Elwynn Forest',
+		"|cff4fd1c5SendaFH|r: Unknown guide 'nope'.",
+		'|cff4fd1c5SendaFH|r: Guide: Elwynn Forest',
+		'|cff4fd1c5SendaFH|r: Guide: Northshire Valley',
+		'|cff4fd1c5SendaFH|r: Guide: Elwynn Forest',
 	]);
-	assert.equal(out.header, 'Polestar');
+	assert.equal(out.header, 'SendaFH');
 	assert.equal(out.binding, 'Next step');
 });
 
@@ -960,7 +960,7 @@ test('slash commands drive the engine and report status', () => {
 // the open ones in the game's words under the goal (a player's report: The
 // Hunt Begins showed no x of y).
 const HUNT = `
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
 	id = "test/hunt", pack = "test", title = "Camp Narache", faction = "Alliance", minLevel = 1, maxLevel = 4, zone = 1429,
 	steps = {
 		{ title = "The Hunt Begins", goals = {

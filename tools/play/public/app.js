@@ -4,7 +4,7 @@
 // control panel. Every request returns the next frame.
 (function () {
 	'use strict';
-	const { hitTest, toScreen } = window.PolestarHit;
+	const { hitTest, toScreen } = window.SendaFHHit;
 	const $ = (sel, el = document) => el.querySelector(sel);
 	const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
@@ -402,9 +402,9 @@
 		if (!changed.length) {
 			text = '-- Every setting is at its default.';
 		} else {
-			const run = changed.map(([k, v]) => `/run Polestar.Set(${JSON.stringify(k)}, ${luaLiteral(v)})`);
-			const db = changed.map(([k, v]) => `PolestarDB.settings.${k.split('.').map((p) => (/^[A-Za-z_]\w*$/.test(p) ? p : `[${JSON.stringify(p)}]`)).join('.').replace(/\.\[/g, '[')} = ${luaLiteral(v)}`);
-			text = ['-- In game: paste each line into chat', ...run, '', '-- As PolestarDB values (WTF/Account/<account>/SavedVariables/Polestar.lua)', ...db].join('\n');
+			const run = changed.map(([k, v]) => `/run SendaFH.Set(${JSON.stringify(k)}, ${luaLiteral(v)})`);
+			const db = changed.map(([k, v]) => `SendaFHDB.settings.${k.split('.').map((p) => (/^[A-Za-z_]\w*$/.test(p) ? p : `[${JSON.stringify(p)}]`)).join('.').replace(/\.\[/g, '[')} = ${luaLiteral(v)}`);
+			text = ['-- In game: paste each line into chat', ...run, '', '-- As SendaFHDB values (WTF/Account/<account>/SavedVariables/SendaFH.lua)', ...db].join('\n');
 		}
 		$('#copy-text').value = text;
 		$('#copy-dialog').showModal();
@@ -647,7 +647,7 @@
 		watchVersion(meta.version);
 	}
 
-	// `polestar dev` restarts the session after a rebuild: the page asks for the
+	// `sendafh dev` restarts the session after a rebuild: the page asks for the
 	// rebuild count every second and redraws (with the new guide list) when it
 	// changes, without waiting for a click. `known` is the count /api/meta gave
 	// before the first frame, so a rebuild during start-up is not missed.
@@ -668,7 +668,7 @@
 	}
 	// For scripted sessions and debugging: the current hit map and state, and
 	// where a screen point is on the page.
-	window.PolestarPlay = {
+	window.SendaFHPlay = {
 		get hits() { return hits; },
 		get state() { return state; },
 		pageXY(x, y) {

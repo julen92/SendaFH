@@ -606,7 +606,7 @@ RAID_CLASS_COLORS = {
 	DRUID = { r = 1.0, g = 0.49, b = 0.04 },
 }
 
--- The client's own words for the game terms Polestar shows as the client
+-- The client's own words for the game terms SendaFH shows as the client
 -- writes them (docs/ARCHITECTURE.md, "Localisation"): the English client's
 -- GlobalStrings (build 1.60.1.70425).
 FACTION_STANDING_LABEL1, FACTION_STANDING_LABEL2, FACTION_STANDING_LABEL3, FACTION_STANDING_LABEL4 = "Hated", "Hostile", "Unfriendly", "Neutral"
@@ -898,7 +898,7 @@ local function encode(v, seen, out)
 	elseif t == "boolean" then out[#out + 1] = v and "true" or "false"
 	elseif t == "number" then
 		if v ~= v or v == math.huge or v == -math.huge then out[#out + 1] = "null"
-		elseif v == math.floor(v) and math.abs(v) < 2 ^ 53 then out[#out + 1] = string.format("%d", v)
+		elseif v == math.floor(v) and math.abs(v) < 2 ^ 53 then out[#out + 1] = v == 0 and "0" or string.format("%.0f", v)
 		else out[#out + 1] = string.format("%.14g", v) end
 	elseif t == "string" then
 		out[#out + 1] = '"' .. v:gsub('[%z\1-\31"\\]', function(c) return escapes[c] or string.format("\\u%04x", c:byte()) end) .. '"'

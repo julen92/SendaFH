@@ -107,7 +107,7 @@ function inline(obj, keys, decimals) {
 function emitGuide(guide, sourceRel) {
 	const out = [];
 	if (sourceRel) out.push(`-- Source: ${sourceRel.replace(/[\r\n]/g, ' ')}`);
-	out.push('do', '\tlocal function register()', '\t\tPolestar.RegisterGuide({');
+	out.push('do', '\tlocal function register()', '\t\tSendaFH.RegisterGuide({');
 	for (const k of GUIDE_KEYS) {
 		const v = guide[k];
 		if (v === undefined || v === null) continue;
@@ -145,28 +145,28 @@ function emitGuides(entries) {
 function emitPack(manifest) {
 	const parts = ['addon = ADDON', `id = ${luaString(manifest.id)}`, `format = ${FORMAT}`];
 	for (const k of PACK_KEYS.slice(1)) if (manifest[k] !== undefined && manifest[k] !== null) parts.push(`${k} = ${luaString(manifest[k])}`);
-	return `${header('lua', 'compile', 'pack.json')}\nlocal ADDON = ...\n\nPolestar.RegisterPack({ ${parts.join(', ')} })\n`;
+	return `${header('lua', 'compile', 'pack.json')}\nlocal ADDON = ...\n\nSendaFH.RegisterPack({ ${parts.join(', ')} })\n`;
 }
 
-// <folder>.toc: the pack's metadata for the client and for Polestar's pack
+// <folder>.toc: the pack's metadata for the client and for SendaFH's pack
 // list (optional lines only when the value exists), then the fixed file set.
-// A pack other than ours reads "Polestar Pack: <title>" in the AddOns list and
-// sits in Polestar's group there, under Polestar's own entry, like
-// Polestar_Guides; Polestar's menus show the plain title (Pack.lua).
+// A pack other than ours reads "SendaFH Pack: <title>" in the AddOns list and
+// sits in SendaFH's group there, under SendaFH's own entry, like
+// SendaFH_Guides; SendaFH's menus show the plain title (Pack.lua).
 function emitToc(manifest, iface) {
 	const ours = manifest.id === 'guides';
 	const title = ours || manifest.title.startsWith(TOC_TITLE_PREFIX) ? manifest.title : `${TOC_TITLE_PREFIX}${manifest.title}`;
 	const lines = [
 		`## Interface: ${iface}`,
 		`## Title: ${title}`,
-		`## Notes: ${manifest.notes || `Guide pack for Polestar by ${manifest.author}`}`,
+		`## Notes: ${manifest.notes || `Guide pack for SendaFH by ${manifest.author}`}`,
 		`## Author: ${manifest.author}`,
 		`## Version: ${manifest.version}`,
 		'## Category: Quests',
 	];
-	if (!ours) lines.push('## Group: Polestar');
+	if (!ours) lines.push('## Group: SendaFH');
 	lines.push(
-		'## Dependencies: Polestar',
+		'## Dependencies: SendaFH',
 		`## X-Polestar-Pack: ${manifest.id}`,
 		`## X-Polestar-Format: ${FORMAT}`,
 		`## X-Polestar-Needs: ${NEEDS[FORMAT]}`,
@@ -182,7 +182,7 @@ function emitMapFrames(frames, packId) {
 	const ids = Object.keys(frames)
 		.map(Number)
 		.sort((a, b) => a - b);
-	const out = [HEADER, '', 'Polestar.RegisterMapFrames({', '\tera = {'];
+	const out = [HEADER, '', 'SendaFH.RegisterMapFrames({', '\tera = {'];
 	for (const id of ids) out.push(`\t\t[${id}] = ${inline(frames[id], FRAME_KEYS, 4)},`);
 	out.push('\t},', `}, ${luaString(packId)})`);
 	return `${out.join('\n')}\n`;
@@ -242,10 +242,10 @@ function isPfQuest(src) {
 function emitLicense(meta) {
 	const sources = (meta && Array.isArray(meta.sources) ? meta.sources : []).slice().sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
 	const out = [
-		'Polestar guide data: third-party notices',
+		'SendaFH guide data: third-party notices',
 		'========================================',
 		'',
-		'The guides in this folder were written for Polestar. Quest titles, names and',
+		'The guides in this folder were written for SendaFH. Quest titles, names and',
 		'coordinates in them were filled in from the reference data sources below.',
 		'',
 	];
@@ -269,11 +269,11 @@ function emitLicense(meta) {
 	out.push(
 		'Guide pack permission',
 		'---------------------',
-		"This folder was produced by Polestar's compiler. Polestar's LICENSE-EXCEPTION.md",
+		"This folder was produced by SendaFH's compiler. SendaFH's LICENSE-EXCEPTION.md",
 		'gives permission to distribute guide packs produced by the compiler, including',
-		"the parts of Polestar's reference data placed in them, under terms of your",
-		"choice. It does not cover guide text copied from Polestar's own guides, or",
-		"Polestar's code.",
+		"the parts of SendaFH's reference data placed in them, under terms of your",
+		"choice. It does not cover guide text copied from SendaFH's own guides, or",
+		"SendaFH's code.",
 		'',
 	);
 	return `${out.join('\n').trimEnd()}\n`;

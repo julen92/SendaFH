@@ -12,7 +12,7 @@ const syn = require('./fixtures/sim/synthetic');
 const { tmpdir } = require('./helpers/tmp');
 
 test('camps are clusters of quest mobs only: a guard standing in a group is never a grind spot', (t) => {
-	const dir = tmpdir('polestar-export-');
+	const dir = tmpdir('sendafh-export-');
 	const data = syn.makeData();
 	// Town guards: a group of normal NPCs without a faction, no quest needs them.
 	data.npcs[20] = { id: 20, name: 'Town Bruiser', level: 7, faction: null, spawns: { [syn.FIELD]: { f: 'e', pts: [[60, 60], [60.5, 60], [61, 60], [60, 60.5], [60.5, 60.5], [61, 60.5], [60, 61]] } } };

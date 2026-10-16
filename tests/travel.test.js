@@ -1,5 +1,5 @@
 'use strict';
-// Travel planner (addon/Polestar/Nav/Travel.lua): Dijkstra over walking,
+// Travel planner (addon/SendaFH/Nav/Travel.lua): Dijkstra over walking,
 // known flights, transports, the Hearthstone and learned paths, and how the
 // arrow follows the route. Runs the real Core/Init.lua + Nav/Nav.xml against
 // tests/lua/stub_nav.lua with a small fixture travel world (stub.nav.useTravelWorld).
@@ -9,10 +9,10 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { fakeLocale } = require('./helpers/locale');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local A = N.arrow
 local nav = stub.nav
 local function target(wx, wy, label)
@@ -29,7 +29,7 @@ local function route()
 	return out
 end
 local function known(...)
-	local flags = Polestar.CharState().flags
+	local flags = SendaFH.CharState().flags
 	flags.taxi = {}
 	for _, id in ipairs({ ... }) do flags.taxi[id] = true end
 end
@@ -198,7 +198,7 @@ test('learned walking paths change the route', () => {
 test('the arrow follows the legs: walk, act at the flight master, re-plan on landing', () => {
 	const [out] = run(`
 		local r, changes = {}, 0
-		Polestar.On("ROUTE_CHANGED", function() changes = changes + 1 end)
+		SendaFH.On("ROUTE_CHANGED", function() changes = changes + 1 end)
 		known(1, 2)
 		nav.place(0, 600)
 		target(0, -780, "Kobolds")
@@ -236,7 +236,7 @@ test('opening the flight map records known nodes and re-plans', () => {
 		local before = route()
 		nav.taxiMap = { mapID = 1415, nodes = { 1, 2 } }
 		stub.fire("TAXIMAP_OPENED", 1)
-		local saved = Polestar.CharState().flags.taxi
+		local saved = SendaFH.CharState().flags.taxi
 		emit({ before = before, after = route(), saved = { saved[1] == true, saved[2] == true, saved[3] == true } })`);
 	assert.deepEqual(out.before, ['walk|Target']);
 	assert.deepEqual(out.after, ['fly|Fly to East Hold', 'walk|Target']);
@@ -254,7 +254,7 @@ test('binding at an innkeeper teaches Nav what the bind location means', () => {
 		stub.fire("HEARTHSTONE_BOUND")
 		nav.place(0, 0, 1)
 		target(-520, -690, "Q")
-		emit({ before = before, after = route()[1], learned = Polestar.CharState().flags.inn })`);
+		emit({ before = before, after = route()[1], learned = SendaFH.CharState().flags.inn })`);
 	assert.equal(out.before, 'walk|Walk to the boat');
 	assert.equal(out.after, "hearth|Hearth to Lion's Den Tavern");
 	assert.deepEqual(out.learned, { "lion's den tavern": 900 });
@@ -270,10 +270,10 @@ test('a target change re-plans; nav.travel off falls back to the direct arrow', 
 		target(0, 500)
 		r.second = route()
 		target(0, -780)
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		stub.advance(0.2)
 		r.off = { N.GetRoute() == nil, A.GetMode(), A.labelText:GetText() }
-		Polestar.Set("nav.travel", true)
+		SendaFH.Set("nav.travel", true)
 		r.on = #route()
 		emit(r)`);
 	assert.equal(out.first, 3);
@@ -305,7 +305,7 @@ test('world map shows the final target pin plus the route waypoints', () => {
 test('EstimateTravel prices trips with the planner, caches briefly, and leaves the route alone', () => {
 	const [out] = run(`
 		local r, changes = {}, 0
-		Polestar.On("ROUTE_CHANGED", function() changes = changes + 1 end)
+		SendaFH.On("ROUTE_CHANGED", function() changes = changes + 1 end)
 		nav.place(0, 600)
 		local m, x, y = nav.mapPoint(0, -780)
 		local far = { map = m, x = x, y = y }
@@ -337,12 +337,12 @@ test('EstimateTravel stays cheap for a burst of candidates on the real network',
 		addons: [NAV],
 		login: true,
 		script: `
-			local N, nav = Polestar.Nav, stub.nav
+			local N, nav = SendaFH.Nav, stub.nav
 			nav.faction = "Alliance"
-			Polestar.RegisterMapFrames({ era = { [1436] = { c = 0, left = 3016.667, right = -483.333, top = -9400, bottom = -11733.333 },
+			SendaFH.RegisterMapFrames({ era = { [1436] = { c = 0, left = 3016.667, right = -483.333, top = -9400, bottom = -11733.333 },
 				[1433] = { c = 0, left = -1570.833, right = -3741.667, top = -8575, bottom = -10022.916 } } })
 			nav.place(-10500, 1046, 0)
-			Polestar.CharState().flags.taxi = { [2] = true, [4] = true, [5] = true }
+			SendaFH.CharState().flags.taxi = { [2] = true, [4] = true, [5] = true }
 			local t0 = os.clock()
 			local first
 			for i = 1, 10 do
@@ -362,7 +362,7 @@ test('only discovered flight masters are recorded from the flight map', () => {
 		-- Current (0) here, East Hold listed as Unreachable (2): a pass-through node, not discovered.
 		nav.taxiMap = { mapID = 1415, nodes = { { 1, 0 }, { 2, 2 } } }
 		stub.fire("TAXIMAP_OPENED", 1)
-		local saved = Polestar.CharState().flags.taxi
+		local saved = SendaFH.CharState().flags.taxi
 		local r = { saved = { saved[1] == true, saved[2] == true }, route = route() }
 		nav.taxiMap = { mapID = 1415, nodes = { { 1, 0 }, { 2, 1 } } }
 		stub.fire("TAXIMAP_OPENED", 1)
@@ -444,7 +444,7 @@ test('walk legs are priced unmounted, so a fast mount never swaps a flight for a
 test('EstimateTravel takes a live-frame start and an Era-frame destination on a re-framed map', () => {
 	const [out] = run(`
 		-- Map 9000's Era frame is shifted from the live one (like Mulgore 1412).
-		Polestar.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
+		SendaFH.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
 		nav.place(0, 0)
 		local fm, fx, fy = nav.mapPoint(0, 0)            -- the player's live map position, no f
 		local here = { map = fm, x = fx, y = fy }

@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { buildReport, formatReport } = require('../tools/lib/recording/report');
 const { tmpdir } = require('./helpers/tmp');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 
 const G = 'forever/alliance/human/01-elwynn';
 const G2 = 'professions/mining';
@@ -164,9 +164,9 @@ test('--guide narrows the report; the text report names steps, revisits and open
 });
 
 test('record report CLI: text, --json, --guide, and no recordings', () => {
-	const dir = tmpdir('polestar-report-');
+	const dir = tmpdir('sendafh-report-');
 	for (const s of SESSIONS()) fs.writeFileSync(path.join(dir, `${s.session}.json`), JSON.stringify(s));
-	const run = (...args) => polestar(['record', 'report', '--recordings', dir, ...args]);
+	const run = (...args) => sendafh(['record', 'report', '--recordings', dir, ...args]);
 
 	const text = run();
 	assert.equal(text.status, 0, text.stderr);
@@ -182,12 +182,12 @@ test('record report CLI: text, --json, --guide, and no recordings', () => {
 	assert.equal(none.status, 1);
 	assert.match(none.stderr, /no recorded guide matches "nowhere"/);
 
-	const empty = polestar(['record', 'report', '--recordings', path.join(dir, 'missing')]);
+	const empty = sendafh(['record', 'report', '--recordings', path.join(dir, 'missing')]);
 	assert.equal(empty.status, 1);
 	assert.match(empty.stderr, /no sessions/);
 });
 
-test('sessions without Polestar (no step snapshots) report nothing instead of failing', () => {
+test('sessions without SendaFH (no step snapshots) report nothing instead of failing', () => {
 	const plain = session('Gamma', 1791300000, [
 		{ t: 0, e: 'zone', map: 1429, zone: 'Elwynn Forest' },
 		{ t: 30, e: 'pos', ...at },

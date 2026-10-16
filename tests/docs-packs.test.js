@@ -1,7 +1,7 @@
 'use strict';
 // The pack docs keep up with the code: docs/PACK_FORMAT.md (the contract)
 // names every goal verb the runtime reads (Core/Guides.lua's REQUIRED table,
-// Polestar.Guides.VERBS) and every guide and goal key the compiler writes
+// SendaFH.Guides.VERBS) and every guide and goal key the compiler writes
 // (tools/lib/dsl/emit.js); docs/PACKS.md (the handbook) names every problem
 // kind and pack status the Guide packs page can show.
 
@@ -23,8 +23,8 @@ function missing(text, list) {
 
 test('PACK_FORMAT.md names every goal verb the runtime reads', () => {
 	const [verbs] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Core/Guides.lua'] }],
-		script: 'local out = {} for k in pairs(Polestar.Guides.VERBS) do out[#out + 1] = k end table.sort(out) emit(out)',
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Core/Guides.lua'] }],
+		script: 'local out = {} for k in pairs(SendaFH.Guides.VERBS) do out[#out + 1] = k end table.sort(out) emit(out)',
 	}).emitted;
 	assert.ok(verbs.length >= 20, `expected the runtime's verb list, got ${JSON.stringify(verbs)}`);
 	assert.deepEqual(missing(read('docs/PACK_FORMAT.md'), verbs), []);

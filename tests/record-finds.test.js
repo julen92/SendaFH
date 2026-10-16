@@ -1,5 +1,5 @@
 'use strict';
-// Recorded finds (addon/Polestar_Recorder/Finds.lua events) through
+// Recorded finds (addon/SendaFH_Recorder/Finds.lua events) through
 // `record import` and `data build` (tools/lib/data/recordings.js applyFinds):
 // drop chances from kills and loot windows merged across sessions, ranks,
 // levels, rare roles and spawns, treasures, instances and encounters, quest
@@ -158,7 +158,7 @@ test('quest frame rewards: the turn-in wins over the accept', () => {
 test('a recorded session with a rare, kills and loot imports and builds into npcs, items and objects facts', async () => {
 	const sv = runAddon({
 		stubs: ['stub_recorder.lua'],
-		addons: ['Polestar_Recorder'],
+		addons: ['SendaFH_Recorder'],
 		login: true,
 		script: `
 			local function unit(token, guid, name, cls, lvl)
@@ -189,14 +189,14 @@ test('a recorded session with a rare, kills and loot imports and builds into npc
 			stub.world.loot = { { name = "Linen Cloth", item = 58, count = 2, src = { (stub.gameObject(700)), 2 } } }
 			stub.fire("LOOT_OPENED", false, false)
 			stub.fire("PLAYER_LOGOUT")
-			emit(stub.serialize(PolestarRecorderDB))`,
+			emit(stub.serialize(SendaFHRecorderDB))`,
 	}).emitted[0];
-	const dir = tmpdir('polestar-finds-');
+	const dir = tmpdir('sendafh-finds-');
 	const svDir = path.join(dir, 'WTF', 'Account', 'TEST', 'SavedVariables');
 	fs.mkdirSync(svDir, { recursive: true });
-	fs.writeFileSync(path.join(svDir, 'Polestar_Recorder.lua'), `PolestarRecorderDB = ${sv}\n`);
+	fs.writeFileSync(path.join(svDir, 'SendaFH_Recorder.lua'), `SendaFHRecorderDB = ${sv}\n`);
 	const recordings = path.join(dir, 'recordings');
-	const imported = importFile(path.join(svDir, 'Polestar_Recorder.lua'), { outDir: recordings });
+	const imported = importFile(path.join(svDir, 'SendaFH_Recorder.lua'), { outDir: recordings });
 	assert.equal(imported.sessions.length, 1);
 	const drop = JSON.parse(fs.readFileSync(imported.sessions[0].file, 'utf8')).events.find((e) => e.e === 'drop');
 	assert.deepEqual(drop.items, [{ item: 55, n: 1 }], 'loot lists survive the SavedVariables round trip');

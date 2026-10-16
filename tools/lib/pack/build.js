@@ -103,7 +103,7 @@ function noReferenceData(pack, dataDir, flag) {
 		shownPath(dataDir),
 		0,
 		`no reference data: ${what}, so no quest, NPC or place can be looked up`,
-		`run \`node tools/polestar.js data build\`, or pass --data <dir>${context}${flag ? '; --no-data checks guides that give every quest title, name and place themselves' : ''}`,
+		`run \`node tools/sendafh.js data build\`, or pass --data <dir>${context}${flag ? '; --no-data checks guides that give every quest title, name and place themselves' : ''}`,
 	);
 	return diag;
 }
@@ -124,7 +124,7 @@ function readLicense(pack, diag) {
 		diag.warn(
 			shown.startsWith('..') ? file : shown.split(path.sep).join('/'),
 			at + 1,
-			'LICENSE still holds the placeholder line `polestar new` writes, not the licence text',
+			'LICENSE still holds the placeholder line `sendafh new` writes, not the licence text',
 			`replace the line with the full text of the ${pack.manifest.license} licence: the built addon ships LICENSE as LICENSE.txt`,
 		);
 	}

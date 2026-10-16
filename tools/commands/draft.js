@@ -1,5 +1,5 @@
 'use strict';
-// `polestar draft`: generate a first-draft leveling route as a .guide file.
+// `sendafh draft`: generate a first-draft leveling route as a .guide file.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -7,7 +7,7 @@ const { draft, loadData } = require('../lib/route');
 
 const { DATA } = require('../lib/paths');
 
-const usage = `usage: node tools/polestar.js draft --faction <Alliance|Horde> --race <Race> --zone <name> [--zone <name>...] --levels <min>-<max> [options]
+const usage = `usage: node tools/sendafh.js draft --faction <Alliance|Horde> --race <Race> --zone <name> [--zone <name>...] --levels <min>-<max> [options]
 
 Generates an efficient first-draft route (docs/GUIDE_FORMAT.md) from the
 reference data: hub-style accepts and turn-ins, objective areas ordered by

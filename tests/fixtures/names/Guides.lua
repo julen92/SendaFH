@@ -3,7 +3,7 @@
 -- Source: test/names.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "test/names",
 			pack = "test",
 			title = "Names",

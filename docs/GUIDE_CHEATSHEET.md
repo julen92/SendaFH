@@ -1,9 +1,9 @@
 # Guide format on one page
 
 Every line a `.guide` file can hold, with what it does and a short example.
-The full rules, the checks `polestar lint` runs and worked examples are in
+The full rules, the checks `sendafh lint` runs and worked examples are in
 [GUIDE_FORMAT.md](GUIDE_FORMAT.md); packs are in [PACKS.md](PACKS.md).
-`polestar find <text>` looks up the ids the examples use.
+`sendafh find <text>` looks up the ids the examples use.
 
 A guide is a header (lines in column 0) followed by steps; the lines inside a
 step are indented. Words are separated by spaces, `"double quotes"` hold
@@ -64,7 +64,7 @@ Before the first `step`. `guide`, `title`, `levels` and `zone` are required.
 | `getfp "<Flight point>"` | Learn a flight path from its flight master | `getfp "Stormwind"` |
 | `fly "<Town>"` | Take a flight; done on landing there | `fly "Stormwind"` |
 
-`polestar find --kind inn` and `polestar find --kind flight` list the names
+`sendafh find --kind inn` and `sendafh find --kind flight` list the names
 `sethome`, `hearth`, `getfp` and `fly` take.
 
 ## Quests
@@ -152,4 +152,4 @@ is a Dwarf who is a Warrior or a Paladin.
 
 | Header line | What it does | Example |
 |---|---|---|
-| `next <id>` | The guide that follows when this one ends: one of yours or one of Polestar's (`polestar find --kind guide <zone>` lists them with who can follow them) | `next joe-routes/westfall` |
+| `next <id>` | The guide that follows when this one ends: one of yours or one of SendaFH's (`sendafh find --kind guide <zone>` lists them with who can follow them) | `next joe-routes/westfall` |

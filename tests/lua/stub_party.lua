@@ -51,7 +51,7 @@ function party.raid(on)
 end
 
 function party.receive(sender, text, channel, prefix)
-	stub.fire("CHAT_MSG_ADDON", prefix or "Polestar", text, channel or "PARTY", sender, "", 0, 0, "", 0)
+	stub.fire("CHAT_MSG_ADDON", prefix or "SendaFH", text, channel or "PARTY", sender, "", 0, 0, "", 0)
 end
 
 function party.noUnitQuestAPI() C_QuestLog.IsUnitOnQuest = nil end

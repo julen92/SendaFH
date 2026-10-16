@@ -1,12 +1,12 @@
 'use strict';
-// node tools/polestar.js data build [options]
+// node tools/sendafh.js data build [options]
 
 const path = require('node:path');
 const { parseArgs } = require('node:util');
 const { buildData } = require('../lib/data/build');
 const { detectQuestie, questieDbDir } = require('../lib/data/questie');
 
-const usage = `usage: node tools/polestar.js data build [options]
+const usage = `usage: node tools/sendafh.js data build [options]
 
 Builds data/forever/*.json (quests, npcs, objects, items, zones, map-frames,
 factions, meta) from pfQuest (MIT), QuestieDB's Forever store (installed with

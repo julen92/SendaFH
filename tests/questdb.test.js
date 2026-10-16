@@ -2,7 +2,7 @@
 // `questdb build` (tools/lib/questdb, tools/commands/questdb.js): spawn
 // clustering, what the database keeps and drops, record layouts, faction
 // derivation, caps, determinism, the size budget, and that the generated
-// addon/Polestar_QuestDB is a load-on-demand addon that loads under Lua 5.1
+// addon/SendaFH_QuestDB is a load-on-demand addon that loads under Lua 5.1
 // within its memory budget.
 
 const { test } = require('node:test');
@@ -18,24 +18,24 @@ const { tmpdir } = require('./helpers/tmp');
 
 const FIX = path.join(__dirname, 'fixtures', 'questdb');
 const REAL = path.join(ROOT, 'data', 'forever');
-const ADDON = path.join(ROOT, 'addon', 'Polestar_QuestDB');
+const ADDON = path.join(ROOT, 'addon', 'SendaFH_QuestDB');
 const BUDGET = 3 * 1024 * 1024; // bytes of Lua
 const DATA_FILES = ['Quests.lua', 'Npcs.lua', 'Objects.lua', 'Items.lua'];
 
-const tmp = () => tmpdir('polestar-questdb-');
+const tmp = () => tmpdir('sendafh-questdb-');
 const FRAME = { c: 0, left: 1500, right: -1500, top: 500, bottom: -1500 }; // 30 yd per x %, 20 yd per y %
 
 // Loads data files with a minimal AddData under plain Lua 5.1; returns the
 // script's printed JSON-ish output lines.
 function luaLoad(dir, tail) {
 	const prog = `
-Polestar = { QuestDB = {} }
+SendaFH = { QuestDB = {} }
 local data = { quests = {}, npcs = {}, objects = {}, items = {} }
 local meta
-function Polestar.QuestDB.AddData(kind, recs) if kind == "meta" then meta = recs return end local t = data[kind] for k, v in pairs(recs) do t[k] = v end end
+function SendaFH.QuestDB.AddData(kind, recs) if kind == "meta" then meta = recs return end local t = data[kind] for k, v in pairs(recs) do t[k] = v end end
 collectgarbage("collect"); collectgarbage("collect")
 local before = collectgarbage("count")
-for _, f in ipairs({ ${DATA_FILES.map((f) => JSON.stringify(path.join(dir, f))).join(', ')} }) do assert(loadfile(f))("Polestar_QuestDB", {}) end
+for _, f in ipairs({ ${DATA_FILES.map((f) => JSON.stringify(path.join(dir, f))).join(', ')} }) do assert(loadfile(f))("SendaFH_QuestDB", {}) end
 collectgarbage("collect"); collectgarbage("collect")
 local kb = collectgarbage("count") - before
 ${tail}`;
@@ -99,7 +99,7 @@ test('the fixture database keeps quest-related entities only, in the documented 
 	assert.deepEqual(db.items.get(772), ['Large Candle', 2, 6, 40, 40, 20.5, 1, 77, 100, 253]);
 	assert.deepEqual(db.npcs.get(197), ['Marshal McBride', 1429, 0, 1, 48.9, 41.6, 0]);
 	assert.match(files['Quests.lua'], /^\[7\]=\{"Kobold Camp Cleanup",2,1,nil,nil,1,197,197,nil,783,nil,\{1,6,10\},1429\},$/m);
-	assert.match(files['MapFrames.lua'], /Polestar\.RegisterMapFrames\(\{ era = \{/);
+	assert.match(files['MapFrames.lua'], /SendaFH\.RegisterMapFrames\(\{ era = \{/);
 	assert.match(files['MapFrames.lua'], /\[1429\] = \{bottom=-1500,c=0,left=1500,right=-1500,top=500\},/);
 	assert.match(files['LICENSE-DATA.txt'], /Fixture notice\./);
 });
@@ -129,7 +129,7 @@ test('every known spawn of an entity lies in one of its clusters: no cap, and th
 	for (const [x, y] of more) assert.ok(clusters.some((c) => c.x === x && c.y === y), `a marker at the lone spawn ${x},${y}`);
 });
 
-test('builds are byte-identical and the TOC is a load-on-demand Polestar addon', () => {
+test('builds are byte-identical and the TOC is a load-on-demand SendaFH addon', () => {
 	const a = tmp();
 	const b = tmp();
 	writeQuestDB(buildQuestDB({ dataDir: FIX }), a);
@@ -137,10 +137,10 @@ test('builds are byte-identical and the TOC is a load-on-demand Polestar addon',
 	const names = fs.readdirSync(a).sort();
 	assert.deepEqual(names, fs.readdirSync(b).sort());
 	for (const n of names) assert.equal(fs.readFileSync(path.join(a, n), 'utf8'), fs.readFileSync(path.join(b, n), 'utf8'), n);
-	const toc = fs.readFileSync(path.join(a, 'Polestar_QuestDB.toc'), 'utf8');
+	const toc = fs.readFileSync(path.join(a, 'SendaFH_QuestDB.toc'), 'utf8');
 	assert.match(toc, /^## Interface: 16001$/m);
 	assert.match(toc, /^## LoadOnDemand: 1$/m);
-	assert.match(toc, /^## Dependencies: Polestar$/m);
+	assert.match(toc, /^## Dependencies: SendaFH$/m);
 	// A stale data file from an older layout is removed on rebuild.
 	fs.writeFileSync(path.join(a, 'Old.lua'), '-- stale');
 	writeQuestDB(buildQuestDB({ dataDir: FIX }), a);
@@ -151,7 +151,7 @@ test('builds are byte-identical and the TOC is a load-on-demand Polestar addon',
 
 test('the command writes the addon and reports size and memory', () => {
 	const out = tmp();
-	const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'polestar.js'), 'questdb', 'build', '--data', FIX, '--out', out, '--json'], { encoding: 'utf8' });
+	const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'sendafh.js'), 'questdb', 'build', '--data', FIX, '--out', out, '--json'], { encoding: 'utf8' });
 	assert.equal(r.status, 0, r.stderr);
 	const stats = JSON.parse(r.stdout);
 	assert.equal(stats.quests, 15);
@@ -168,10 +168,10 @@ test('the real database fits the size budget and builds deterministically', { sk
 	console.log(`questdb real: Lua ${(one.stats.luaBytes / 1048576).toFixed(2)} MB, estimated memory ${(one.stats.memoryBytes / 1048576).toFixed(2)} MB`);
 });
 
-test('the shipped addon/Polestar_QuestDB loads under Lua 5.1 within budget', { skip: !fs.existsSync(path.join(ADDON, 'Quests.lua')) && 'not generated' }, () => {
-	const toc = fs.readFileSync(path.join(ADDON, 'Polestar_QuestDB.toc'), 'utf8');
+test('the shipped addon/SendaFH_QuestDB loads under Lua 5.1 within budget', { skip: !fs.existsSync(path.join(ADDON, 'Quests.lua')) && 'not generated' }, () => {
+	const toc = fs.readFileSync(path.join(ADDON, 'SendaFH_QuestDB.toc'), 'utf8');
 	assert.match(toc, /^## LoadOnDemand: 1$/m);
-	assert.match(toc, /^## Dependencies: Polestar$/m);
+	assert.match(toc, /^## Dependencies: SendaFH$/m);
 	const bytes = DATA_FILES.concat('MapFrames.lua').reduce((s, f) => s + fs.statSync(path.join(ADDON, f)).size, 0);
 	assert.ok(bytes <= BUDGET, `Lua ${bytes} bytes over budget`);
 	const [line] = luaLoad(ADDON, 'print(string.format("%d %s %.2f", (function() local n = 0 for _ in pairs(data.quests) do n = n + 1 end return n end)(), data.quests[7] and data.quests[7][1] or "-", kb / 1024))');

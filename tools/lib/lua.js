@@ -3,7 +3,7 @@
 // game can load (SavedVariables, pfQuest database files) this can read:
 //
 //   const { luaToJson } = require('./lua');
-//   const db = luaToJson({ files: [svPath], expr: 'return PolestarRecorderDB' });
+//   const db = luaToJson({ files: [svPath], expr: 'return SendaFHRecorderDB' });
 //
 // Tables with keys exactly 1..n become arrays; everything else becomes an object
 // with string keys (integer keys printed without a decimal point). An empty
@@ -15,7 +15,7 @@
 // os, io, load*, dofile, require, debug, getfenv/setfenv or the metatable
 // functions. `prelude` and `expr` are the caller's own code and run normally;
 // they can load more untrusted files the same way with
-// __polestar_loaddata(path, ...) -> ok, err (extra arguments become the
+// __sendafh_loaddata(path, ...) -> ok, err (extra arguments become the
 // chunk's `...`, as the client passes an addon's name and namespace). Every run
 // has a time limit.
 
@@ -94,7 +94,7 @@ local function encode(v, seen, buf)
     buf[#buf+1] = "null"
   end
 end
-function __polestar_json(v)
+function __sendafh_json(v)
   local buf = {}
   encode(v, {}, buf)
   return table.concat(buf)
@@ -122,7 +122,7 @@ local __env = setmetatable({}, {
   end,
 })
 local __rawopen, __rawload, __setfenv, __pcall = io.open, loadstring, setfenv, pcall
-function __polestar_loaddata(path, ...)
+function __sendafh_loaddata(path, ...)
   local f, err = __rawopen(path, "rb")
   if not f then return false, err end
   local src = f:read("*a")
@@ -141,7 +141,7 @@ end
 // `files` paths are passed as arguments, so no quoting issues. `timeout` is in ms.
 function luaToJson({ files = [], prelude = '', expr, timeout = 120000 }) {
 	if (!expr) throw new Error('luaToJson: expr is required, e.g. "return MyGlobal"');
-	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-lua-'));
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-lua-'));
 	const script = path.join(dir, 'run.lua');
 	const out = path.join(dir, 'out.json');
 	fs.writeFileSync(
@@ -151,12 +151,12 @@ ${SANDBOX}
 local __out = arg[1]
 ${prelude}
 for i = 2, #arg do
-  local ok, err = __polestar_loaddata(arg[i])
+  local ok, err = __sendafh_loaddata(arg[i])
   if not ok then error(err, 0) end
 end
 local __value = (function() ${expr} end)()
 local __f = assert(io.open(__out, "wb"))
-__f:write(__polestar_json(__value))
+__f:write(__sendafh_json(__value))
 __f:close()
 `,
 	);

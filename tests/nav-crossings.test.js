@@ -1,5 +1,5 @@
 'use strict';
-// Zone crossings in the travel planner (addon/Polestar/Nav/Travel.lua,
+// Zone crossings in the travel planner (addon/SendaFH/Nav/Travel.lua,
 // Nav.RegisterCrossings): routes between zones go through crossing waypoints,
 // captions follow the direction, open-ground pairs walk straight, approach
 // chains are entered at their mouth, and the re-plan triggers. Runs the real
@@ -16,10 +16,10 @@ const path = require('node:path');
 const { runAddon, ROOT } = require('./helpers/lua');
 const { luaLiteral } = require('../tools/lib/travel/route');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local A = N.arrow
 local nav = stub.nav
 local function target(wx, wy, label)
@@ -36,7 +36,7 @@ local function route()
 	return out
 end
 local function known(...)
-	local flags = Polestar.CharState().flags
+	local flags = SendaFH.CharState().flags
 	flags.taxi = {}
 	for _, id in ipairs({ ... }) do flags.taxi[id] = true end
 end
@@ -149,15 +149,15 @@ test('a crossing set that is not complete (recorded crossings) leaves walking as
 		N.RegisterCrossings({ complete = false, zones = ZONES, crossings = { GATE } })
 		nav.place(-500, 500)
 		target(-500, -500)
-		emit({ route(), #(Polestar.Nav.travel.CrossingCounts()) })`);
+		emit({ route(), #(SendaFH.Nav.travel.CrossingCounts()) })`);
 	assert.deepEqual(out, [['walk|Target'], 0]);
 });
 
 test('the arrow shows the leg caption, aims at the waypoint, advances inside its radius and re-plans there', () => {
 	const [out] = run(`
 		local r, changes, advanced = {}, 0, 0
-		Polestar.On("ROUTE_CHANGED", function() changes = changes + 1 end)
-		Polestar.On("ROUTE_ADVANCED", function() advanced = advanced + 1 end)
+		SendaFH.On("ROUTE_CHANGED", function() changes = changes + 1 end)
+		SendaFH.On("ROUTE_ADVANCED", function() advanced = advanced + 1 end)
 		crossings()
 		nav.place(-500, 500)
 		target(-500, -500, "Kobolds")
@@ -189,7 +189,7 @@ test('the arrow shows the leg caption, aims at the waypoint, advances inside its
 test('moving more than 50 yd re-plans once the plan is 30 s old, at most once a second, and only with crossing data', () => {
 	const [out] = run(`
 		local r, changes = {}, 0
-		Polestar.On("ROUTE_CHANGED", function() changes = changes + 1 end)
+		SendaFH.On("ROUTE_CHANGED", function() changes = changes + 1 end)
 		local function walk(seconds)
 			for _ = 1, seconds do
 				local p = nav.player
@@ -229,7 +229,7 @@ test('learning a flight path re-plans with it', () => {
 		stub.fire("UI_INFO_MESSAGE", 0, "Something else")
 		local other = route()
 		stub.fire("UI_INFO_MESSAGE", 0, ERR_NEWTAXIPATH)
-		emit({ before = before, other = other, after = route(), saved = Polestar.CharState().flags.taxi[1] == true })`);
+		emit({ before = before, other = other, after = route(), saved = SendaFH.CharState().flags.taxi[1] == true })`);
 	assert.deepEqual(out.before, ['walk|Target']);
 	assert.deepEqual(out.other, ['walk|Target']);
 	assert.deepEqual(out.after, ['fly|Fly to East Hold', 'walk|Target']);
@@ -249,10 +249,10 @@ test('a flight lands in the right zone: the walk after it crosses at the gate', 
 	assert.deepEqual(out.east, ['walk|Walk to the flight master', 'fly|Fly to East Hold', 'walk|Camp']);
 });
 
-// The local crossings (addon/Polestar_Travel, built by `travel build` from the
+// The local crossings (addon/SendaFH_Travel, built by `travel build` from the
 // optional local crossings file) with the committed TravelData.lua: real
 // routes go through the real gates, and planning stays cheap.
-const LOCAL = path.join(ROOT, 'addon', 'Polestar_Travel', 'Crossings.lua');
+const LOCAL = path.join(ROOT, 'addon', 'SendaFH_Travel', 'Crossings.lua');
 const DATA = path.join(ROOT, 'data', 'forever', 'map-frames.json');
 test('the local crossings route real trips through their gates, within the planner budget', { skip: !(fs.existsSync(LOCAL) && fs.existsSync(DATA)) && 'no local crossings built' }, () => {
 	const era = JSON.parse(fs.readFileSync(DATA, 'utf8')).era;
@@ -271,8 +271,8 @@ test('the local crossings route real trips through their gates, within the plann
 		addons: [NAV],
 		login: true,
 		script: `
-			assert(loadfile(${luaLiteral(LOCAL)}))("Polestar_Travel", {})
-			local N = Polestar.Nav
+			assert(loadfile(${luaLiteral(LOCAL)}))("SendaFH_Travel", {})
+			local N = SendaFH.Nav
 			local list, crossings, open, chains = N.travel.CrossingCounts()
 			local out = { covered = list, crossings = crossings, open = open, chains = chains, routes = {} }
 			local trips = ${luaLiteral(trips)}

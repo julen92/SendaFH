@@ -6,7 +6,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { main, load } = require('../tools/polestar');
+const { main, load } = require('../tools/sendafh');
 const { quiet } = require('./helpers/cli');
 
 const ROOT = path.join(__dirname, '..');

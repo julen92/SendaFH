@@ -1,5 +1,5 @@
 'use strict';
-// The recorder's progress capture (addon/Polestar_Recorder/Progress.lua and
+// The recorder's progress capture (addon/SendaFH_Recorder/Progress.lua and
 // the /psrec legacy|factions|skills dumps) plus quest givers that are game
 // objects or items, against tests/lua/stub_recorder.lua.
 
@@ -7,10 +7,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const REC = 'Polestar_Recorder';
+const REC = 'SendaFH_Recorder';
 
 const PRELUDE = `
-local function S() return PolestarRecorderDB.sessions[PolestarRecorderDB.current] end
+local function S() return SendaFHRecorderDB.sessions[SendaFHRecorderDB.current] end
 local function events(kind)
 	local out = {}
 	for _, e in ipairs(S().events) do
@@ -22,7 +22,7 @@ local function events(kind)
 	end
 	return out
 end
-local cmd = SlashCmdList.POLESTARREC
+local cmd = SlashCmdList.SENDAFHREC
 `;
 
 function run(script, opts = {}) {

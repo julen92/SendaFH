@@ -1,5 +1,5 @@
 'use strict';
-// `sim compare` and `sim bench` (docs/SIMULATION.md §5): Polestar's guides
+// `sim compare` and `sim bench` (docs/SIMULATION.md §5): SendaFH's guides
 // (the default route and every route choice) and the best route found, all
 // scored under the same calibrated model. Inside another guide pack (or with
 // --pack) compare also scores that pack's chain (after our default chain up
@@ -13,7 +13,7 @@ const { K_TURNIN } = require('./run');
 const { compileSequence, routeSequence } = require('./sequence');
 const { fmtH, table, mdTable } = require('./report');
 const { LEVEL_XP } = require('../game/xp');
-const { loadPolestarRoutes, requiredEvents } = require('./baselines/polestar');
+const { loadSendaFHRoutes, requiredEvents } = require('./baselines/sendafh');
 const { resolvePack, packArgument } = require('../pack/locate');
 const { printDiagnostics } = require('../cli');
 const { isDir } = require('../addons');
@@ -33,19 +33,19 @@ function sources(o, faction, race, run, runD) {
 	if (resD) out.push({ id: 'best-dungeons', label: 'Best found (dungeons)', source: 'sim', route: sim.routeFromKeys(runD, resD.best.route), family: 'dungeons' });
 	const guidesDir = o.guidesDir || path.join(ROOT, 'guides');
 	try {
-		const L = loadPolestarRoutes({ guidesDir, dataDir: o.dataDir, faction, race, cls: null });
+		const L = loadSendaFHRoutes({ guidesDir, dataDir: o.dataDir, faction, race, cls: null });
 		if (L) {
-			out.push({ id: 'polestar', label: 'Polestar default', source: 'polestar', events: evs(L.default.events) });
-			L.variants.forEach((v, i) => out.push({ id: `polestar-${i + 1}`, label: `Polestar ${v.label}`, source: 'polestar-variant', events: evs(v.sequence.events) }));
+			out.push({ id: 'sendafh', label: 'SendaFH default', source: 'sendafh', events: evs(L.default.events) });
+			L.variants.forEach((v, i) => out.push({ id: `sendafh-${i + 1}`, label: `SendaFH ${v.label}`, source: 'sendafh-variant', events: evs(v.sequence.events) }));
 		}
 	} catch (err) {
-		warn.push(`Polestar: ${err.message}`);
+		warn.push(`SendaFH: ${err.message}`);
 	}
 	if (o.pack) {
 		const id = o.pack.manifest.id;
 		const ids = (seq) => seq.guides.map((g) => g.id);
 		try {
-			const P = loadPolestarRoutes({ guidesDir, dataDir: o.dataDir, faction, race, cls: null, pack: o.pack });
+			const P = loadSendaFHRoutes({ guidesDir, dataDir: o.dataDir, faction, race, cls: null, pack: o.pack });
 			if (P) {
 				out.push({ id: 'pack', label: `${id} default`, source: 'pack', events: evs(P.default.events), guides: ids(P.default) });
 				P.variants.forEach((v, i) => out.push({ id: `pack-${i + 1}`, label: `${id} ${v.label}`, source: 'pack-variant', events: evs(v.sequence.events), guides: ids(v.sequence) }));
@@ -190,7 +190,7 @@ async function compareCommand(args, o) {
 	const res = await compare(opts);
 	fs.mkdirSync(opts.benchDir, { recursive: true });
 	// [name, variant source, row label prefix] for ours and the pack.
-	const kinds = [['Polestar', 'polestar-variant', /^Polestar /], ...(pack ? [[pack.manifest.id, 'pack-variant', new RegExp(`^${pack.manifest.id} `)]] : [])];
+	const kinds = [['SendaFH', 'sendafh-variant', /^SendaFH /], ...(pack ? [[pack.manifest.id, 'pack-variant', new RegExp(`^${pack.manifest.id} `)]] : [])];
 	for (const c of res) {
 		const shown = c.rows.filter((x) => !kinds.some(([, src]) => x.source === src));
 		const choices = [];
@@ -211,7 +211,7 @@ async function compareCommand(args, o) {
 		// A pack's comparison is its own file, so ours is never overwritten.
 		const file = path.join(opts.benchDir, `compare-${c.faction.toLowerCase()}-${c.race.toLowerCase()}${pack ? `-${pack.manifest.id}` : ''}.json`);
 		fs.writeFileSync(file, `${JSON.stringify({ ...c, ...(pack ? { pack: pack.manifest.id } : {}), rows: c.rows.map(({ trace, ...x }) => x) }, null, 1)}\n`);
-		const md = choices.length ? choices.map(([name, variants]) => `## ${name} route choices\n\n${mdTable(HEAD, variants.map(fmtRow))}\n`).join('\n') : `## Polestar route choices\n\n${mdTable(HEAD, [])}\n`;
+		const md = choices.length ? choices.map(([name, variants]) => `## ${name} route choices\n\n${mdTable(HEAD, variants.map(fmtRow))}\n`).join('\n') : `## SendaFH route choices\n\n${mdTable(HEAD, [])}\n`;
 		fs.writeFileSync(file.replace(/\.json$/, '.md'), `# ${c.faction} ${c.race}${pack ? ` (${pack.manifest.id})` : ''}: route comparison\n\n${mdTable(HEAD, shown.map(fmtRow))}\n\n${md}`);
 		console.log(`wrote ${path.relative(process.cwd(), file)} (+ .md)`);
 	}
@@ -229,7 +229,7 @@ async function bench(o) {
 	const res = await compare(o);
 	const out = [];
 	for (const c of res) {
-		const pick = ['polestar', 'best', 'best-dungeons'];
+		const pick = ['sendafh', 'best', 'best-dungeons'];
 		const srcs = c.rows.filter((x) => pick.includes(x.id));
 		const per = srcs.map((x) => {
 			const b = BRACKETS.map(() => ({ zones: [], quests: new Set() }));

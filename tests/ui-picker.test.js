@@ -1,5 +1,5 @@
 'use strict';
-// The guide menu (addon/Polestar/UI/Picker.lua): three panes in the Polestar
+// The guide menu (addon/SendaFH/UI/Picker.lua): three panes in the SendaFH
 // shell, against the fake Engine and sample guides of tests/lua/stub_ui.lua.
 // Rows mark a finished guide with a check and an open one with a muted
 // "Tab N" note; the tab row always has an active tab (Browse for a category
@@ -14,8 +14,8 @@ const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 function run(script, { install = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `uistub.install(${install})\nstub.login()\nlocal UI, P = Polestar.UI, Polestar.UI.Picker\n${HELPERS}\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `uistub.install(${install})\nstub.login()\nlocal UI, P = SendaFH.UI, SendaFH.UI.Picker\n${HELPERS}\n${script}`,
 	}).emitted;
 }
 
@@ -30,7 +30,7 @@ end
 local function rows()
 	local out = {}
 	for _, f in ipairs(stub.frames) do
-		if f.psGuide and rawget(f, "Range") and f:IsShown() and f:GetParent() == PolestarPicker.Scroll.Child then out[#out + 1] = f end
+		if f.psGuide and rawget(f, "Range") and f:IsShown() and f:GetParent() == SendaFHPicker.Scroll.Child then out[#out + 1] = f end
 	end
 	table.sort(out, function(a, b) return select(5, a:GetPoint(1)) > select(5, b:GetPoint(1)) end)
 	return out
@@ -47,7 +47,7 @@ end
 local function folders()
 	local out = {}
 	for _, f in ipairs(stub.frames) do
-		if rawget(f, "Count") and rawget(f, "Rule") and not rawget(f, "Range") and f:IsShown() and f:GetParent() == PolestarPicker.Scroll.Child then out[#out + 1] = f end
+		if rawget(f, "Count") and rawget(f, "Rule") and not rawget(f, "Range") and f:IsShown() and f:GetParent() == SendaFHPicker.Scroll.Child then out[#out + 1] = f end
 	end
 	table.sort(out, function(a, b) return select(5, a:GetPoint(1)) > select(5, b:GetPoint(1)) end)
 	for i, f in ipairs(out) do out[i] = f.Text:GetText() .. " " .. f.Count:GetText() end
@@ -60,10 +60,10 @@ local function lastCall(name)
 	for i = #uistub.calls, 1, -1 do if uistub.calls[i][1] == name then return uistub.calls[i] end end
 end
 local function tab(key)
-	for _, t in ipairs(PolestarPicker.tabButtons) do if t.psKey == key and t:IsShown() then return t end end
+	for _, t in ipairs(SendaFHPicker.tabButtons) do if t.psKey == key and t:IsShown() then return t end end
 end
 local function nav(key)
-	for _, b in ipairs(PolestarPicker.navButtons) do if b.psKey == key and b:IsShown() then return b end end
+	for _, b in ipairs(SendaFHPicker.navButtons) do if b.psKey == key and b:IsShown() then return b end end
 end
 local D = function() return P.details end
 local TABS = { { uistub.elwynn, 3 }, { uistub.tailoring, 2 }, { uistub.stormwindRep, 2 } }
@@ -118,8 +118,8 @@ test('search covers titles, zones, categories and player-facing race names; typi
 		end
 		P.SetView("current")
 		P.SetQuery("elwynn")
-		local r = { view = P.View(), shown = lines(), selected = P.Selected(), title = PolestarPicker.Title:GetText(),
-			subtitle = PolestarPicker.Subtitle:GetText(), browseOn = tab("browse").psSelected }
+		local r = { view = P.View(), shown = lines(), selected = P.Selected(), title = SendaFHPicker.Title:GetText(),
+			subtitle = SendaFHPicker.Subtitle:GetText(), browseOn = tab("browse").psSelected }
 		emit({ r = r, multi = guides("elwynn riding"), reputation = guides("reputation"), upper = guides("PROFESSIONS"),
 			undead = guides("undead"), nightelf = guides("night elf"), profInLeveling = #guides("tailoring", "Leveling") })`);
 	assert.deepEqual(out.multi, ['Horse'], 'every word must match: the zone and a keyword');
@@ -138,26 +138,26 @@ test('left pane: the rail holds the sections and Options; the sidebar holds the 
 	const [out] = run(`
 		UI.ShowPicker()
 		local labels, rail = {}, {}
-		for _, b in ipairs(PolestarPicker.navButtons) do
+		for _, b in ipairs(SendaFHPicker.navButtons) do
 			if b:IsShown() then labels[#labels + 1] = b.Label:GetText() .. " " .. b.Count:GetText() end
 		end
-		for _, b in ipairs(PolestarPicker.railButtons) do
+		for _, b in ipairs(SendaFHPicker.railButtons) do
 			if b:IsShown() then rail[#rail + 1] = b.Label:GetText() .. (b.Bar:IsShown() and "*" or "") end
 		end
 		local icon = nav("Favorites").Icon:GetTexture()
 		nav("Professions"):Click()
-		local r = { view = P.View(), category = P.Category(), title = PolestarPicker.Title:GetText(), folders = folders(), lines = lines(),
+		local r = { view = P.View(), category = P.Category(), title = SendaFHPicker.Title:GetText(), folders = folders(), lines = lines(),
 			navOn = nav("Professions").Bar:IsShown(), tabOn = tab("home").psSelected or false, browseOn = tab("browse").psSelected,
-			tabs = {}, footer = PolestarPicker.Footer:IsShown(), subtitle = PolestarPicker.Subtitle:GetText() }
-		for _, t in ipairs(PolestarPicker.tabButtons) do if t:IsShown() then r.tabs[#r.tabs + 1] = t.Label:GetText() end end
+			tabs = {}, footer = SendaFHPicker.Footer:IsShown(), subtitle = SendaFHPicker.Subtitle:GetText() }
+		for _, t in ipairs(SendaFHPicker.tabButtons) do if t:IsShown() then r.tabs[#r.tabs + 1] = t.Label:GetText() end end
 		tab("home"):Click()
 		r.home = { view = P.View(), homeOn = tab("home").psSelected }
 		tab("browse"):Click()
 		r.back = { view = P.View(), category = P.Category(), browseOn = tab("browse").psSelected }
-		for _, b in ipairs(PolestarPicker.railButtons) do if b:IsShown() and b.psKey == "Options" then b:Click() end end
+		for _, b in ipairs(SendaFHPicker.railButtons) do if b:IsShown() and b.psKey == "Options" then b:Click() end end
 		local sections = {}
 		for i, s in ipairs(P.Sections()) do sections[i] = s.label or s.key end
-		emit({ cats = P.categories, labels = labels, rail = rail, sections = sections, icon = icon, r = r, options = PolestarOptions:IsShown(), picker = PolestarPicker:IsShown() })`);
+		emit({ cats = P.categories, labels = labels, rail = rail, sections = sections, icon = icon, r = r, options = SendaFHOptions:IsShown(), picker = SendaFHPicker:IsShown() })`);
 	assert.deepEqual(out.cats, ['All', 'Leveling', 'Professions', 'Reputation', 'Exploration', 'Legacy', 'Collectibles', 'Favorites'], 'dungeons have their own section, not a category');
 	// Sections (Guides built in, then the registered ones by order) are on the rail, Options at its foot.
 	assert.equal(out.sections[0], 'Guides');
@@ -178,7 +178,7 @@ test('left pane: the rail holds the sections and Options; the sidebar holds the 
 test('the sidebar is one compact block on one edge: the lockup (wordmark, tagline under it), the search with its foot on the band line, navigation 12px under that; the version on the rail\'s foot line', () => {
 	const [out] = run(`
 		UI.ShowPicker()
-		local F = PolestarPicker
+		local F = SendaFHPicker
 		local function pt(r, i) local p, _, _, x, y = r:GetPoint(i or 1); return { p, x, y } end
 		local opt
 		for _, b in ipairs(F.railButtons) do if b:IsShown() and b.psKey == "Options" then opt = b end end
@@ -204,7 +204,7 @@ test('the sidebar is one compact block on one edge: the lockup (wordmark, taglin
 test('the search placeholder is the first wording that fits the box, refitted on resize; the last is cut when none fits', () => {
 	const [out] = run(`
 		UI.ShowPicker()
-		local box = PolestarPicker.Search
+		local box = SendaFHPicker.Search
 		local ph = box.Placeholder
 		local function at(w)
 			box:SetWidth(w)
@@ -235,11 +235,11 @@ test('the hub fits: every section on the rail above Options, every category in t
 		for k, s in ipairs(P.Sections()) do all[k] = s.key end
 		UI.ShowPicker()
 		P.SetCategory("All")
-		local H = PolestarPicker:GetHeight()
+		local H = SendaFHPicker:GetHeight()
 		local function bottomOf(b) local _, _, _, _, y = b:GetPoint(1); return -y + b:GetHeight() end
 		local function topOfFoot(b) local _, _, _, _, y = b:GetPoint(1); return H - 2 - (y + b:GetHeight()) end
 		local railBottom, options, keys = 0, nil, {}
-		for _, b in ipairs(PolestarPicker.railButtons) do
+		for _, b in ipairs(SendaFHPicker.railButtons) do
 			if b:IsShown() then
 				if b.psKey == "Options" then options = topOfFoot(b) else
 					railBottom = math.max(railBottom, bottomOf(b))
@@ -247,17 +247,17 @@ test('the hub fits: every section on the rail above Options, every category in t
 				end
 			end
 		end
-		local navBottom, navTop = 0, PolestarPicker.psNavTop
-		for _, b in ipairs(PolestarPicker.navButtons) do
+		local navBottom, navTop = 0, SendaFHPicker.psNavTop
+		for _, b in ipairs(SendaFHPicker.navButtons) do
 			if b:IsShown() then local _, _, _, _, y = b:GetPoint(1); navBottom = math.max(navBottom, navTop - y + b:GetHeight()) end
 		end
-		local _, _, _, _, statusY = PolestarPicker.Status:GetPoint(1)
+		local _, _, _, _, statusY = SendaFHPicker.Status:GetPoint(1)
 		P.ShowSection("Rares")
 		local sectionNav = {}
-		for _, b in ipairs(PolestarPicker.navButtons) do if b:IsShown() then sectionNav[#sectionNav + 1] = b.psKey end end
+		for _, b in ipairs(SendaFHPicker.navButtons) do if b:IsShown() then sectionNav[#sectionNav + 1] = b.psKey end end
 		emit({ keys = keys, all = all, railBottom = railBottom, options = options, navBottom = navBottom, statusTop = H - 2 - statusY - 14,
-			sectionNav = sectionNav, railOn = (function() for _, b in ipairs(PolestarPicker.railButtons) do if b:IsShown() and b.Bar:IsShown() then return b.psKey end end end)(),
-			details = P.details:IsShown(), list = PolestarPicker.Content:IsShown() })`);
+			sectionNav = sectionNav, railOn = (function() for _, b in ipairs(SendaFHPicker.railButtons) do if b:IsShown() and b.Bar:IsShown() then return b.psKey end end end)(),
+			details = P.details:IsShown(), list = SendaFHPicker.Content:IsShown() })`);
 	assert.equal(out.all.length, 8);
 	assert.deepEqual(out.keys, out.all, 'eight sections fit the rail');
 	assert.ok(out.railBottom <= out.options, `rail ends at ${out.railBottom}, Options starts at ${out.options}`);
@@ -276,7 +276,7 @@ test('categories: left out without a guide for any faction; faded with a tip whe
 			if g and g.category == "Legacy" then table.remove(uistub.order, i) end
 		end
 		uistub.openTabs(TABS, 1)
-		Polestar.Set("ui.pickerFaction", "Horde")
+		SendaFH.Set("ui.pickerFaction", "Horde")
 		UI.ShowPicker()
 		P.SetCategory("All")
 		local collectibles = nav("Collectibles")
@@ -303,7 +303,7 @@ test('selecting a guide shows its details and loads nothing; the selection is re
 		local r = { title = d.Title:GetText(), eyebrow = rawget(d, "Category") ~= nil, track = d.Prog:IsShown(), chips = chips, facts = P.detail.facts,
 			progress = d.ProgLabel:GetText(), pitch = d.Pitch:GetText(), pros = pros, cons = d.Cons[1].Text:GetText(),
 			load = d.Load.Label:GetText(), newTab = d.NewTab:IsShown() and d.NewTab:IsEnabled(), selectedRow = rowFor("Westfall").Selected:IsShown(),
-			calls = #uistub.calls - before, open = PolestarPicker:IsShown(), tip = rowFor("Westfall").psTip }
+			calls = #uistub.calls - before, open = SendaFHPicker:IsShown(), tip = rowFor("Westfall").psTip }
 		-- A route choice next.
 		westfall.nextChoices = { "forever/alliance/30-40/02-desolace", "forever/alliance/40-50/03-feralas" }
 		P.Render()
@@ -313,8 +313,8 @@ test('selecting a guide shows its details and loads nothing; the selection is re
 		rowFor("Elwynn Forest"):Click()
 		r.open1 = { progress = d.ProgLabel:GetText(), pct = d.ProgPct:GetText(), track = d.Prog:IsShown(), load = d.Load.Label:GetText(), newTab = d.NewTab:IsShown(),
 			loadWidth = d.Load.psFixedWidth, facts = P.detail.facts }
-		PolestarPicker:Hide()
-		r.saved = Polestar.CharState().ui.pickerSelected
+		SendaFHPicker:Hide()
+		r.saved = SendaFH.CharState().ui.pickerSelected
 		UI.ShowPicker()
 		r.again = d.Title:GetText()
 		emit(r)`);
@@ -342,12 +342,12 @@ test('a Class guide\'s details lead with its reward (item and spell icons, quali
 			steps = { { title = "One", goals = { { t = "note", text = "One", status = "pending" } } } } }
 		table.insert(uistub.order, id)
 		ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 } }
-		Polestar.Compat.ItemIcon = function(item) return item == 20536 and 135139 or nil end
-		Polestar.Compat.SpellIcon = function(spell) return spell == 23161 and 132238 or nil end
+		SendaFH.Compat.ItemIcon = function(item) return item == 20536 and 135139 or nil end
+		SendaFH.Compat.SpellIcon = function(spell) return spell == 23161 and 132238 or nil end
 		local tips = {}
 		GameTooltip.SetHyperlink = function(_, link) tips[#tips + 1] = link end
 		GameTooltip.SetSpellByID = function(_, spell) tips[#tips + 1] = "spell:" .. spell end
-		Polestar.Set("ui.pickerFaction", "All")
+		SendaFH.Set("ui.pickerFaction", "All")
 		UI.ShowPicker()
 		P.Select(id)
 		local d = D()
@@ -395,7 +395,7 @@ test('reward tiles: an uncached item\'s tooltip fills in when the item arrives, 
 		local cached, requested, spellsRequested = {}, {}, {}
 		local names = { [20536] = "Soul Harvester", [20534] = "Abyss Shard" }
 		local function link(item) return "|cff0070dd|Hitem:" .. item .. "::::::::50:::::|h[" .. names[item] .. "]|h|r" end
-		local C = Polestar.Compat
+		local C = SendaFH.Compat
 		C.RequestItem = function(item) if cached[item] then return true end requested[#requested + 1] = item; return false end
 		C.ItemLink = function(item) return cached[item] and link(item) or nil end
 		C.RequestSpell = function(spell) spellsRequested[#spellsRequested + 1] = spell; return false end
@@ -420,8 +420,8 @@ test('reward tiles: an uncached item\'s tooltip fills in when the item arrives, 
 			if IsModifiedClick("DRESSUP") then return DressUpItemLink(l) end
 			return false
 		end
-		Polestar.Hooks.ItemClick("test", function(_, item) if IsAltKeyDown() then calls[#calls + 1] = "guide " .. item end end)
-		Polestar.Set("ui.pickerFaction", "All")
+		SendaFH.Hooks.ItemClick("test", function(_, item) if IsAltKeyDown() then calls[#calls + 1] = "guide " .. item end end)
+		SendaFH.Set("ui.pickerFaction", "All")
 		UI.ShowPicker()
 		P.Select(id)
 		local d = D()
@@ -468,20 +468,20 @@ test('reward tiles: an uncached item\'s tooltip fills in when the item arrives, 
 test('Load guide replaces the current tab, Open in new tab adds one; double-click and Enter load', () => {
 	const [out] = run(`
 		uistub.openTabs(TABS, 1)
-		Polestar.Set("ui.shown", false)
+		SendaFH.Set("ui.shown", false)
 		local r = {}
 		UI.ShowPicker(); P.SetCategory("Leveling"); P.Select("forever/alliance/02-westfall")
 		D().Load:Click()
-		r.load = { lastCall("SetGuide"), Polestar.Get("ui.shown"), PolestarPicker:IsShown() }
+		r.load = { lastCall("SetGuide"), SendaFH.Get("ui.shown"), SendaFHPicker:IsShown() }
 		UI.ShowPicker(); P.Select("forever/alliance/dwarf-gnome/01-dun-morogh")
 		D().NewTab:Click()
-		r.newTab = { lastCall("OpenTab"), PolestarPicker:IsShown() }
+		r.newTab = { lastCall("OpenTab"), SendaFHPicker:IsShown() }
 		UI.ShowPicker(); P.SetCategory("Professions")
 		stub.RunScript(rowFor("Cooking 1-300"), "OnDoubleClick", "LeftButton")
-		r.double = { lastCall("SetGuide"), PolestarPicker:IsShown() }
+		r.double = { lastCall("SetGuide"), SendaFHPicker:IsShown() }
 		UI.ShowPicker(); P.SetQuery("darkshore")
-		stub.RunScript(PolestarPicker.Search, "OnEnterPressed")
-		r.enter = { lastCall("SetGuide"), PolestarPicker:IsShown() }
+		stub.RunScript(SendaFHPicker.Search, "OnEnterPressed")
+		r.enter = { lastCall("SetGuide"), SendaFHPicker:IsShown() }
 		emit(r)`);
 	assert.deepEqual(out.load, [['SetGuide', 'forever/alliance/02-westfall'], true, false]);
 	assert.deepEqual(out.newTab, [['OpenTab', 'forever/alliance/dwarf-gnome/01-dun-morogh'], false]);
@@ -493,16 +493,16 @@ test('from the guide window\'s +, loading opens a new tab; faction buttons write
 	const [out] = run(`
 		uistub.openTabs(TABS, 1)
 		UI.ShowPicker({ newTab = true })
-		local r = { subtitle = PolestarPicker.Subtitle:GetText(), newTabMode = P.IsNewTabMode() }
-		for _, b in ipairs(PolestarPicker.factionButtons) do if b.psKey == "Horde" then b:Click() end end
-		r.filter = Polestar.Get("ui.pickerFaction")
+		local r = { subtitle = SendaFHPicker.Subtitle:GetText(), newTabMode = P.IsNewTabMode() }
+		for _, b in ipairs(SendaFHPicker.factionButtons) do if b.psKey == "Horde" then b:Click() end end
+		r.filter = SendaFH.Get("ui.pickerFaction")
 		P.SetCategory("Leveling")
 		P.Select("forever/horde/orc-troll/01-durotar")
 		r.primary = { load = D().Load.psPrimary or false, newTab = D().NewTab.psPrimary or false }
 		r.tip = rowFor("Durotar").psTip
 		stub.RunScript(rowFor("Durotar"), "OnDoubleClick", "LeftButton")
 		r.call = lastCall("OpenTab")
-		r.tabs = #select(1, Polestar.Engine.GetTabs())
+		r.tabs = #select(1, SendaFH.Engine.GetTabs())
 		emit(r)`);
 	assert.deepEqual(out, {
 		subtitle: 'Pick a guide to open in a new tab.', newTabMode: true, filter: 'Horde', primary: { load: false, newTab: true },
@@ -522,16 +522,16 @@ test('Home: Continue cards for the open tabs and the suggested guides; a card se
 		UI.ShowPicker()
 		local cards = {}
 		for _, f in ipairs(stub.frames) do
-			if f.psIndex and rawget(f, "Pct") and f:IsShown() and f:GetParent() == PolestarPicker.Scroll.Child then cards[#cards + 1] = f end
+			if f.psIndex and rawget(f, "Pct") and f:IsShown() and f:GetParent() == SendaFHPicker.Scroll.Child then cards[#cards + 1] = f end
 		end
 		table.sort(cards, function(a, b) return a.psIndex < b.psIndex end)
 		local info = {}
 		for i, c in ipairs(cards) do info[i] = { c.Title:GetText(), c.Step:GetText(), c.Pct:GetText(), c.Note:GetText() } end
 		local r = { view = P.View(), homeOn = tab("home").psSelected, folders = folders(), suggested = lines(), info = info, shown = P.shown.cards }
 		cards[2]:Click()
-		r.selected = { P.Selected(), D().Title:GetText(), PolestarPicker:IsShown() }
+		r.selected = { P.Selected(), D().Title:GetText(), SendaFHPicker:IsShown() }
 		stub.RunScript(cards[2], "OnDoubleClick", "LeftButton")
-		r.continued = { lastCall("SetGuide"), select(2, Polestar.Engine.GetTabs()), PolestarPicker:IsShown() }
+		r.continued = { lastCall("SetGuide"), select(2, SendaFH.Engine.GetTabs()), SendaFHPicker:IsShown() }
 		emit(r)`);
 	assert.equal(out.view, 'home');
 	assert.equal(out.homeOn, true);
@@ -571,14 +571,14 @@ test('Current lists the open tabs (tab and progress; check when finished); Recen
 		local r = { view = P.View(), current = lines() }
 		tab("recent"):Click()
 		r.recent = lines()
-		r.stored = Polestar.CharState().ui.recentGuides[1]
+		r.stored = SendaFH.CharState().ui.recentGuides[1]
 		-- Every guide that becomes the loaded one goes to the front, once.
 		local ids = {}
 		for _, id in ipairs(uistub.order) do ids[#ids + 1] = id end
-		for i = 1, 12 do Polestar.Fire("GUIDE_CHANGED", ids[i]) end
-		Polestar.Fire("GUIDE_CHANGED", ids[5])
-		Polestar.Fire("GUIDE_CHANGED", nil)
-		local list = Polestar.CharState().ui.recentGuides
+		for i = 1, 12 do SendaFH.Fire("GUIDE_CHANGED", ids[i]) end
+		SendaFH.Fire("GUIDE_CHANGED", ids[5])
+		SendaFH.Fire("GUIDE_CHANGED", nil)
+		local list = SendaFH.CharState().ui.recentGuides
 		r.count, r.first, r.second, r.unique = #list, list[1], list[2], true
 		local seen = {}
 		for _, id in ipairs(list) do if seen[id] then r.unique = false end; seen[id] = true end
@@ -606,12 +606,12 @@ test('Favorites: the star in the details toggles a guide in CharState().ui.favor
 		local star = D().Star
 		local r = { before = star.psActive or false }
 		star:Click()
-		r.after = { star.psActive, star.psTip, Polestar.CharState().ui.favoriteGuides["forever/alliance/02-westfall"], nav("Favorites").Count:GetText() }
+		r.after = { star.psActive, star.psTip, SendaFH.CharState().ui.favoriteGuides["forever/alliance/02-westfall"], nav("Favorites").Count:GetText() }
 		nav("Favorites"):Click()
 		r.list = lines()
 		r.folders = folders()
 		star:Click()
-		r.removed = { Polestar.CharState().ui.favoriteGuides["forever/alliance/02-westfall"] or false, #rows(), PolestarPicker.Empty:IsShown() }
+		r.removed = { SendaFH.CharState().ui.favoriteGuides["forever/alliance/02-westfall"] or false, #rows(), SendaFHPicker.Empty:IsShown() }
 		emit(r)`);
 	assert.deepEqual(out, {
 		before: false,
@@ -630,7 +630,7 @@ test('the details art: the zone\'s painting from the client around the guide\'s 
 		end
 		C_Map.GetMapArtLayerTextures = function() local t = {}; for i = 1, 12 do t[i] = 200000 + i end; return t end
 		uistub.guides["forever/alliance/02-westfall"].zone = 1436
-		Polestar.Engine.GuideFocus = function(id) if id == "forever/alliance/02-westfall" then return 56, 47 end end
+		SendaFH.Engine.GuideFocus = function(id) if id == "forever/alliance/02-westfall" then return 56, 47 end end
 		UI.ShowPicker()
 		P.Select("forever/alliance/02-westfall")
 		local a = D().Art
@@ -642,9 +642,9 @@ test('the details art: the zone\'s painting from the client around the guide\'s 
 		local shown = 0
 		for _, t in ipairs(a.Tiles) do if t:IsShown() then shown = shown + 1 end end
 		r.other = { painted = P.detail.art, band = a.Band:IsShown(), tiles = shown }
-		Polestar.CharState().ui.pickerSelected = "gone"
-		PolestarPicker:Hide()
-		Polestar.Engine.SetGuide(nil)
+		SendaFH.CharState().ui.pickerSelected = "gone"
+		SendaFHPicker:Hide()
+		SendaFH.Engine.SetGuide(nil)
 		uistub.suggest = nil
 		UI.ShowPicker()
 		r.none = { P.detail == nil, D().EmptyTitle:IsShown(), a.Band:IsShown(), D().Load:IsShown() }

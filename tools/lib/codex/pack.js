@@ -1,11 +1,11 @@
 'use strict';
 // Codex JSON (data/forever/codex/*.json, docs/SUITE.md "Data layer") -> the
-// load-on-demand data addon Polestar_Codex, decoded in game by
-// addon/Polestar/Lookup/Codex.lua. Same input gives byte-identical output.
+// load-on-demand data addon SendaFH_Codex, decoded in game by
+// addon/SendaFH/Lookup/Codex.lua. Same input gives byte-identical output.
 //
 //   const { emitPack } = require('./pack');
 //   const files = emitPack(codex, { version: '0.1.0', build: '1.60.1.70338' });
-//   // { 'Polestar_Codex.toc': text, 'Meta.lua': text, 'Items1.lua': text, ... }
+//   // { 'SendaFH_Codex.toc': text, 'Meta.lua': text, 'Items1.lua': text, ... }
 //
 // Every data file is a list of `C.Register(group, names, records, lo, hi)`
 // calls whose arguments are long strings, not table constructors (a client
@@ -56,7 +56,7 @@
 const { header } = require('../generated');
 
 const SCHEMA = 1;
-const ADDON = 'Polestar_Codex';
+const ADDON = 'SendaFH_Codex';
 const CHUNK = 4000;
 
 const ITEM_KINDS = ['item', 'mount', 'pet', 'recipe', 'tabard'];
@@ -322,9 +322,9 @@ const SEARCH_KINDS = ['mount', 'pet', 'item', 'recipe', 'tabard', 'quest', 'npc'
 const HEADER = [
 	header('lua', 'codex build', 'the sources listed in Meta.lua'),
 	'-- Facts (ids, names, levels, coordinates, rates, relations), merged. Decoded by',
-	'-- Polestar/Lookup/Codex.lua.',
+	'-- SendaFH/Lookup/Codex.lua.',
 	'',
-	'local C = Polestar and Polestar.Codex',
+	'local C = SendaFH and SendaFH.Codex',
 	'if not (C and C.Register) then return end',
 	'',
 ];
@@ -367,20 +367,20 @@ function cap(s) {
 function emitToc(version, files) {
 	return [
 		'## Interface: 16001',
-		'## Title: Polestar Codex',
-		'## Notes: Part of Polestar: items, mounts, pets, NPCs, quests and where to get them, dungeons and rares, for Lookup, Dungeons and Rares. Loaded on demand.',
-		'## Author: Polestar',
+		'## Title: SendaFH Codex',
+		'## Notes: Part of SendaFH: items, mounts, pets, NPCs, quests and where to get them, dungeons and rares, for Lookup, Dungeons and Rares. Loaded on demand.',
+		'## Author: SendaFH',
 		`## Version: ${version}`,
 		'## Category: Quests',
 		'## LoadOnDemand: 1',
-		'## Dependencies: Polestar',
+		'## Dependencies: SendaFH',
 		'',
 		...files,
 		'',
 	].join('\n');
 }
 
-// -> { [relativePath]: text } including Polestar_Codex.toc. `extraFiles`
+// -> { [relativePath]: text } including SendaFH_Codex.toc. `extraFiles`
 // ([{ name, text }]) are copied verbatim and load last, in the given order
 // (Journal's Dungeons1.lua).
 function emitPack(codex, { version = '0.0.0', build = null, extraFiles = [] } = {}) {
@@ -404,7 +404,7 @@ function emitPack(codex, { version = '0.0.0', build = null, extraFiles = [] } = 
 	const frames = codex.frames || {};
 	const frameIds = sortedIds(frames);
 	if (frameIds.length) {
-		metaLines.push('-- Era bounds of every map the Codex places points on (f = "e").', 'if Polestar.RegisterMapFrames then', '\tPolestar.RegisterMapFrames({ era = {');
+		metaLines.push('-- Era bounds of every map the Codex places points on (f = "e").', 'if SendaFH.RegisterMapFrames then', '\tSendaFH.RegisterMapFrames({ era = {');
 		for (const id of frameIds) {
 			const f = frames[id];
 			metaLines.push(`\t\t[${id}] = { c = ${num(f.c)}, left = ${num(f.left)}, right = ${num(f.right)}, top = ${num(f.top)}, bottom = ${num(f.bottom)} },`);
@@ -471,10 +471,10 @@ function emitPack(codex, { version = '0.0.0', build = null, extraFiles = [] } = 
 // plus the Codex's own inputs), each with its version and licence.
 function licenseText(meta) {
 	const out = [
-		'Polestar Codex: third-party notices',
+		'SendaFH Codex: third-party notices',
 		'===================================',
 		'',
-		'The data in this folder was generated for Polestar by `codex build` from the',
+		'The data in this folder was generated for SendaFH by `codex build` from the',
 		'sources below: item, NPC, object, quest, zone and instance facts (ids, names,',
 		'levels, coordinates, drop chances, requirements). No text, images or code',
 		'were copied from them; the Dungeons journal is written in our own words.',
@@ -508,13 +508,13 @@ function releaseRefusal(dir) {
 	const fs = require('node:fs');
 	const path = require('node:path');
 	const file = (name) => path.join(dir, name);
-	if (!fs.existsSync(file(`${ADDON}.toc`))) return 'not built (run `node tools/polestar.js codex build`)';
-	if (!fs.existsSync(file('Meta.lua'))) return 'Meta.lua is missing (run `node tools/polestar.js codex build`)';
-	if (!fs.existsSync(file('LICENSE-DATA.txt'))) return 'LICENSE-DATA.txt is missing (rebuild it with `node tools/polestar.js codex build`)';
+	if (!fs.existsSync(file(`${ADDON}.toc`))) return 'not built (run `node tools/sendafh.js codex build`)';
+	if (!fs.existsSync(file('Meta.lua'))) return 'Meta.lua is missing (run `node tools/sendafh.js codex build`)';
+	if (!fs.existsSync(file('LICENSE-DATA.txt'))) return 'LICENSE-DATA.txt is missing (rebuild it with `node tools/sendafh.js codex build`)';
 	const meta = fs.readFileSync(file('Meta.lua'), 'utf8');
-	if (/\blocalExtras = true\b/.test(meta)) return 'it is a --local-extras build (AtlasLoot, RareScanner, DungeonJournal); rebuild it with `node tools/polestar.js codex build`';
+	if (/\blocalExtras = true\b/.test(meta)) return 'it is a --local-extras build (AtlasLoot, RareScanner, DungeonJournal); rebuild it with `node tools/sendafh.js codex build`';
 	const named = [...meta.matchAll(/\bname = "([^"]*)"/g)].map((m) => m[1]).find((n) => LOCAL_ONLY_SOURCES.test(n));
-	if (named) return `its sources include a local-only input (${named}); rebuild it with \`node tools/polestar.js codex build\``;
+	if (named) return `its sources include a local-only input (${named}); rebuild it with \`node tools/sendafh.js codex build\``;
 	return null;
 }
 

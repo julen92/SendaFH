@@ -340,9 +340,9 @@ function chokepoints({ nav, c, aids, lifts = [], geo, areas }) {
 
 const luaStr = (s) => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 
-// { [c]: entries } -> Chokepoints.lua (global PolestarNavChokepoints); `gen`
+// { [c]: entries } -> Chokepoints.lua (global SendaFHNavChokepoints); `gen`
 // is its first line (generated.js header).
-function chokepointsLua(byMap, gen, global = 'PolestarNavChokepoints') {
+function chokepointsLua(byMap, gen, global = 'SendaFHNavChokepoints') {
 	const field = (k, v) => (typeof v === 'number' ? `${k} = ${v}` : typeof v === 'string' ? `${k} = ${luaStr(v)}` : `${k} = { ${v.map((s) => `{ ${Object.entries(s).map(([a, b]) => field(a, b)).join(', ')} }`).join(', ')} }`);
 	const lines = [
 		gen,

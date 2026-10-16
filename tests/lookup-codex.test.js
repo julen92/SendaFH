@@ -1,5 +1,5 @@
 'use strict';
-// The built Codex pack (addon/Polestar_Codex, local: `node tools/polestar.js
+// The built Codex pack (addon/SendaFH_Codex, local: `node tools/sendafh.js
 // codex build`) end to end: searching a mount's name finds it, it has ranked
 // sources, the curated guide that collects it is the one Lookup opens, and the
 // guide Lookup builds from its best source plays to the end in the real engine
@@ -12,10 +12,10 @@ const path = require('node:path');
 const { runAddon, ROOT } = require('./helpers/lua');
 const { SIMULATE, luaValue } = require('../tools/lib/playtest');
 
-const PACK = path.join(ROOT, 'addon', 'Polestar_Codex');
-const TOC = path.join(PACK, 'Polestar_Codex.toc');
+const PACK = path.join(ROOT, 'addon', 'SendaFH_Codex');
+const TOC = path.join(PACK, 'SendaFH_Codex.toc');
 const FRAMES = path.join(ROOT, 'data', 'forever', 'map-frames.json');
-const skip = !fs.existsSync(TOC) || !fs.existsSync(FRAMES) ? 'Codex pack not built (node tools/polestar.js codex build)' : false;
+const skip = !fs.existsSync(TOC) || !fs.existsSync(FRAMES) ? 'Codex pack not built (node tools/sendafh.js codex build)' : false;
 
 function packLua() {
 	const files = fs
@@ -28,7 +28,7 @@ function packLua() {
 	return `do
   local __files, __load = ${list}, C_AddOns.LoadAddOn
   function C_AddOns.LoadAddOn(name)
-    if name ~= "Polestar_Codex" then return __load(name) end
+    if name ~= "SendaFH_Codex" then return __load(name) end
     if not stub.addonsLoaded[name] then
       for _, f in ipairs(__files) do dofile(f) end
       stub.addonsLoaded[name] = true
@@ -62,16 +62,16 @@ ${mapsLua()}
 w.race, w.raceName, w.class, w.className, w.faction = ${luaValue(race)}, ${luaValue(race)}, ${luaValue(cls)}, ${luaValue(cls)}, ${luaValue(faction)}
 w.level = ${level}
 w.moveTo(${at.join(', ')})`,
-		addons: ['Polestar', 'Polestar_Guides'],
+		addons: ['SendaFH', 'SendaFH_Guides'],
 		script: `
 stub.login()
-Polestar.Set("behavior.autoNextGuide", false)
-local results = Polestar.Search.Query(${luaValue(query)})
+SendaFH.Set("behavior.autoNextGuide", false)
+local results = SendaFH.Search.Query(${luaValue(query)})
 local hit
 for _, r in ipairs(results) do
 	if r.kind == ${luaValue(kindOf)} then hit = r; break end
 end
-local rows = hit and Polestar.Lookup.Sources(hit.kind, hit.id) or {}
+local rows = hit and SendaFH.Lookup.Sources(hit.kind, hit.id) or {}
 local types = {}
 for i, r in ipairs(rows) do types[i] = r.type .. (r.available and "" or ("!" .. tostring(r.why))) end
 local mounts = {}
@@ -79,11 +79,11 @@ for _, r in ipairs(results) do
 	if r.kind == "mount" then mounts[#mounts + 1] = { id = r.id, status = r.status or false, curated = r.curated or false } end
 end
 emit({ id = hit and hit.id or false, title = hit and hit.title or false, kinds = #results, types = types, mounts = mounts,
-	curated = hit and Polestar.Lookup.CuratedGuide(hit.kind, hit.id) or false })
+	curated = hit and SendaFH.Lookup.CuratedGuide(hit.kind, hit.id) or false })
 local best
 for i, r in ipairs(rows) do if r.available and r.guideable then best = i; break end end
-local gid, why = Polestar.Lookup.Guide(hit.kind, hit.id, best or 1)
-local g = gid and Polestar.Guides.Get(gid)
+local gid, why = SendaFH.Lookup.Guide(hit.kind, hit.id, best or 1)
+local g = gid and SendaFH.Guides.Get(gid)
 emit({ id = gid or false, why = why or false, steps = g and #g.steps or 0 })
 stub.advance(0.6)
 ${SIMULATE}`,
@@ -136,16 +136,16 @@ test('the built Codex is release-safe, and in game Lookup finds items, mounts an
 	const [out] = runAddon({
 		stubs: ['stub_world.lua'],
 		before: packLua(),
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 stub.login()
-local C = Polestar.Codex
+local C = SendaFH.Codex
 local loaded = C.Load()
 local function first(q, kind)
-	for _, r in ipairs(Polestar.Search.Query(q)) do if r.kind == kind then return r.id end end
+	for _, r in ipairs(SendaFH.Search.Query(q)) do if r.kind == kind then return r.id end end
 	return false
 end
-local D = Polestar.Dungeons
+local D = SendaFH.Dungeons
 D.Load()
 local list, bossed, quested = 0, 0, 0
 for _, d in ipairs(D.List()) do
@@ -188,10 +188,10 @@ ${mapsLua()}
 w.race, w.raceName, w.class, w.className, w.faction = "Gnome", "Gnome", "ROGUE", "ROGUE", "Alliance"
 w.level = 21
 w.moveTo(1433, 26.5, 45.0)`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 stub.login()
-local D = Polestar.Dungeons
+local D = SendaFH.Dungeons
 D.Load()
 local plan = D.PickupPlan("deadmines")
 local take = {}
@@ -223,17 +223,17 @@ ${mapsLua()}
 w.race, w.raceName, w.class, w.className, w.faction = ${luaValue(race)}, ${luaValue(race)}, "MAGE", "MAGE", ${luaValue(faction)}
 w.level = 44
 w.moveTo(${at.join(', ')})`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 stub.login()
-local D = Polestar.Dungeons
+local D = SendaFH.Dungeons
 D.Load()
 local giver
 for _, t in ipairs(D.PickupPlan("zulfarrak").take) do
 	if t.quest.id == 2861 then giver = t.giver end
 end
 local target = D.GiverTarget("zulfarrak", 2861)
-local npc = giver and Polestar.Codex.Npc(giver.id)
+local npc = giver and SendaFH.Codex.Npc(giver.id)
 emit({ giver = giver and giver.name or false, map = giver and giver.map or false, side = npc and npc.faction or false, target = target and target.name or false })`,
 	}).emitted[0];
 }
@@ -259,11 +259,11 @@ ${mapsLua()}
 w.race, w.raceName, w.class, w.className, w.faction = ${luaValue(race)}, ${luaValue(race)}, "WARRIOR", "WARRIOR", ${luaValue(faction)}
 w.level = ${level}
 w.moveTo(${at.join(', ')})`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 stub.login()
-Polestar.Set("behavior.autoNextGuide", false)
-local D = Polestar.Dungeons
+SendaFH.Set("behavior.autoNextGuide", false)
+local D = SendaFH.Dungeons
 D.Load()
 local a
 for _, x in ipairs(D.Attunements(${luaValue(key)})) do if x.id == ${luaValue(id)} then a = x end end
@@ -283,7 +283,7 @@ emit({ quests = quests, accepts = accepts, bare = table.concat(bare, ", "), why 
 if def then
 	D.Attune(${luaValue(key)}, ${luaValue(id)})
 	stub.advance(0.6)
-	SIM_GUIDE = Polestar.Engine.GetGuide()
+	SIM_GUIDE = SendaFH.Engine.GetGuide()
 	${script}
 end`,
 	}).emitted;
@@ -329,7 +329,7 @@ test("the maintainer's level 20 Undead in the Undercity: Molten Core's guide sen
 		level: 20,
 		at: [1458, 66, 44],
 		script: `
-local E = Polestar.Engine
+local E = SendaFH.Engine
 local v = E.GetStepView(1)
 local goals = {}
 for i, g in ipairs(v.goals) do goals[i] = { t = g.t, text = g.text, detail = g.detail or false, at = g.map and { g.map, g.x, g.y } or false } end
@@ -359,10 +359,10 @@ w.race, w.raceName, w.class, w.className, w.faction = ${luaValue(race)}, ${luaVa
 w.level = ${level}
 w.moveTo(${at.join(', ')})
 for _, q in ipairs(${luaValue(ready)}) do w.onQuest(q, {}) end`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 stub.login()
-local D = Polestar.Dungeons
+local D = SendaFH.Dungeons
 D.Load()
 local ids = function(list, f) local o = {} for i, x in ipairs(list or {}) do o[i] = f(x) end return o end
 local plan = D.PickupPlan(${luaValue(key)})

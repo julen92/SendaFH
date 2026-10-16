@@ -1,18 +1,18 @@
 'use strict';
-// `gear build`: the inputs of Polestar's upgrade advice -> the addon's data.
+// `gear build`: the inputs of SendaFH's upgrade advice -> the addon's data.
 //
-// Committed (MIT material and Polestar's own numbers):
-//   addon/Polestar_ItemDB/Forever.lua      ForeverLevelingBiS: Forever item stats
+// Committed (MIT material and SendaFH's own numbers):
+//   addon/SendaFH_ItemDB/Forever.lua      ForeverLevelingBiS: Forever item stats
 //                                          over the Era table, quest reward choices
-//   addon/Polestar_ItemDB/*.toc            lists Forever.lua after Items.lua
-//   addon/Polestar_ItemDB/LICENSE-DATA.txt its MIT notice
-//   addon/Polestar/Gear/SpecData.lua       weight bands (Polestar + wowsims),
+//   addon/SendaFH_ItemDB/*.toc            lists Forever.lua after Items.lua
+//   addon/SendaFH_ItemDB/LICENSE-DATA.txt its MIT notice
+//   addon/SendaFH/Gear/SpecData.lua       weight bands (SendaFH + wowsims),
 //                                          racials (ForeverLevelingBiS)
-//   addon/Polestar/Gear/LICENSE-DATA.txt   the MIT notices of both
+//   addon/SendaFH/Gear/LICENSE-DATA.txt   the MIT notices of both
 // Local: data/forever/gear/report.json (counts and provenance of this run).
 //
 // ForeverLevelingBiS is required; without the wowsims cache the bands are
-// Polestar's own weights, and the report says so.
+// SendaFH's own weights, and the report says so.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -40,7 +40,7 @@ async function buildGear({ addons, root = ROOT, wowsimsCache, log = () => {} } =
 	const eraFile = path.join(itemDir, 'Items.lua');
 	if (!fs.existsSync(eraFile)) throw new Error(`${path.relative(root, eraFile)} missing: run \`itemdb build\` first`);
 
-	// 1. ForeverLevelingBiS -> Polestar_ItemDB/Forever.lua
+	// 1. ForeverLevelingBiS -> SendaFH_ItemDB/Forever.lua
 	const addonsRoot = resolveAddonsDir(addons);
 	const flb = readForeverLevelingBiS({ addons });
 	const pack = buildForeverPack(flb, fs.readFileSync(eraFile, 'utf8'));
@@ -55,19 +55,19 @@ async function buildGear({ addons, root = ROOT, wowsimsCache, log = () => {} } =
 	try {
 		wowsims = await require('../consume/wowsims').readWowsims({ cacheDir: simCache });
 	} catch (err) {
-		gaps.push(`wowsims: ${err.message}; the bands are Polestar's own weights`);
+		gaps.push(`wowsims: ${err.message}; the bands are SendaFH's own weights`);
 		log(`wowsims: not used (${err.message})`);
 	}
 
 	// 3. SpecData.lua and its notices
 	const { bands, counts: bandCounts } = weightBands(wowsims);
 	const specData = emitSpecData({ bands, racials: racials(flb), wowsimsMeta: wowsims && wowsims.meta, flbMeta: flb.meta });
-	writeAtomic(path.join(root, 'addon', 'Polestar', 'Gear', 'SpecData.lua'), specData);
+	writeAtomic(path.join(root, 'addon', 'SendaFH', 'Gear', 'SpecData.lua'), specData);
 	const parts = [notice('SpecData.lua: racial gear traits derived from ForeverLevelingBiS by Thunder:', flbLicence)];
 	if (wowsims && fs.existsSync(path.join(simCache, WOWSIMS_LICENCE))) {
 		parts.push(notice('SpecData.lua: stat weights derived from wowsims (https://github.com/wowsims):', fs.readFileSync(path.join(simCache, WOWSIMS_LICENCE), 'utf8')));
 	}
-	writeAtomic(path.join(root, 'addon', 'Polestar', 'Gear', 'LICENSE-DATA.txt'), parts.join('\n'));
+	writeAtomic(path.join(root, 'addon', 'SendaFH', 'Gear', 'LICENSE-DATA.txt'), parts.join('\n'));
 
 	const report = {
 		builtAt: new Date().toISOString(),

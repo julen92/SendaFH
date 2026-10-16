@@ -1,5 +1,5 @@
 'use strict';
-// "Pick up the quests" for a dungeon (addon/Polestar/Dungeons/Pickup.lua over
+// "Pick up the quests" for a dungeon (addon/SendaFH/Dungeons/Pickup.lua over
 // Lookup's guide machinery): which of a page's quests this character can take
 // before the run, their open prerequisites first, the givers on a travel route
 // from where the player stands, the entrance last; the guide opens in a new
@@ -28,7 +28,7 @@ const { SIMULATE, luaValue } = require('../tools/lib/playtest');
 const { buildJournal, emitJournal } = require('../tools/lib/codex/journal');
 
 const { codex, inputs } = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'codex', 'dungeon-pickup.json'), 'utf8'));
-const ADDON = { name: 'Polestar', files: ['Core/Core.xml', 'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml'] };
+const ADDON = { name: 'SendaFH', files: ['Core/Core.xml', 'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml'] };
 const KEY = 'shadowfang-keep';
 const GID = `lookup/pickup/${KEY}`;
 const UNDERCITY = [1458, 66, 44];
@@ -58,7 +58,7 @@ local function describe(g)
 end
 local function tabIds()
 	local ids = {}
-	for i, t in ipairs(Polestar.Engine.GetTabs()) do ids[i] = t.guideId end
+	for i, t in ipairs(SendaFH.Engine.GetTabs()) do ids[i] = t.guideId end
 	return ids
 end
 `;
@@ -76,9 +76,9 @@ w.complete(${luaValue(done)})
 for _, q in ipairs(${luaValue(log)}) do w.onQuest(q, { 1 }) end
 for _, q in ipairs(${luaValue(ready)}) do w.onQuest(q, {}) end`,
 		addons: [ADDON],
-		saved: saved ? { Polestar: saved } : undefined,
+		saved: saved ? { SendaFH: saved } : undefined,
 		login: true,
-		script: `${DESCRIBE}\nlocal D = Polestar.Dungeons\n${script}`,
+		script: `${DESCRIBE}\nlocal D = SendaFH.Dungeons\n${script}`,
 	}).emitted;
 }
 
@@ -110,7 +110,7 @@ emit({ take = take, carried = carried, title = def.title, steps = describe(def),
 	assert.deepEqual(out.steps, FROM_UNDERCITY);
 	assert.equal(out.note, 'In your log already: The Book of Ur');
 	assert.deepEqual(out.entrance, [1421, 44.8, 67.8, 'Enter Shadowfang Keep']);
-	assert.equal(out.after, "After the run: open this dungeon's page (/polestar dungeons Shadowfang Keep) and choose Hand in the quests.");
+	assert.equal(out.after, "After the run: open this dungeon's page (/sendafh dungeons Shadowfang Keep) and choose Hand in the quests.");
 });
 
 test('the route starts where the player stands; another class gets no class quest', () => {
@@ -160,15 +160,15 @@ emit({ take = g, target = p and p.name or false })`;
 
 test('PickUp opens the guide in a new tab and it plays to the end; the giver link points at the first prerequisite still to do', () => {
 	const [opened, links, out] = run(`
-Polestar.Set("behavior.autoNextGuide", false)
-local before = #Polestar.Engine.GetTabs()
+SendaFH.Set("behavior.autoNextGuide", false)
+local before = #SendaFH.Engine.GetTabs()
 local function target(id)
 	local p, label, first, turnIn = D.GiverTarget("${KEY}", id)
 	return { p and p.map or false, label or false, first or false, turnIn or false }
 end
 local links = { arugal = target(1014), orb = target(1740) }
 local id, why = D.PickUp("${KEY}")
-emit({ id = id or false, why = why or false, tabs = tabIds(), before = before, active = Polestar.Engine.GetGuide() and Polestar.Engine.GetGuide().id or false })
+emit({ id = id or false, why = why or false, tabs = tabIds(), before = before, active = SendaFH.Engine.GetGuide() and SendaFH.Engine.GetGuide().id or false })
 stub.world.accept(1010, { 1 })
 links.arugalAfter = target(1014)
 stub.world.abandon(1010)
@@ -190,11 +190,11 @@ ${SIMULATE}`);
 test('the tab survives /reload: rebuilt before the Engine reopens it, in the same route without a position', () => {
 	const [first] = run(`
 D.PickUp("${KEY}")
-local s = Polestar.CharState()
-emit({ tabs = s.tabs, order = s.dungeonPickup and s.dungeonPickup["${KEY}"] or false, steps = describe(Polestar.Guides.Get("${GID}")) })`);
+local s = SendaFH.CharState()
+emit({ tabs = s.tabs, order = s.dungeonPickup and s.dungeonPickup["${KEY}"] or false, steps = describe(SendaFH.Guides.Get("${GID}")) })`);
 	assert.ok(Array.isArray(first.order) && first.order.length > 0, 'the route is kept');
-	const saved = `PolestarCharDB = { schema = 1, tabs = ${luaValue(first.tabs)}, activeTab = ${first.tabs.length}, dungeonPickup = { [${JSON.stringify(KEY)}] = ${luaValue(first.order)} } }`;
-	const [after] = run(`emit({ tabs = tabIds(), active = Polestar.Engine.GetGuide() and Polestar.Engine.GetGuide().id or false, steps = describe(Polestar.Guides.Get("${GID}")) })`,
+	const saved = `SendaFHCharDB = { schema = 1, tabs = ${luaValue(first.tabs)}, activeTab = ${first.tabs.length}, dungeonPickup = { [${JSON.stringify(KEY)}] = ${luaValue(first.order)} } }`;
+	const [after] = run(`emit({ tabs = tabIds(), active = SendaFH.Engine.GetGuide() and SendaFH.Engine.GetGuide().id or false, steps = describe(SendaFH.Guides.Get("${GID}")) })`,
 		{ at: null, saved });
 	assert.deepEqual(after.tabs, first.tabs);
 	assert.equal(after.active, GID);
@@ -206,7 +206,7 @@ test('nothing left to pick up: PickUp says so and builds no guide', () => {
 	const [out] = run(`
 local before = tabIds()
 local id, why = D.PickUp("${KEY}")
-emit({ id = id or false, why = why or false, guide = Polestar.Guides.Get("${GID}") ~= nil, same = #tabIds() == #before, carried = #D.PickupPlan("${KEY}").carried })`,
+emit({ id = id or false, why = why or false, guide = SendaFH.Guides.Get("${GID}") ~= nil, same = #tabIds() == #before, carried = #D.PickupPlan("${KEY}").carried })`,
 	{ done: [1098, 1740, 1014, 1016], log: [1013] });
 	assert.deepEqual(out, { id: false, why: 'nothing', guide: false, same: true, carried: 1 });
 });
@@ -221,7 +221,7 @@ test('a follow-up of a dungeon quest is picked up once that quest is done', () =
 const ZONE_TRAVEL = `
 local ZONES = { [1458] = "uc", [1421] = "sp", [1413] = "b" }
 local COST = { ["uc-sp"] = 120, ["uc-b"] = 250, ["sp-b"] = 370 }
-Polestar.TravelCost = function(a, b)
+SendaFH.TravelCost = function(a, b)
 	local za, zb = ZONES[a.map], ZONES[b.map]
 	if not (za and zb) then return nil end
 	if za == zb then return 20 + math.abs(a.x - b.x) + math.abs(a.y - b.y) end
@@ -319,7 +319,7 @@ test('after the run: a follow-up from a giver next door is a stop of its own; on
 local function follow() local o = {} for i, f in ipairs(D.HandinFollowUps(D.HandinPlan("${KEY}"))) do o[i] = f.rec.id end return o end
 emit(follow())
 -- Held, so the Codex keeps this record while its giver is moved.
-local dalar = Polestar.Codex.Quest(1016)
+local dalar = SendaFH.Codex.Quest(1016)
 dalar.start.npc = { 1952 } -- High Executor Hadrec, next to Dalar
 emit(describe(D.HandinGuide("${KEY}")))
 dalar.start.npc = { 6247 } -- Doan Karhan, in the Barrens
@@ -341,7 +341,7 @@ test('nothing to hand in: HandIn says so and builds no guide; the text names wha
 	const [out] = run(`
 local before = tabIds()
 local id, why = D.HandIn("${KEY}")
-emit({ id = id or false, why = why or false, guide = Polestar.Guides.Get("lookup/handin/${KEY}") ~= nil, same = #tabIds() == #before,
+emit({ id = id or false, why = why or false, guide = SendaFH.Guides.Get("lookup/handin/${KEY}") ~= nil, same = #tabIds() == #before,
 	text = D.HandinText(D.HandinPlan("${KEY}")) })
 stub.world.abandon(1013)
 emit(D.HandinText(D.HandinPlan("${KEY}")))`);
@@ -350,17 +350,17 @@ emit(D.HandinText(D.HandinPlan("${KEY}")))`);
 
 test('HandIn takes the place of the pick-up guide once that one is at the entrance, comes back after /reload, and plays to the end', () => {
 	const [first, out] = run(`
-Polestar.Set("behavior.autoNextGuide", false)
+SendaFH.Set("behavior.autoNextGuide", false)
 -- Return to Dalar is all that is left to pick up: its step, then the entrance.
 D.PickUp("${KEY}")
-Polestar.Engine.OpenTab("lookup/pickup/${KEY}")
+SendaFH.Engine.OpenTab("lookup/pickup/${KEY}")
 local early = { D.HandIn("${KEY}") }
 local kept = tabIds()
 stub.world.accept(1016, { 1 })
 stub.advance(0.6)
 local id = D.HandIn("${KEY}")
-local s = Polestar.CharState()
-emit({ early = early[1] or false, kept = kept, id = id or false, tabs = tabIds(), active = Polestar.Engine.GetGuide().id,
+local s = SendaFH.CharState()
+emit({ early = early[1] or false, kept = kept, id = id or false, tabs = tabIds(), active = SendaFH.Engine.GetGuide().id,
 	order = s.dungeonHandin and s.dungeonHandin["${KEY}"] or false, saved = s.tabs })
 stub.advance(0.6)
 ${SIMULATE}`, { done: [1098, 1740, 1011, 1014], log: [], ready: [1013] });
@@ -373,8 +373,8 @@ ${SIMULATE}`, { done: [1098, 1740, 1011, 1014], log: [], ready: [1013] });
 	assert.ok(!out.stuck, `stuck: ${JSON.stringify(out.stuck)}`);
 	assert.equal(out.done, true);
 	assert.deepEqual(out.missing, {});
-	const saved = `PolestarCharDB = { schema = 1, tabs = ${luaValue(first.saved)}, activeTab = 1, dungeonHandin = { [${JSON.stringify(KEY)}] = ${luaValue(first.order)} } }`;
-	const [after] = run(`emit({ tabs = tabIds(), steps = describe(Polestar.Guides.Get("lookup/handin/${KEY}")) })`,
+	const saved = `SendaFHCharDB = { schema = 1, tabs = ${luaValue(first.saved)}, activeTab = 1, dungeonHandin = { [${JSON.stringify(KEY)}] = ${luaValue(first.order)} } }`;
+	const [after] = run(`emit({ tabs = tabIds(), steps = describe(SendaFH.Guides.Get("lookup/handin/${KEY}")) })`,
 		{ at: null, saved, done: [1098, 1740, 1011, 1014], log: [], ready: [1013] });
 	assert.deepEqual(after, { tabs: ['lookup/handin/shadowfang-keep'], steps: [{ title: "Keeper Bel'dugur", goals: 'turnin:1013' }] });
 });

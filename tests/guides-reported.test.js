@@ -7,7 +7,7 @@
 // rule (tests/lint-timed.test.js); the Fargodeep Mine and Blackfathom Deeps
 // mouths are in tests/guides-caves.test.js.
 //
-// Needs data/forever (node tools/polestar.js data build); skips without it.
+// Needs data/forever (node tools/sendafh.js data build); skips without it.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -208,19 +208,19 @@ function greySkippedInDarkshore(level) {
 	const { guides } = compileSources(files.map((file) => ({ file, text: fs.readFileSync(file, 'utf8') })), data);
 	const { dir, scripts } = writeTestPack(guides, data);
 	try {
-		const loads = scripts.map((f) => `assert(loadfile(${JSON.stringify(f)}))("Polestar_Guides", ns)`).join('\n');
+		const loads = scripts.map((f) => `assert(loadfile(${JSON.stringify(f)}))("SendaFH_Guides", ns)`).join('\n');
 		const { emitted } = runAddon({
 			stubs: ['stub_world.lua'],
 			before: `local w = stub.world
 				w.race, w.raceName, w.faction, w.class, w.className = "Human", "Human", "Alliance", "WARRIOR", "Warrior"
 				w.level = ${level}`,
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
-			saved: { Polestar: 'PolestarDB = { schema = 1, settings = { behavior = { skipGrey = true, autoSelectGuide = false } } }' },
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
+			saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { behavior = { skipGrey = true, autoSelectGuide = false } } }' },
 			script: `do local ns = {}
 				${loads}
 				end
 				stub.login(); stub.advance(0.5)
-				local E = Polestar.Engine
+				local E = SendaFH.Engine
 				E.SetGuide("forever/alliance/03-darkshore")
 				local out = {}
 				for i = 1, #E.GetGuide().steps do
@@ -273,20 +273,20 @@ function engineRun(guide, who, { before = '', after = '', script }) {
 	const { guides } = compileSources([{ file, text: fs.readFileSync(file, 'utf8') }], data);
 	const { dir, scripts } = writeTestPack(guides, data);
 	try {
-		const loads = scripts.map((f) => `assert(loadfile(${JSON.stringify(f)}))("Polestar_Guides", ns)`).join('\n');
+		const loads = scripts.map((f) => `assert(loadfile(${JSON.stringify(f)}))("SendaFH_Guides", ns)`).join('\n');
 		const { emitted } = runAddon({
 			stubs: ['stub_world.lua'],
 			before: `local w = stub.world
 				w.race, w.raceName, w.faction, w.class, w.className = "${who.race}", "${who.raceName}", "${who.faction}", "${who.cls}", "${who.className}"
 				w.level = ${who.level}
 				${before}`,
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
-			saved: { Polestar: 'PolestarDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }' },
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
+			saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }' },
 			script: `do local ns = {}
 				${loads}
 				end
 				stub.login(); stub.advance(0.5)
-				local E = Polestar.Engine
+				local E = SendaFH.Engine
 				E.SetGuide("${guide.replace(/\.guide$/, '')}")
 				${after}
 				stub.advance(0.5)

@@ -3,8 +3,8 @@
 // Forever client's map tables (areas.js), data/forever (zones, map frames,
 // flight masters) and the zone order in spec.js:
 //
-//   node tools/polestar.js exploration build    # rewrite guides/forever/exploration/*.guide
-//   node tools/polestar.js exploration check    # exit 1 when a guide is out of date
+//   node tools/sendafh.js exploration build    # rewrite guides/forever/exploration/*.guide
+//   node tools/sendafh.js exploration check    # exit 1 when a guide is out of date
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -20,7 +20,7 @@ const FACTIONS = ['Alliance', 'Horde'];
 
 function readJson(dir, name) {
 	const file = path.join(dir, `${name}.json`);
-	if (!fs.existsSync(file)) throw new Error(`${path.relative(process.cwd(), file)} missing (node tools/polestar.js data build / travel build)`);
+	if (!fs.existsSync(file)) throw new Error(`${path.relative(process.cwd(), file)} missing (node tools/sendafh.js data build / travel build)`);
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 

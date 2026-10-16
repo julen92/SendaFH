@@ -1,12 +1,12 @@
 -- Client pieces the Quests module needs on top of wow_stub.lua and
 -- stub_world.lua (load both first): quest log enumeration, the bulk
 -- completed-quest call, TooltipDataProcessor, nameplates, secret values,
--- LoadAddOn for the load-on-demand Polestar_QuestDB, and a contract-faithful
--- fake of Polestar.Pins (docs/ARCHITECTURE.md, "Pins").
+-- LoadAddOn for the load-on-demand SendaFH_QuestDB, and a contract-faithful
+-- fake of SendaFH.Pins (docs/ARCHITECTURE.md, "Pins").
 --
 --   local sq = stub.quests
---   sq.dbFiles = { "/abs/Quests.lua", ... }   -- files LoadAddOn("Polestar_QuestDB") runs
---   sq.installPins()                          -- after the addon loaded: Polestar.Pins = fake
+--   sq.dbFiles = { "/abs/Quests.lua", ... }   -- files LoadAddOn("SendaFH_QuestDB") runs
+--   sq.installPins()                          -- after the addon loaded: SendaFH.Pins = fake
 --   sq.pins.layers[layer] -> { pins = {...}, opts = {...} } ; sq.pins.calls -> { { "SetLayer", layer, n }, ... }
 --   sq.hoverUnit(npcID [, secret])            -- run the Unit tooltip post-calls on GameTooltip
 --   sq.hoverItem(itemID); sq.hoverObject(objectID, name)
@@ -68,7 +68,7 @@ end
 
 local baseLoad = C_AddOns.LoadAddOn
 function C_AddOns.LoadAddOn(name)
-	if name ~= "Polestar_QuestDB" then return baseLoad(name) end
+	if name ~= "SendaFH_QuestDB" then return baseLoad(name) end
 	sq.loadCalls = sq.loadCalls + 1
 	if stub.addonsLoaded[name] then return true end
 	if #sq.dbFiles == 0 then return false, "MISSING" end
@@ -148,7 +148,7 @@ function sq.removePlate(unit)
 end
 
 ---------------------------------------------------------------------------
--- Polestar.Pins fake (contract: SetLayer / ClearLayer / SetLayerVisible)
+-- SendaFH.Pins fake (contract: SetLayer / ClearLayer / SetLayerVisible)
 ---------------------------------------------------------------------------
 
 local pins = { layers = {}, calls = {}, visible = {} }
@@ -178,7 +178,7 @@ function pins.SetLayerVisible(layer, visible)
 end
 
 function sq.installPins()
-	Polestar.Pins = pins
+	SendaFH.Pins = pins
 end
 
 -- Tooltip lines a pin shows.

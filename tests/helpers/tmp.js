@@ -11,7 +11,7 @@ process.on('exit', () => {
 	for (const d of made) fs.rmSync(d, { recursive: true, force: true });
 });
 
-function tmpdir(prefix = 'polestar-test-') {
+function tmpdir(prefix = 'sendafh-test-') {
 	const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 	made.push(d);
 	return d;

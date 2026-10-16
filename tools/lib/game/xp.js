@@ -75,7 +75,7 @@ async function loadQuestXp({ sourcesDir, build = QUESTXP_BUILD, offline = false,
 		if (offline) throw new Error(`--offline: missing cached ${file}`);
 		const url = tableUrl('QuestXP', build);
 		log(`fetching ${url}`);
-		const res = await fetchImpl(url, { headers: { 'user-agent': 'polestar-data-build' } });
+		const res = await fetchImpl(url, { headers: { 'user-agent': 'sendafh-data-build' } });
 		if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 		const text = await res.text();
 		parseQuestXp(text);

@@ -1,3 +1,0 @@
-local ADDON = ...
-
-Polestar.RegisterPack({ addon = ADDON, id = "acceptance-stray", format = 1, title = "Acceptance Stray", author = "Bo", version = "0.1.0", license = "MIT" })

@@ -11,16 +11,16 @@ const { runAddon } = require('./helpers/lua');
 const FILES = ['Core/Core.xml', 'Quests/Party.lua'];
 
 // Both switches start off; most tests play a player who turned them on.
-const ON = 'PolestarDB = { schema = 1, settings = { party = { share = true, show = true } } }';
+const ON = 'SendaFHDB = { schema = 1, settings = { party = { share = true, show = true } } }';
 
 function run(script, { stubs = ['stub_world.lua'], files = FILES, login = false, before = '', saved = ON } = {}) {
 	return runAddon({
 		stubs,
 		before,
-		saved: saved ? { Polestar: saved } : undefined,
-		addons: [{ name: 'Polestar', files }],
+		saved: saved ? { SendaFH: saved } : undefined,
+		addons: [{ name: 'SendaFH', files }],
 		login,
-		script: `local P, w = Polestar.Party, stub.world\n${script}`,
+		script: `local P, w = SendaFH.Party, stub.world\n${script}`,
 	}).emitted;
 }
 
@@ -111,7 +111,7 @@ emit(p.sent[#p.sent].chatType .. " " .. p.sent[#p.sent].prefix)`, LIVE);
 	// Solo before, so we knew nobody's progress: the snapshot asks for theirs.
 	assert.deepEqual(before, ['1R|33:0/8']);
 	assert.deepEqual(after, ['1R|33:0/8', '1|33:3/8']);
-	assert.equal(chat, 'PARTY Polestar');
+	assert.equal(chat, 'PARTY SendaFH');
 });
 
 test('party: unchanged quests are not sent again', () => {
@@ -173,7 +173,7 @@ w.progress(33, 1, 3)
 stub.advance(10)
 emit(#p.sent)
 p.disband()
-Polestar.Set("party.share", false)
+SendaFH.Set("party.share", false)
 p.join("Ben")
 w.progress(33, 1, 4)
 stub.advance(10)
@@ -213,8 +213,8 @@ local function registered()
 	return out
 end
 emit(registered())
-Polestar.Set("party.share", false)
-Polestar.Set("party.show", false)
+SendaFH.Set("party.share", false)
+SendaFH.Set("party.show", false)
 emit(registered())`, LIVE);
 	assert.ok(on.includes('CHAT_MSG_ADDON') && on.includes('GROUP_ROSTER_UPDATE'));
 	assert.deepEqual(off.filter((e) => e !== 'QUEST_LOG_UPDATE'), []);
@@ -304,7 +304,7 @@ emit(members())`, LIVE);
 
 test('party: with showing off, incoming progress is ignored', () => {
 	const [got] = run(`${SENT}
-Polestar.Set("party.show", false)
+SendaFH.Set("party.show", false)
 p.join("Ana")
 p.receive("Ana-TestRealm", "1|33:1/8")
 emit(#P.Members())`, LIVE);
@@ -314,7 +314,7 @@ emit(#P.Members())`, LIVE);
 test('party: a burst of messages refreshes the guide once', () => {
 	const [fires] = run(`${SENT}
 local fires = 0
-Polestar.On("PARTY_PROGRESS", function() fires = fires + 1 end)
+SendaFH.On("PARTY_PROGRESS", function() fires = fires + 1 end)
 p.join("Ana")
 for i = 1, 5 do p.receive("Ana-TestRealm", "1|33:" .. i .. "/8"); stub.advance(0.02) end
 stub.advance(1)
@@ -358,7 +358,7 @@ p.join("Ana")
 p.receive("Ana-TestRealm", "1|60:1/4")
 emit(P.Line({ t = "kill", quest = 33, oi = 1, status = "active" }) == nil)
 p.receive("Ana-TestRealm", "1|33:1/8")
-Polestar.Set("party.show", false)
+SendaFH.Set("party.show", false)
 emit(P.Line({ t = "kill", quest = 33, oi = 1, status = "active" }) == nil)`, SHOWN);
 	assert.deepEqual([other, off], [true, true]);
 });
@@ -401,19 +401,19 @@ test('party: the goal\'s grey line carries the party part', () => {
 	const [sub] = run(`${SENT}
 p.join("Ana")
 p.receive("Ana-TestRealm", "1|33:5/8")
-emit(Polestar.UI.GoalSubline({ t = "kill", quest = 33, oi = 1, status = "active" }))`, SHOWN);
+emit(SendaFH.UI.GoalSubline({ t = "kill", quest = 33, oi = 1, status = "active" }))`, SHOWN);
 	assert.equal(sub, 'Ana 5/8');
 });
 
 test('party: the Questing page has the two party switches, both off until turned on', () => {
 	const [keys, share, show] = run(`
 local keys = {}
-Polestar.Widgets.OnOptionsRegistered(function(spec)
+SendaFH.Widgets.OnOptionsRegistered(function(spec)
 	for _, c in ipairs(spec.controls) do
 		if c.key and c.key:sub(1, 6) == "party." then keys[#keys + 1] = spec.page .. "/" .. c.key end
 	end
 end)
-emit(keys); emit(Polestar.Get("party.share")); emit(Polestar.Get("party.show"))`, { ...SHOWN, saved: null });
+emit(keys); emit(SendaFH.Get("party.share")); emit(SendaFH.Get("party.show"))`, { ...SHOWN, saved: null });
 	assert.deepEqual(keys, ['Questing/party.share', 'Questing/party.show']);
 	assert.deepEqual([share, show], [false, false]);
 });
@@ -504,17 +504,17 @@ w.onQuest(33, { 8 })
 p.join("Ana")
 stub.advance(6)
 p.sent = {}
-Polestar.Set("party.share", false)
+SendaFH.Set("party.share", false)
 w.progress(33, 1, 2)
 stub.advance(10)
 emit(texts())
 p.sent = {}
-Polestar.Set("party.share", true)
+SendaFH.Set("party.share", true)
 stub.advance(6)
 emit(texts())
 p.sent = {}
-Polestar.Set("party.show", false)
-Polestar.Set("party.show", true)
+SendaFH.Set("party.show", false)
+SendaFH.Set("party.show", true)
 stub.advance(6)
 emit(texts())`, LIVE);
 	assert.deepEqual(off, ['1S|']);
@@ -526,7 +526,7 @@ test('party: turning sharing off before anything went out sends nothing', () => 
 	const [sent] = run(`${SENT}
 w.onQuest(33, { 8 })
 p.join("Ana")
-Polestar.Set("party.share", false)
+SendaFH.Set("party.share", false)
 stub.advance(10)
 emit(texts())`, LIVE);
 	// No empty snapshot: the party has nothing of ours to forget.
@@ -539,9 +539,9 @@ w.onQuest(33, { 8 })
 p.join("Ana")
 stub.advance(6)
 p.sent = {}
-Polestar.Set("party.show", false)
-Polestar.Set("party.show", true)
-Polestar.Set("party.share", false)
+SendaFH.Set("party.show", false)
+SendaFH.Set("party.show", true)
+SendaFH.Set("party.share", false)
 stub.advance(10)
 emit(texts())`, LIVE);
 	assert.deepEqual(sent, ['1S|', '1Q|']);
@@ -552,7 +552,7 @@ test('party: sharing turned off right after a reload in a party clears what the 
 p.members = { { name = "Ana", online = true } }
 w.onQuest(33, { 8 })
 stub.login()
-Polestar.Set("party.share", false)
+SendaFH.Set("party.share", false)
 stub.advance(10)
 emit(texts())`, { stubs: LIVE.stubs, login: false });
 	assert.deepEqual(sent, ['1S|', '1Q|']);
@@ -560,7 +560,7 @@ emit(texts())`, { stubs: LIVE.stubs, login: false });
 
 test('party: showing without sharing asks for the party\'s progress and sends none of yours', () => {
 	const [asked, kept, answered] = run(`${SENT}${MEMBERS}
-Polestar.Set("party.share", false)
+SendaFH.Set("party.share", false)
 w.onQuest(33, { 8 })
 p.join("Ana")
 stub.advance(6)
@@ -570,7 +570,7 @@ w.progress(33, 1, 1)
 stub.advance(3)
 emit({ texts(), members() })
 p.sent = {}
-Polestar.Set("party.share", true)
+SendaFH.Set("party.share", true)
 stub.advance(6)
 p.sent = {}
 stub.advance(5)
@@ -586,7 +586,7 @@ emit({ texts(), members() })`, LIVE);
 
 test('party: a refused bare request is asked again when a member\'s quest log changes', () => {
 	const [refused, again, once] = run(`${SENT}
-Polestar.Set("party.share", false)
+SendaFH.Set("party.share", false)
 p.result = Enum.SendAddonMessageResult.AddonMessageThrottle
 p.join("Ana")
 stub.advance(6)
@@ -648,7 +648,7 @@ emit(P.Line({ t = "kill", quest = 33, oi = 1, status = "active" }))`, SHOWN);
 test('party: a member\'s quest log changing, or someone joining, refreshes the guide', () => {
 	const [fires] = run(`${SENT}
 local fires = 0
-Polestar.On("PARTY_PROGRESS", function() fires = fires + 1 end)
+SendaFH.On("PARTY_PROGRESS", function() fires = fires + 1 end)
 p.join("Ben")
 stub.advance(1)
 p.questLogChanged("Ben")

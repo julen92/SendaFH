@@ -71,13 +71,13 @@ function issueMessage({ repo, issue, action, owner, comments }) {
 		content += `\nThanks for the report! (${link})`;
 		return { role: 'wontfix', locked: true, content };
 	}
-	return { role: 'fixed', locked: true, content: `${ping}This is fixed and will ship in the next Polestar update. Thanks for the report! (${link})` };
+	return { role: 'fixed', locked: true, content: `${ping}This is fixed and will ship in the next SendaFH update. Thanks for the report! (${link})` };
 }
 
 function releaseMessage({ repo, issue, release, owner }) {
 	const name = release.name || release.tag_name;
 	const ping = owner ? `<@${owner}> ` : '';
-	return `${ping}The fix is out in **${name}**: update Polestar to get it. ([release notes](<${release.html_url}>), ${issueLink(repo, issue.number)})`;
+	return `${ping}The fix is out in **${name}**: update SendaFH to get it. ([release notes](<${release.html_url}>), ${issueLink(repo, issue.number)})`;
 }
 
 // The thread an issue was filed from, or null (no marker, deleted, or not

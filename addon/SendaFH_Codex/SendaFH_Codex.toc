@@ -1,0 +1,35 @@
+## Interface: 16001
+## Title: SendaFH | Códice
+## Notes: Buscador, mazmorras, raros y fuentes de objetos. Datos de la nueva versión de Polestar.
+## Author: Polestar
+## Version: 0.5.0-beta.1
+## Category: Quests
+## LoadOnDemand: 1
+## Dependencies: SendaFH
+
+Meta.lua
+Skills1.lua
+Items1.lua
+Items2.lua
+Items3.lua
+Items4.lua
+Items5.lua
+Mounts1.lua
+Pets1.lua
+Recipes1.lua
+Tabards1.lua
+Npcs1.lua
+Npcs2.lua
+Npcs3.lua
+Rares1.lua
+Roles1.lua
+Objects1.lua
+Treasures1.lua
+Quests1.lua
+Quests2.lua
+Instances1.lua
+Zones1.lua
+Factions1.lua
+Spells1.lua
+Index.lua
+Dungeons1.lua

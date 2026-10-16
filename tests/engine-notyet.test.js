@@ -25,7 +25,7 @@ w.race, w.faction, w.class, w.className, w.level = "Orc", "Horde", "SHAMAN", "Sh
 // taken now. Barrens: a leveling guide shaped like Call of Water.
 const GUIDES = `
 local function reg(id, title, category, steps)
-	assert(Polestar.RegisterGuide({ id = id, pack = "test", title = title, category = category, minLevel = 20, maxLevel = 23, steps = steps }))
+	assert(SendaFH.RegisterGuide({ id = id, pack = "test", title = title, category = category, minLevel = 20, maxLevel = 23, steps = steps }))
 end
 reg("test/water", "Call of Water", "Class", {
 	{ title = "Searn Firewarder", goals = { { t = "accept", quest = 1528, title = "Call of Water", npc = 5892, npcName = "Searn Firewarder", minLevel = 20, map = 1454, x = 38, y = 36 } } },
@@ -59,12 +59,12 @@ function run(script) {
 	return runAddon({
 		stubs: ['stub_world.lua'],
 		before: WORLD,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
 ${GUIDES}
-			E, w = Polestar.Engine, stub.world
-			local p = Polestar.UI.GuideFrame.parts
+			E, w = SendaFH.Engine, stub.world
+			local p = SendaFH.UI.GuideFrame.parts
 			function shown()
 				local wp = E.GetWaypoint()
 				return { step = E.GetStepIndex() or false, notice = p.empty:IsShown() and p.empty.Title:GetText() or false,
@@ -73,7 +73,7 @@ ${GUIDES}
 			end
 			stub.login()
 			stub.fire("QUEST_LOG_UPDATE")
-			Polestar.Set("behavior.autoAccept", false)
+			SendaFH.Set("behavior.autoAccept", false)
 			${script}`,
 	}).emitted;
 }
@@ -147,7 +147,7 @@ test('no notice when an opening quest can be taken now, once the guide is under 
 
 test('the guide menu\'s row says when a Class guide opens, and stops once it does', () => {
 	const [out] = run(`
-		local UI, P = Polestar.UI, Polestar.UI.Picker
+		local UI, P = SendaFH.UI, SendaFH.UI.Picker
 		local function row(title)
 			for _, f in ipairs(stub.frames) do
 				if f.psGuide and rawget(f, "Range") and f:IsShown() and f.psGuide.title == title then return f.Note:GetText() end

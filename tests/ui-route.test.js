@@ -1,5 +1,5 @@
 'use strict';
-// The route choice window (addon/Polestar/UI/RouteChoice.lua) against the
+// The route choice window (addon/SendaFH/UI/RouteChoice.lua) against the
 // real Core + Theme + UI manifests and the fake Engine of tests/lua/stub_ui.lua,
 // given the choice data Engine.GetRouteChoice returns.
 
@@ -10,7 +10,7 @@ const { runAddon } = require('./helpers/lua');
 const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 
 const CHOICE = `
-local E = Polestar.Engine
+local E = SendaFH.Engine
 CHOSEN = nil
 E.GetRouteChoice = function(id)
 	if id ~= "tirisfal" then return nil end
@@ -24,7 +24,7 @@ E.GetRouteChoice = function(id)
 end
 E.ChooseRoute = function(from, to) CHOSEN = from .. ">" .. to; return true end
 E.PendingRouteChoice = function() return "tirisfal" end
-RC = Polestar.UI.RouteChoice
+RC = SendaFH.UI.RouteChoice
 function cardFor(id)
 	for _, f in ipairs(stub.frames) do if f.psId == id and f:IsShown() then return f end end
 end
@@ -33,15 +33,15 @@ end
 function run(script) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()\nstub.login()\n${CHOICE}\n${script}`,
 	}).emitted;
 }
 
 test('ROUTE_CHOICE opens one card per zone: a stat row on one line across cards, capped pros and cons; the recommended one leads', () => {
 	const [out] = run(`
-		Polestar.Fire("ROUTE_CHOICE", "tirisfal")
-		local F = PolestarRouteChoice
+		SendaFH.Fire("ROUTE_CHOICE", "tirisfal")
+		local F = SendaFHRouteChoice
 		local s, b = cardFor("silverpine"), cardFor("barrens")
 		local function y(region) local _, _, _, _, py = region:GetPoint(1) return py end
 		local function shown(list) local n = 0 for _, l in ipairs(list) do if l.Text:IsShown() then n = n + 1 end end return n end
@@ -50,7 +50,7 @@ test('ROUTE_CHOICE opens one card per zone: a stat row on one line across cards,
 		emit({
 			shown = F:IsShown(), subtitle = F.Subtitle:GetText(),
 			names = { s.Name:GetText(), b.Name:GetText() },
-			stats = s.Stats:GetText(), textHex = Polestar.Theme.Hex("text"),
+			stats = s.Stats:GetText(), textHex = SendaFH.Theme.Hex("text"),
 			statsY = { y(s.Stats), y(b.Stats) }, ruleY = { y(s.Rule), y(b.Rule) }, consY = { y(s.Cons[1].Text), y(b.Cons[1].Text) },
 			tag = s.Tag:IsShown() and s.Tag.Text:GetText(), otherTag = b.Tag:IsShown(),
 			pros = { s.Pros[1].Text:GetText(), s.Pros[2].Text:GetText() }, cons = b.Cons[2].Text:GetText(),
@@ -81,13 +81,13 @@ test('ROUTE_CHOICE opens one card per zone: a stat row on one line across cards,
 
 test('choosing a card calls Engine.ChooseRoute and closes; Decide later only closes', () => {
 	const [out] = run(`
-		Polestar.Fire("ROUTE_CHOICE", "tirisfal")
+		SendaFH.Fire("ROUTE_CHOICE", "tirisfal")
 		stub.RunScript(cardFor("barrens").Go, "OnClick", "LeftButton")
-		local r = { chosen = CHOSEN, shown = PolestarRouteChoice:IsShown() }
+		local r = { chosen = CHOSEN, shown = SendaFHRouteChoice:IsShown() }
 		CHOSEN = nil
-		Polestar.Fire("ROUTE_CHOICE", "tirisfal")
-		stub.RunScript(PolestarRouteChoice.Later, "OnClick", "LeftButton")
-		r.later = { chosen = CHOSEN, shown = PolestarRouteChoice:IsShown() }
+		SendaFH.Fire("ROUTE_CHOICE", "tirisfal")
+		stub.RunScript(SendaFHRouteChoice.Later, "OnClick", "LeftButton")
+		r.later = { chosen = CHOSEN, shown = SendaFHRouteChoice:IsShown() }
 		emit(r)`);
 	assert.deepEqual(out, { chosen: 'tirisfal>barrens', shown: false, later: { shown: false } });
 });
@@ -95,15 +95,15 @@ test('choosing a card calls Engine.ChooseRoute and closes; Decide later only clo
 test('in combat the window waits for the fight to end; the checkbox sets behavior.routeChoice', () => {
 	const [out] = run(`
 		stub.inCombat = true
-		Polestar.Fire("ROUTE_CHOICE", "tirisfal")
-		local r = { during = PolestarRouteChoice ~= nil and PolestarRouteChoice:IsShown() or false }
+		SendaFH.Fire("ROUTE_CHOICE", "tirisfal")
+		local r = { during = SendaFHRouteChoice ~= nil and SendaFHRouteChoice:IsShown() or false }
 		stub.inCombat = false
 		stub.fire("PLAYER_REGEN_ENABLED")
-		r.after = PolestarRouteChoice:IsShown()
-		local box = PolestarRouteChoice.Always
+		r.after = SendaFHRouteChoice:IsShown()
+		local box = SendaFHRouteChoice.Always
 		box:SetChecked(true)
 		stub.RunScript(box, "OnClick", "LeftButton")
-		r.setting = Polestar.Get("behavior.routeChoice")
+		r.setting = SendaFH.Get("behavior.routeChoice")
 		r.unknown = RC.Show("elsewhere")
 		emit(r)`);
 	assert.deepEqual(out, { during: false, after: true, setting: 'recommended', unknown: false });
@@ -122,8 +122,8 @@ test('each card shows its zone painting from the client, framed on the route sta
 			for i = 1, 12 do t[i] = 100000 + i end
 			return t
 		end
-		local real = Polestar.Engine.GetRouteChoice
-		Polestar.Engine.GetRouteChoice = function(id)
+		local real = SendaFH.Engine.GetRouteChoice
+		SendaFH.Engine.GetRouteChoice = function(id)
 			local c = real(id)
 			if c then
 				c.options[1].zone, c.options[1].focusX, c.options[1].focusY = 1421, 45, 42
@@ -131,7 +131,7 @@ test('each card shows its zone painting from the client, framed on the route sta
 			end
 			return c
 		end
-		Polestar.Fire("ROUTE_CHOICE", "tirisfal")
+		SendaFH.Fire("ROUTE_CHOICE", "tirisfal")
 		local s, b = cardFor("silverpine"), cardFor("barrens")
 		local a = s.Art
 		local tiles = {}

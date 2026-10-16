@@ -2,7 +2,7 @@
 // The Lookup runtime: Lookup.Sources ranking for the character (faction,
 // race, class, level, professions, reputation, distance, drop chance),
 // curated and generated guides, Search over guides and Codex entities,
-// Polestar.Hooks (tooltip lines, item clicks), the mount spotter, tooltip
+// SendaFH.Hooks (tooltip lines, item clicks), the mount spotter, tooltip
 // source lines, Alt-click and the options page. The Codex is a synthetic pack
 // (tests/fixtures/codex/lookup.json) loaded the way the client loads it.
 
@@ -16,7 +16,7 @@ const { writeCodexPack } = require('./helpers/codex');
 
 const FIXTURE = path.join(__dirname, 'fixtures', 'codex', 'lookup.json');
 const codex = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
-const ADDON = { name: 'Polestar', files: ['Core/Core.xml', 'Lookup/Lookup.xml'] };
+const ADDON = { name: 'SendaFH', files: ['Core/Core.xml', 'Lookup/Lookup.xml'] };
 
 // The stub world draws the fixture's maps with the same bounds as their Era
 // frames, so live and Era coordinates agree.
@@ -42,11 +42,11 @@ w.class, w.className = ${JSON.stringify(cls)}, ${JSON.stringify(cls)}
 w.moveTo(${at.join(', ')})
 ${setup}`,
 		addons: [files],
-		saved: saved ? { Polestar: saved } : undefined,
+		saved: saved ? { SendaFH: saved } : undefined,
 		login: true,
 		script: `
 local function rows(kind, id)
-	local list, entity = Polestar.Lookup.Sources(kind, id)
+	local list, entity = SendaFH.Lookup.Sources(kind, id)
 	local out = {}
 	for i, r in ipairs(list) do
 		out[i] = { type = r.type, label = r.label, detail = r.detail, available = r.available, why = r.why, whyText = r.whyText,
@@ -108,7 +108,7 @@ test('sources: professions gate crafts unless the character can still learn them
 	const [low] = run(script, { setup: 'w.learnSkill(197, "Tailoring", 80, 150)' });
 	const [high] = run(script, { setup: 'w.learnSkill(197, "Tailoring", 120, 150)' });
 	const [stubbed] = run(`
-		Polestar.Compat.GetSkillRank = function(line) if line == 197 then return 150, 225 end end
+		SendaFH.Compat.GetSkillRank = function(line) if line == 197 then return 150, 225 end end
 		emit((rows("item", 8005)))
 	`);
 	assert.deepEqual(pick(none, ['available', 'label', 'trainer', 'map']), [{ available: true, label: 'Tailoring 100', trainer: 5010, map: 9001 }]);
@@ -221,7 +221,7 @@ ${TEST_SOURCE}
 local function g(id, extra)
 	local def = { id = id, pack = "test", title = id, category = "Collectibles", steps = { { goals = { { t = "note", text = "x" } } } } }
 	for k, v in pairs(extra) do def[k] = v end
-	assert(Polestar.RegisterGuide(def))
+	assert(SendaFH.RegisterGuide(def))
 end
 g("test/horde-strider", { faction = "Horde", collects = { 8000 } })
 g("test/alliance-strider", { faction = "Alliance", collects = { 8000, 8013 } })
@@ -232,32 +232,32 @@ g("test/route", { category = "Leveling", minLevel = 1, maxLevel = 60 })
 
 test('curated guides: the one for this character, and class mounts by keyword', () => {
 	const [alliance, spell, none, opened, tabs] = run(`${GUIDES}
-		local L = Polestar.Lookup
+		local L = SendaFH.Lookup
 		emit(L.CuratedGuide("mount", 8000)); emit(L.CuratedGuide("spell", 9503)); emit(L.CuratedGuide("item", 8004) or false)
 		emit(L.Guide("pet", 8013))
-		local t = Polestar.Engine.GetTabs(); emit({ t[#t].guideId, Polestar.Engine.GetGuide().id })
+		local t = SendaFH.Engine.GetTabs(); emit({ t[#t].guideId, SendaFH.Engine.GetGuide().id })
 	`);
 	assert.equal(alliance, 'test/alliance-strider');
 	assert.equal(spell, 'test/shadowsteed');
 	assert.equal(none, false);
 	assert.equal(opened, 'test/alliance-strider');
 	assert.deepEqual(tabs, ['test/alliance-strider', 'test/alliance-strider']);
-	const [horde] = run(`${GUIDES} emit(Polestar.Lookup.CuratedGuide("mount", 8000))`, { race: 'Orc', faction: 'Horde' });
+	const [horde] = run(`${GUIDES} emit(SendaFH.Lookup.CuratedGuide("mount", 8000))`, { race: 'Orc', faction: 'Horde' });
 	assert.equal(horde, 'test/horde-strider');
 });
 
 test('generated guides: registered unsaved in pack "lookup", opened in a tab, rebuilt for another source', () => {
 	const [first, def, second, tabs, step] = run(`
-		local L = Polestar.Lookup
+		local L = SendaFH.Lookup
 		emit({ L.Guide("item", 8004) })
-		local g = Polestar.Guides.Get("lookup/item/8004")
+		local g = SendaFH.Guides.Get("lookup/item/8004")
 		emit({ pack = g.pack, category = g.category, title = g.title, steps = #g.steps, step1 = g.steps[1].title,
-			goals = { g.steps[1].goals[1].t, g.steps[1].goals[2].t, g.steps[1].goals[3].t }, pack2 = Polestar.Guides.Pack("lookup").id })
+			goals = { g.steps[1].goals[1].t, g.steps[1].goals[2].t, g.steps[1].goals[3].t }, pack2 = SendaFH.Guides.Pack("lookup").id })
 		emit({ L.Guide("item", 8004, 2) })
-		local t = Polestar.Engine.GetTabs(); local ids = {}
+		local t = SendaFH.Engine.GetTabs(); local ids = {}
 		for i, x in ipairs(t) do ids[i] = x.guideId end
 		emit(ids)
-		emit(Polestar.Engine.GetGuide().steps[1].title)
+		emit(SendaFH.Engine.GetGuide().steps[1].title)
 	`);
 	assert.deepEqual(first, ['lookup/item/8004']);
 	assert.deepEqual(def, { pack: 'lookup', category: 'Lookup', title: 'Boar Tusk', steps: 1, step1: 'Bristle Boar', goals: ['goto', 'kill', 'collect'], pack2: 'lookup' });
@@ -266,16 +266,16 @@ test('generated guides: registered unsaved in pack "lookup", opened in a tab, re
 	assert.equal(step, 'Thornback Boar');
 });
 
-test('Polestar holds the internal lookup pack from load: a pack claiming it later is refused, listed, and Lookup still works', () => {
+test('SendaFH holds the internal lookup pack from load: a pack claiming it later is refused, listed, and Lookup still works', () => {
 	const [claim, rows, held, opened] = run(`
-		emit({ Polestar.RegisterPack({ addon = "SneakyLookup", id = "lookup", format = 1, title = "Mine", author = "X", version = "1", license = "MIT", internal = true }) })
+		emit({ SendaFH.RegisterPack({ addon = "SneakyLookup", id = "lookup", format = 1, title = "Mine", author = "X", version = "1", license = "MIT", internal = true }) })
 		stub.addonLoaded("SneakyLookup")
 		local rows = {}
-		for _, r in ipairs(Polestar.Guides.Packs()) do rows[#rows + 1] = { id = r.id, addon = r.addon or false, status = r.status, reason = r.reason or false } end
+		for _, r in ipairs(SendaFH.Guides.Packs()) do rows[#rows + 1] = { id = r.id, addon = r.addon or false, status = r.status, reason = r.reason or false } end
 		emit(rows)
-		local p = Polestar.Guides.Pack("lookup")
+		local p = SendaFH.Guides.Pack("lookup")
 		emit({ internal = p.internal or false, status = p.status, addon = p.addon or false })
-		emit({ Polestar.Lookup.Guide("item", 8004) })
+		emit({ SendaFH.Lookup.Guide("item", 8004) })
 	`);
 	assert.equal(claim[0], false);
 	const sneaky = rows.filter((r) => r.addon === 'SneakyLookup');
@@ -288,9 +288,9 @@ test('Polestar holds the internal lookup pack from load: a pack claiming it late
 
 test('generated guides: no guide for sources without a place; disabled module', () => {
 	const [world, disabled] = run(`
-		local function try(...) local id, why = Polestar.Lookup.Guide(...); return { id = id or false, why = why or false } end
+		local function try(...) local id, why = SendaFH.Lookup.Guide(...); return { id = id or false, why = why or false } end
 		emit(try("item", 8015))
-		Polestar.Set("lookup.enabled", false)
+		SendaFH.Set("lookup.enabled", false)
 		emit(try("item", 8004))
 	`);
 	assert.deepEqual(world, { id: false, why: 'noguide' });
@@ -299,10 +299,10 @@ test('generated guides: no guide for sources without a place; disabled module', 
 
 test('generated guides: a saved Lookup tab is rebuilt before the Engine reopens tabs', () => {
 	const [tabs, active] = run(`
-		local t = Polestar.Engine.GetTabs(); local ids = {}
+		local t = SendaFH.Engine.GetTabs(); local ids = {}
 		for i, x in ipairs(t) do ids[i] = x.guideId end
-		emit(ids); emit(Polestar.Engine.GetGuide() and Polestar.Engine.GetGuide().id)
-	`, { saved: 'PolestarCharDB = { schema = 1, tabs = { "lookup/item/8004", "lookup/mount/8000" }, activeTab = 2 }' });
+		emit(ids); emit(SendaFH.Engine.GetGuide() and SendaFH.Engine.GetGuide().id)
+	`, { saved: 'SendaFHCharDB = { schema = 1, tabs = { "lookup/item/8004", "lookup/mount/8000" }, activeTab = 2 }' });
 	assert.deepEqual(tabs, ['lookup/item/8004', 'lookup/mount/8000']);
 	assert.equal(active, 'lookup/mount/8000');
 });
@@ -314,11 +314,11 @@ test('generated guides: a saved Lookup tab is rebuilt before the Engine reopens 
 const SEARCH_GUIDES = `
 ${TEST_PACK}
 ${TEST_SOURCE}
-assert(Polestar.RegisterGuide({ id = "test/pathfinder", pack = "test", title = "Amber Vale Pathfinder", zoneName = "Amber Vale", minLevel = 15, maxLevel = 20,
+assert(SendaFH.RegisterGuide({ id = "test/pathfinder", pack = "test", title = "Amber Vale Pathfinder", zoneName = "Amber Vale", minLevel = 15, maxLevel = 20,
 	keywords = { "strider" }, steps = { { goals = { { t = "note", text = "x" } } } } }))
-assert(Polestar.RegisterGuide({ id = "lookup/item/1", pack = "lookup", title = "Amber Generated", steps = { { goals = { { t = "note", text = "x" } } } } }))
+assert(SendaFH.RegisterGuide({ id = "lookup/item/1", pack = "lookup", title = "Amber Generated", steps = { { goals = { { t = "note", text = "x" } } } } }))
 local function q(text, opts)
-	local res, counts = Polestar.Search.Query(text, opts)
+	local res, counts = SendaFH.Search.Query(text, opts)
 	local out = {}
 	for i, r in ipairs(res) do out[i] = { kind = r.kind, id = r.id, title = r.title, subtitle = r.subtitle, quality = r.quality } end
 	return { res = out, counts = counts }
@@ -329,7 +329,7 @@ test('search: tiers, kind order, guides with keywords, filters and counts', () =
 	const [amber, exact, boar, npcOnly, strider, rider, words, accent, status] = run(`${SEARCH_GUIDES}
 		emit(q("amber")); emit(q("Amber Vale")); emit(q("boar")); emit(q("boar", { kinds = { npc = true } }))
 		emit(q("strider")); emit(q("rider")); emit(q("reins strider")); emit(q("M\\195\\174RA"))
-		emit({ Polestar.Search.Status() })
+		emit({ SendaFH.Search.Status() })
 	`);
 	const titles = (r) => r.res.map((x) => `${x.kind}:${x.title}`);
 	assert.deepEqual(titles(amber), ['guide:Amber Vale Pathfinder', 'mount:Amber Strider Reins', 'zone:Amber Vale']);
@@ -349,9 +349,9 @@ test('search: tiers, kind order, guides with keywords, filters and counts', () =
 
 test('search: folding, quests and dungeons, limits, a missing Codex pack, Lookup switched off', () => {
 	const [fold, quest, crypt, limited, status] = run(`${SEARCH_GUIDES}
-		emit(Polestar.Search.Fold("\\195\\129mber V\\195\\161le's  Path-finder"))
+		emit(SendaFH.Search.Fold("\\195\\129mber V\\195\\161le's  Path-finder"))
 		emit(q("trouble")); emit(q("crypt")); emit(q("a", { limit = 2 }))
-		emit({ Polestar.Search.Status() })
+		emit({ SendaFH.Search.Status() })
 	`);
 	assert.equal(fold, ' amber vales path finder');
 	assert.deepEqual(quest.res, [{ kind: 'quest', id: 7001, title: 'Trouble in the Vale', subtitle: 'Level 18 \u00b7 Amber Vale' }]);
@@ -362,14 +362,14 @@ test('search: folding, quests and dungeons, limits, a missing Codex pack, Lookup
 	assert.equal(limited.res.length, 2);
 	assert.deepEqual(status, [true]);
 	const [st0, res, st1] = run(`${SEARCH_GUIDES}
-		emit({ Polestar.Search.Status() }); emit(q("amber")); emit({ Polestar.Search.Status() })
+		emit({ SendaFH.Search.Status() }); emit(q("amber")); emit({ SendaFH.Search.Status() })
 	`, { withPack: false });
 	assert.deepEqual(st0, [false, 'notloaded']);
 	assert.deepEqual(res.res.map((r) => r.kind), ['guide'], 'without the pack only guides are found');
 	assert.deepEqual(st1, [false, 'missing']);
 	const [offStatus, offRes, loaded] = run(`${SEARCH_GUIDES}
-		Polestar.Set("lookup.enabled", false)
-		emit({ Polestar.Search.Status() }); emit(q("amber")); emit(Polestar.Codex.IsLoaded())
+		SendaFH.Set("lookup.enabled", false)
+		emit({ SendaFH.Search.Status() }); emit(q("amber")); emit(SendaFH.Codex.IsLoaded())
 	`);
 	assert.deepEqual(offStatus, [false, 'off']);
 	assert.deepEqual(offRes.res.map((r) => r.kind), ['guide']);
@@ -390,15 +390,15 @@ test('search and sources: obtainable before retired, curated-guide-backed before
 		const [res, rows, guide] = run(`
 			${TEST_PACK}
 ${TEST_SOURCE}
-			assert(Polestar.RegisterGuide({ id = "test/sabers", pack = "test", title = "Striped Sabers", collects = { 8102 },
+			assert(SendaFH.RegisterGuide({ id = "test/sabers", pack = "test", title = "Striped Sabers", collects = { 8102 },
 				steps = { { goals = { { t = "note", text = "x" } } } } }))
-			local res = Polestar.Search.Query("saber")
+			local res = SendaFH.Search.Query("saber")
 			local out = {}
 			for i, r in ipairs(res) do out[i] = { kind = r.kind, id = r.id, status = r.status or false, curated = r.curated or false } end
 			emit(out)
-			local list = Polestar.Lookup.Sources("mount", 8100)
+			local list = SendaFH.Lookup.Sources("mount", 8100)
 			emit({ available = list[1].available, why = list[1].why, whyText = list[1].whyText, guideable = list[1].guideable })
-			local id, why = Polestar.Lookup.Guide("mount", 8100)
+			local id, why = SendaFH.Lookup.Guide("mount", 8100)
 			emit({ id = id or false, why = why or false })
 		`, { withPack: false, setup: own.stubLua });
 		assert.deepEqual(res.filter((r) => r.kind !== 'guide'), [
@@ -423,22 +423,22 @@ test('search: an item only a third pack collects ranks as curated only while tha
 		const [before, after] = run(`
 			${TEST_PACK}
 ${TEST_SOURCE}
-			Polestar.RegisterPack({ addon = "Polestar_Other", id = "other", format = 1, title = "Other", author = "O", version = "1", license = "MIT" })
+			SendaFH.RegisterPack({ addon = "SendaFH_Other", id = "other", format = 1, title = "Other", author = "O", version = "1", license = "MIT" })
 			local function g(id, extra)
 				local def = { id = id, pack = "other", title = id, steps = { { goals = { { t = "note", text = "x" } } } } }
 				for k, v in pairs(extra) do def[k] = v end
-				assert(Polestar.RegisterGuide(def))
+				assert(SendaFH.RegisterGuide(def))
 			end
 			g("other/sabers", { category = "Collectibles", collects = { 8102 } })
 			g("other/route", { category = "Leveling", minLevel = 1, maxLevel = 60 })
 			local function flag()
-				for _, r in ipairs(Polestar.Search.Query("striped saber")) do
+				for _, r in ipairs(SendaFH.Search.Query("striped saber")) do
 					if r.kind == "mount" and r.id == 8102 then return r.curated or false end
 				end
 				return "missing"
 			end
 			emit(flag())
-			Polestar.Set("behavior.suggestFrom", "other")
+			SendaFH.Set("behavior.suggestFrom", "other")
 			emit(flag())
 		`, { withPack: false, setup: own.stubLua });
 		assert.equal(before, false, 'no curated guide opens for it from another pack');
@@ -453,25 +453,25 @@ test('search: one-letter queries read name prefixes only, capped; paging with of
 		local names = {}
 		for i = 1, 400 do names[i] = { 100000 + i, (i % 2 == 0 and "Kestrel " or "Old Kestrel ") .. i } end
 		local lines = {}
-		for i, e in ipairs(names) do lines[i] = "\\2" .. Polestar.Search.Fold(e[2]):sub(2) .. "\\1" .. e[1] .. ",2,," .. #e[2] .. "\\n" end
+		for i, e in ipairs(names) do lines[i] = "\\2" .. SendaFH.Search.Fold(e[2]):sub(2) .. "\\1" .. e[1] .. ",2,," .. #e[2] .. "\\n" end
 		local blob = table.concat(lines)
 		local byId = {}
 		for _, e in ipairs(names) do byId[e[1]] = e[2] end
 		local none = function() return nil end
-		Polestar.Codex = { IsLoaded = function() return true end, Load = function() return true end,
+		SendaFH.Codex = { IsLoaded = function() return true end, Load = function() return true end,
 			Index = function(kind) if kind == "item" then return blob end end,
 			Name = function(kind, id) return byId[id] end,
 			Item = none, Npc = none, Quest = none, Object = none, Instance = none, Zone = none, Faction = none, Spell = none }
-		local res, counts, more = Polestar.Search.Query("k", { kinds = { item = true } })
+		local res, counts, more = SendaFH.Search.Query("k", { kinds = { item = true } })
 		emit({ n = #res, count = counts.item, more = more.item or false, first = res[1] and res[1].title })
-		local a = Polestar.Search.Query("kestrel", { kinds = { item = true }, perKind = 50, subtitles = false })
-		local b = Polestar.Search.Query("kestrel", { kinds = { item = true }, perKind = 50, offset = 50, subtitles = false })
+		local a = SendaFH.Search.Query("kestrel", { kinds = { item = true }, perKind = 50, subtitles = false })
+		local b = SendaFH.Search.Query("kestrel", { kinds = { item = true }, perKind = 50, offset = 50, subtitles = false })
 		emit({ n = #a, first = a[1].title, last = a[#a].title }); emit({ n = #b, first = b[1].title })
 		local calls = 0
-		Polestar.Lookup = { Subtitle = function(kind, id) calls = calls + 1; return "Sub " .. id end }
-		local c = Polestar.Search.Query("kestrel 3", { kinds = { item = true }, subtitles = false })
+		SendaFH.Lookup = { Subtitle = function(kind, id) calls = calls + 1; return "Sub " .. id end }
+		local c = SendaFH.Search.Query("kestrel 3", { kinds = { item = true }, subtitles = false })
 		local before = calls
-		local s1 = Polestar.Search.Subtitle(c[1]); Polestar.Search.Subtitle(c[1])
+		local s1 = SendaFH.Search.Subtitle(c[1]); SendaFH.Search.Subtitle(c[1])
 		emit({ before = before, after = calls, s1 = s1 })
 	`, { withPack: false });
 	assert.deepEqual(one, { n: 60, count: 200, more: false, first: 'Kestrel 2' }, 'one letter: names starting with k only, not the word "Kestrel" in "Old Kestrel"');
@@ -514,19 +514,19 @@ test('search: a keystroke costs a few scans of the names and grows linearly from
 				for i = 1, n do
 					local name = word() .. " " .. word() .. (rnd(3) == 1 and (" " .. word()) or "")
 					names[kind][i] = name
-					lines[i] = "\\2" .. Polestar.Search.Fold(name):sub(2) .. "\\1" .. i .. ",2,," .. #name .. "\\n"
+					lines[i] = "\\2" .. SendaFH.Search.Fold(name):sub(2) .. "\\1" .. i .. ",2,," .. #name .. "\\n"
 				end
 				blobs[kind] = table.concat(lines)
 			end
 			local none = function() return nil end
-			Polestar.Codex = { IsLoaded = function() return true end, Load = function() return true end,
+			SendaFH.Codex = { IsLoaded = function() return true end, Load = function() return true end,
 				Index = function(kind) return blobs[kind] end,
 				Name = function(kind, id) return names[kind] and names[kind][id] end,
 				Item = none, Npc = none, Quest = none, Object = none, Instance = none, Zone = none, Faction = none, Spell = none }
-			Polestar.Search.Query("warmup", { subtitles = false })
+			SendaFH.Search.Query("warmup", { subtitles = false })
 			-- The batches: every query 4 times; 40 scans of every index.
 			local keys = median(function()
-				for _ = 1, 4 do for _, text in ipairs(queries) do Polestar.Search.Query(text, { subtitles = false }) end end
+				for _ = 1, 4 do for _, text in ipairs(queries) do SendaFH.Search.Query(text, { subtitles = false }) end end
 			end, 7) / (4 * #queries)
 			local scan = median(function()
 				for _ = 1, 40 do for _, blob in pairs(blobs) do string.find(blob, "\\2qqqq", 1, true) end end
@@ -549,7 +549,7 @@ test('search: a keystroke costs a few scans of the names and grows linearly from
 
 test('hooks: item lines once per tooltip show, in order, errors isolated, forbidden and secret skipped', () => {
 	const [once, cleared, forbidden, secret, other, ref, replaced] = run(`
-		local H = Polestar.Hooks
+		local H = SendaFH.Hooks
 		H.ItemLines("a", function(tt, link, id) H.AddLine(tt, "A " .. id, link and "link" or nil) end)
 		H.ItemLines("b", function() error("boom") end)
 		H.ItemLines("c", function(tt, link, id) H.AddLine(tt, "C " .. id) end)
@@ -586,7 +586,7 @@ test('hooks: item lines once per tooltip show, in order, errors isolated, forbid
 
 test('hooks: unit lines get the unit token; item clicks get the item id', () => {
 	const [unit, clicks] = run(`
-		local H = Polestar.Hooks
+		local H = SendaFH.Hooks
 		local seen = {}
 		H.UnitLines("t", function(tt, unit) seen[#seen + 1] = unit; H.AddLine(tt, "U " .. unit) end)
 		lookuprt.units.mouseover = { guid = "Player-1-00000042", player = true }
@@ -607,7 +607,7 @@ test('hooks: unit lines get the unit token; item clicks get the item id', () => 
 
 test('hooks: object lines get the object id (data or GUID) and name, secret-safe', () => {
 	const out = run(`
-		local H = Polestar.Hooks
+		local H = SendaFH.Hooks
 		local seen = {}
 		H.ObjectLines("q", function(tt, id, name) seen[#seen + 1] = { id or false, name or false }; H.AddLine(tt, "O " .. tostring(id)) end)
 		local function show(data) GameTooltip:SetOwner(UIParent); lookuprt.showObject(GameTooltip, data); return #GameTooltip.lines end
@@ -633,7 +633,7 @@ lookuprt.auras.target = { { spellId = 1243, name = "Fortitude" }, { spellId = 95
 
 test('spotter: a player\'s mount from their auras, secret-safe', () => {
 	const out = run(`${MOUNTED}
-		local L = Polestar.Lookup
+		local L = SendaFH.Lookup
 		emit(L.UnitMount("target"))
 		lookuprt.auras.target = { { spellId = 9503, name = "Summon Shadowsteed" } }; emit(L.UnitMount("target"))
 		lookuprt.auras.target = { { spellId = 7777, name = "Gale" } }; lookuprt.journal[7777] = { id = 55, name = "Swift Gale", icon = 7 }
@@ -652,22 +652,22 @@ test('spotter: a player\'s mount from their auras, secret-safe', () => {
 	]);
 });
 
-test('spotter: MOUNT_SPOTTED, the unit tooltip line and /polestar mount', () => {
+test('spotter: MOUNT_SPOTTED, the unit tooltip line and /sendafh mount', () => {
 	const [spotted, lines, shown, classMount, nothing, lookupCmd, off] = run(`${MOUNTED}
 		local got = {}
-		Polestar.On("MOUNT_SPOTTED", function(unit, info) got[#got + 1] = { unit, info.item } end)
+		SendaFH.On("MOUNT_SPOTTED", function(unit, info) got[#got + 1] = { unit, info.item } end)
 		local shows = {}
-		Polestar.On("SHOW_LOOKUP", function(q, kind, id) shows[#shows + 1] = { q or false, kind or false, id or false } end)
+		SendaFH.On("SHOW_LOOKUP", function(q, kind, id) shows[#shows + 1] = { q or false, kind or false, id or false } end)
 		stub.fire("PLAYER_TARGET_CHANGED")
 		emit(got)
 		GameTooltip:SetOwner(UIParent); lookuprt.showUnit(GameTooltip, "target"); emit(GameTooltip.lines)
-		SlashCmdList.POLESTAR("mount"); emit(shows[#shows])
+		SlashCmdList.SENDAFH("mount"); emit(shows[#shows])
 		lookuprt.auras.target = { { spellId = 9503, name = "Summon Shadowsteed" } }
-		SlashCmdList.POLESTAR("mount"); emit(shows[#shows])
+		SlashCmdList.SENDAFH("mount"); emit(shows[#shows])
 		lookuprt.auras.target = {}
-		local before = #stub.messages; SlashCmdList.POLESTAR("mount"); emit(stub.messages[#stub.messages])
-		SlashCmdList.POLESTAR("lookup boar tusk"); emit(shows[#shows])
-		Polestar.Set("lookup.mounts", false)
+		local before = #stub.messages; SlashCmdList.SENDAFH("mount"); emit(stub.messages[#stub.messages])
+		SlashCmdList.SENDAFH("lookup boar tusk"); emit(shows[#shows])
+		SendaFH.Set("lookup.mounts", false)
 		lookuprt.auras.target = { { spellId = 9500, name = "Amber Strider" } }
 		got = {}; stub.fire("PLAYER_TARGET_CHANGED")
 		GameTooltip:SetOwner(UIParent); lookuprt.showUnit(GameTooltip, "target")
@@ -690,8 +690,8 @@ test('item tooltips: the best sources, the Alt-click hint, and the settings', ()
 			return GameTooltip.lines
 		end
 		emit(show(8000)); emit(show(8002)); emit(show(8015))
-		Polestar.Set("lookup.tooltip", false); emit(#show(8000)); Polestar.Set("lookup.tooltip", true)
-		Polestar.Set("lookup.enabled", false); emit(#show(8000))
+		SendaFH.Set("lookup.tooltip", false); emit(#show(8000)); SendaFH.Set("lookup.tooltip", true)
+		SendaFH.Set("lookup.enabled", false); emit(#show(8000))
 	`);
 	assert.deepEqual(strider, ['From Mira Saddler | Vendor \u00b7 Amber Vale', 'Alt-click: guide me']);
 	assert.deepEqual(peril, ['From Bristle Boar | Drop \u00b7 Amber Vale', 'From High Peril | Requires level 30', 'Alt-click: guide me']);
@@ -703,15 +703,15 @@ test('item tooltips: the best sources, the Alt-click hint, and the settings', ()
 test('Alt-click: opens a guide for the item, else the Lookup window; only a plain Alt left-click', () => {
 	const [opened, shown, shift, right, off] = run(`
 		local shows = {}
-		Polestar.On("SHOW_LOOKUP", function(q, kind, id) shows[#shows + 1] = { q or false, kind or false, id or false } end)
+		SendaFH.On("SHOW_LOOKUP", function(q, kind, id) shows[#shows + 1] = { q or false, kind or false, id or false } end)
 		local function link(id) return "|cffffffff|Hitem:" .. id .. "::::::::20:::::|h[x]|h|r" end
-		local function tabs() local t, ids = Polestar.Engine.GetTabs(), {}; for i, x in ipairs(t) do ids[i] = x.guideId end; return ids end
+		local function tabs() local t, ids = SendaFH.Engine.GetTabs(), {}; for i, x in ipairs(t) do ids[i] = x.guideId end; return ids end
 		stub.keys.alt = true
 		lookuprt.clickItem(link(8004)); emit(tabs())
 		lookuprt.clickItem(link(8015)); emit(shows)
 		stub.keys.shift = true; lookuprt.clickItem(link(8009)); stub.keys.shift = false; emit(tabs())
 		lookuprt.button = "RightButton"; lookuprt.clickItem(link(8009)); lookuprt.button = "LeftButton"; emit(tabs())
-		Polestar.Set("lookup.altClick", false); lookuprt.clickItem(link(8009)); emit(tabs())
+		SendaFH.Set("lookup.altClick", false); lookuprt.clickItem(link(8009)); emit(tabs())
 	`);
 	assert.deepEqual(opened, ['lookup/item/8004']);
 	assert.deepEqual(shown, [[false, 'item', 8015]]);
@@ -723,14 +723,14 @@ test('Alt-click: opens a guide for the item, else the Lookup window; only a plai
 test('options: the Lookup tab of Discovery and its defaults', () => {
 	const [controls, defaults] = run(`
 		local out = {}
-		for _, spec in ipairs(Polestar.Widgets.OptionsRegistry) do
+		for _, spec in ipairs(SendaFH.Widgets.OptionsRegistry) do
 			if spec.page == "Discovery" and spec.tab == "Lookup" then
 				for _, c in ipairs(spec.controls) do out[#out + 1] = { key = c.key, kind = c.kind, label = c.label, help = c.help ~= nil } end
 			end
 		end
 		emit(out)
-		emit({ Polestar.Get("lookup.enabled"), Polestar.Get("lookup.tooltip"), Polestar.Get("lookup.altClick"), Polestar.Get("lookup.mounts") })
-	`, { files: { name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Lookup/Lookup.xml'] } });
+		emit({ SendaFH.Get("lookup.enabled"), SendaFH.Get("lookup.tooltip"), SendaFH.Get("lookup.altClick"), SendaFH.Get("lookup.mounts") })
+	`, { files: { name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Lookup/Lookup.xml'] } });
 	assert.deepEqual(controls.map((c) => c.key), ['lookup.enabled', 'lookup.tooltip', 'lookup.altClick', 'lookup.mounts']);
 	assert.ok(controls.every((c) => c.kind === 'toggle' && c.label && c.help));
 	assert.deepEqual(defaults, [true, true, true, true]);

@@ -1,7 +1,7 @@
 'use strict';
 // `codex build`: every importer + data/forever + the Forever client's tables
 // -> the Codex (data/forever/codex/*.json, shapes in docs/ARCHITECTURE.md,
-// "Codex (`codex build`)", and tools/lib/codex/pack.js) and the load-on-demand pack addon/Polestar_Codex.
+// "Codex (`codex build`)", and tools/lib/codex/pack.js) and the load-on-demand pack addon/SendaFH_Codex.
 // Same inputs give byte-identical output.
 //
 //   loadInputs(opts)      -> inputs (runs importers, reads files, client tables)
@@ -52,7 +52,7 @@ const ERA_BUILD = '1.15.9.70003';
 const ERA_TABLES = ['Item', 'ItemSparse', 'ItemEffect', 'Map'];
 
 // curated: the cited reputation gate table (tools/lib/codex/repgates.json);
-// guides: Polestar's own curated guides (a collectible's `rep` before its
+// guides: SendaFH's own curated guides (a collectible's `rep` before its
 // `buy`). A gate from the client beats the table, the table a guide's.
 const RANK = { recordings: 0, client: 1, curated: 2, guides: 3, questie: 4, flbis: 4, rarescanner: 4, dungeons: 4, journal: 4, forever: 4, pfquest: 5, atlasloot: 5, wowhead: 6 };
 const RANK_UNKNOWN = 7;
@@ -882,7 +882,7 @@ function mergeCodex(inputs) {
 	// its summon spell is flagged hidden until known (Mount.Flags 0x40: the
 	// client keeps it only for those who already have it; Black Stallion,
 	// still sold, is not flagged), or, in a --local-extras build, when
-	// AtlasLoot's collection lists do not name it. Polestar's own curated
+	// AtlasLoot's collection lists do not name it. SendaFH's own curated
 	// guides (`collects`) name collectibles the game hands out: never retired.
 	// Forever-only rows (Questie without pfQuest) are trusted. Companions have
 	// no such client flag, so a release build retires none.
@@ -1238,12 +1238,12 @@ function luaString(s) {
 // files: absolute pack files in TOC order -> { rawKB, decodedKB }
 function measureMemory(files) {
 	const { findLua } = require('../lua');
-	const codexLua = path.join(ROOT, 'addon', 'Polestar', 'Lookup', 'Codex.lua');
+	const codexLua = path.join(ROOT, 'addon', 'SendaFH', 'Lookup', 'Codex.lua');
 	const program = `
 local ns = {}
-Polestar = ns
+SendaFH = ns
 function ns.RegisterMapFrames() end
-loadfile(${luaString(codexLua)})("Polestar", ns)
+loadfile(${luaString(codexLua)})("SendaFH", ns)
 local C = ns.Codex
 collectgarbage("collect"); collectgarbage("collect")
 local base = collectgarbage("count")
@@ -1262,7 +1262,7 @@ collectgarbage("collect"); collectgarbage("collect")
 local decoded = collectgarbage("count") - base
 io.write(string.format("%.1f %.1f %d %.1f\\n", raw, decoded, #keep, loadMs))
 `;
-	const file = path.join(os.tmpdir(), `polestar-codex-mem-${process.pid}.lua`);
+	const file = path.join(os.tmpdir(), `sendafh-codex-mem-${process.pid}.lua`);
 	fs.writeFileSync(file, program);
 	try {
 		const r = spawnSync(findLua(), [file], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
@@ -1281,7 +1281,7 @@ io.write(string.format("%.1f %.1f %d %.1f\\n", raw, decoded, #keep, loadMs))
 function readJson(file, optional = false) {
 	if (!fs.existsSync(file)) {
 		if (optional) return null;
-		throw new Error(`missing ${path.relative(process.cwd(), file)} (run \`node tools/polestar.js data build\` first)`);
+		throw new Error(`missing ${path.relative(process.cwd(), file)} (run \`node tools/sendafh.js data build\` first)`);
 	}
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
@@ -1418,14 +1418,14 @@ function collectsOf(text) {
 	return m ? m[1].split(/[\s,]+/).filter((id) => /^\d+$/.test(id)).map(Number) : [];
 }
 
-// Item ids that Polestar's own guides obtain (`collects` headers under guides/).
+// Item ids that SendaFH's own guides obtain (`collects` headers under guides/).
 function curatedCollects(dir = path.join(ROOT, 'guides')) {
 	const out = new Set();
 	for (const { text } of guideTexts(dir)) for (const id of collectsOf(text)) out.add(id);
 	return [...out].sort(byId);
 }
 
-// The vendor gates Polestar's own guides state: in a guide that collects an
+// The vendor gates SendaFH's own guides state: in a guide that collects an
 // item, the last `rep <faction> <Standing>` goal before `buy <item> npc <id>`
 // -> { item: [{ npc, faction|null, factionName|null, standing }] }.
 const GUIDE_STANDINGS = { hated: 1, hostile: 2, unfriendly: 3, neutral: 4, friendly: 5, honored: 6, revered: 7, exalted: 8 };

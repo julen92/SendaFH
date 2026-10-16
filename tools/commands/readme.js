@@ -3,8 +3,8 @@
 
 const { parseArgs } = require('node:util');
 
-const usage = `usage: node tools/polestar.js readme brand
-       node tools/polestar.js readme charts --draft <dir|git rev> [options]
+const usage = `usage: node tools/sendafh.js readme brand
+       node tools/sendafh.js readme charts --draft <dir|git rev> [options]
 
 brand: rewrites docs/assets/{banner-dark,banner-light,emblem,logo,download,avatar}.svg,
 drawn in code from the emblem geometry and the wordmark fonts, and with
@@ -20,7 +20,7 @@ results in --sim were searched on the world being scored.
   --draft <dir|rev>    the earlier guides: a guides folder, or a git revision
                        whose guides/ is used. The README's charts use v0.1.0,
                        the first release.
-  --draft-label <text> how the charts name them (default: "Polestar <x.y.z>"
+  --draft-label <text> how the charts name them (default: "SendaFH <x.y.z>"
                        for a release tag vX.Y.Z, else "Earlier guides")
   --sim <dir>          simulator outputs: world, params, results, consensus
                        (default data/sim)

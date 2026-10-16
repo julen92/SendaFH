@@ -26,7 +26,7 @@ zone Burning Steppes
 #
 # Under the hood Legacy Challenges are achievements, but no achievement ids
 # exist in our data yet (the newest wow_classic_era client tables on wago.tools
-# carry none). Once a player runs `/psrec legacy` in Polestar_Recorder on a live
+# carry none). Once a player runs `/psrec legacy` in SendaFH_Recorder on a live
 # Forever client and that recording is imported, every manual goal here becomes
 # an `achieve <id> "Name"` goal (with `criteria <n>` for per-boss and
 # per-dungeon parts) and is tracked automatically, account-wide.
@@ -54,37 +54,37 @@ step Classes: level 60
 # ---------------------------------------------------------------- Tradeskills
 
 step Tradeskills: Alchemy
-  tip Each crafting profession gives 3 points, at 150, 225 and 300. Ranks count once per profession across your account. Follow the Polestar guide "Alchemy 1-300" (Professions). A crafting profession at 150 also unlocks the Legacy System.
+  tip Each crafting profession gives 3 points, at 150, 225 and 300. Ranks count once per profession across your account. Follow the SendaFH guide "Alchemy 1-300" (Professions). A crafting profession at 150 also unlocks the Legacy System.
   skill Alchemy 150
   skill Alchemy 225
   skill Alchemy 300
 
 step Tradeskills: Blacksmithing
-  tip Follow the Polestar guide "Blacksmithing 1-300" (Professions).
+  tip Follow the SendaFH guide "Blacksmithing 1-300" (Professions).
   skill Blacksmithing 150
   skill Blacksmithing 225
   skill Blacksmithing 300
 
 step Tradeskills: Enchanting
-  tip Follow the Polestar guide "Enchanting 1-300" (Professions).
+  tip Follow the SendaFH guide "Enchanting 1-300" (Professions).
   skill Enchanting 150
   skill Enchanting 225
   skill Enchanting 300
 
 step Tradeskills: Engineering
-  tip Follow the Polestar guide "Engineering 1-300" (Professions).
+  tip Follow the SendaFH guide "Engineering 1-300" (Professions).
   skill Engineering 150
   skill Engineering 225
   skill Engineering 300
 
 step Tradeskills: Leatherworking
-  tip Follow the Polestar guide "Leatherworking 1-300" (Professions).
+  tip Follow the SendaFH guide "Leatherworking 1-300" (Professions).
   skill Leatherworking 150
   skill Leatherworking 225
   skill Leatherworking 300
 
 step Tradeskills: Tailoring
-  tip Follow the Polestar guide "Tailoring 1-300" (Professions).
+  tip Follow the SendaFH guide "Tailoring 1-300" (Professions).
   skill Tailoring 150
   skill Tailoring 225
   skill Tailoring 300
@@ -93,7 +93,7 @@ step Tradeskills: Tailoring
 
 step PvP: battleground reputations (Alliance)
   only Alliance
-  tip Exalted with each battleground faction is worth a point (4 in all; this page shows three, see the note). Follow the Polestar Reputation guides Warsong Gulch Reputation, Arathi Basin Reputation and Alterac Valley Reputation. The Diplomat Legacy perk increases reputation gains.
+  tip Exalted with each battleground faction is worth a point (4 in all; this page shows three, see the note). Follow the SendaFH Reputation guides Warsong Gulch Reputation, Arathi Basin Reputation and Alterac Valley Reputation. The Diplomat Legacy perk increases reputation gains.
   rep 890 Exalted             -- Warsong Gulch
   rep 509 Exalted             -- Arathi Basin
   rep 730 Exalted             -- Alterac Valley
@@ -101,14 +101,14 @@ step PvP: battleground reputations (Alliance)
 
 step PvP: battleground reputations (Horde)
   only Horde
-  tip Exalted with each battleground faction is worth a point (4 in all; this page shows three, see the note). Follow the Polestar Reputation guides Warsong Gulch Reputation, Arathi Basin Reputation and Alterac Valley Reputation. The Diplomat Legacy perk increases reputation gains.
+  tip Exalted with each battleground faction is worth a point (4 in all; this page shows three, see the note). Follow the SendaFH Reputation guides Warsong Gulch Reputation, Arathi Basin Reputation and Alterac Valley Reputation. The Diplomat Legacy perk increases reputation gains.
   rep 889 Exalted             -- Warsong Gulch
   rep 510 Exalted             -- Arathi Basin
   rep 729 Exalted             -- Alterac Valley
   note Blizzard counts four battleground reputations, but our faction data has three per side (Warsong Gulch, Arathi Basin, Alterac Valley). The fourth is likely tied to Forever's new PvP content; check the in-game Legacy panel.
 
 step PvP: honor ranks
-  tip Ranks 3, 7, 10, 13 and 14 are a point each. Polestar cannot read your highest rank yet, so tick each one off yourself. Forever's honor rules for reaching a rank have not been published in detail; in Classic, ranks come from your weekly honor standing, and 13-14 take many weeks of top standing.
+  tip Ranks 3, 7, 10, 13 and 14 are a point each. SendaFH cannot read your highest rank yet, so tick each one off yourself. Forever's honor rules for reaching a rank have not been published in detail; in Classic, ranks come from your weekly honor standing, and 13-14 take many weeks of top standing.
   kill "enemy players for honor until PvP Rank 3"
   kill "enemy players for honor until PvP Rank 7"
   kill "enemy players for honor until PvP Rank 10"
@@ -125,7 +125,7 @@ step PvP: Field of Honor
 
 step Adventure: explore the world map
   tip Exploring the entire world map on one character is a point, and it can also unlock the Legacy System. It must all be on the same character.
-  note Follow the Polestar Exploration guides: Exploration: Eastern Kingdoms 1-30, 30-45 and 45-60, and Exploration: Kalimdor 1-30, 30-45 and 45-60. They track every area as you discover it.
+  note Follow the SendaFH Exploration guides: Exploration: Eastern Kingdoms 1-30, 30-45 and 45-60, and Exploration: Kalimdor 1-30, 30-45 and 45-60. They track every area as you discover it.
   note This step cannot check the whole map by itself yet; it becomes a tracked goal once the Legacy achievement ids are recorded.
 
 step Adventure: Lord Valthalak

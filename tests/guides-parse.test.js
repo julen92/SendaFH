@@ -1,6 +1,6 @@
 'use strict';
 // Every guide under guides/ parses without reference data, so a fresh clone
-// (CI) checks them too; and the committed Polestar_Guides holds exactly those
+// (CI) checks them too; and the committed SendaFH_Guides holds exactly those
 // guides, so a guide added, renamed or removed without `compile` fails here.
 
 const test = require('node:test');
@@ -27,8 +27,8 @@ test('every guide parses without errors and has its own id', () => {
 	assert.deepEqual(diag.errors.map(format), []);
 });
 
-test('the compiled Polestar_Guides holds exactly the guides under guides/', () => {
-	const lua = fs.readFileSync(path.join(ROOT, 'addon', 'Polestar_Guides', 'Guides.lua'), 'utf8');
+test('the compiled SendaFH_Guides holds exactly the guides under guides/', () => {
+	const lua = fs.readFileSync(path.join(ROOT, 'addon', 'SendaFH_Guides', 'Guides.lua'), 'utf8');
 	const compiled = [...lua.matchAll(/^-- Source: (.+)$/gm)].map((m) => m[1]).sort();
-	assert.deepEqual(compiled, files, 'run node tools/polestar.js compile');
+	assert.deepEqual(compiled, files, 'run node tools/sendafh.js compile');
 });

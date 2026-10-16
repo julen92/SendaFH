@@ -26,7 +26,7 @@ async function fixtureBuild(outFile) {
 }
 
 function tmpFile(name) {
-	return path.join(tmpdir('polestar-prof-'), name);
+	return path.join(tmpdir('sendafh-prof-'), name);
 }
 
 test('loadTables reads the cached build offline and fails clearly on a missing table', async () => {

@@ -1,17 +1,17 @@
 'use strict';
 // Turns a codex object (the data/forever/codex JSON shape, e.g.
-// tests/fixtures/codex/sample.json) into a loadable Polestar_Codex pack.
+// tests/fixtures/codex/sample.json) into a loadable SendaFH_Codex pack.
 //
 //   const { writeCodexPack, sampleCodex } = require('./helpers/codex');
 //   const pack = writeCodexPack(sampleCodex());
 //   runAddon({
-//     before: pack.stubLua,      // C_AddOns.LoadAddOn("Polestar_Codex") dofiles the pack
-//     addons: ['Polestar'],
-//     script: 'emit(Polestar.Codex.Load())',
+//     before: pack.stubLua,      // C_AddOns.LoadAddOn("SendaFH_Codex") dofiles the pack
+//     addons: ['SendaFH'],
+//     script: 'emit(SendaFH.Codex.Load())',
 //   });
 //   pack.cleanup();
 //
-// `loadLua` dofiles the pack directly (run it after Polestar has loaded);
+// `loadLua` dofiles the pack directly (run it after SendaFH has loaded);
 // `stubLua` instead makes the stubbed client load it when asked, the way the
 // game does, so Data.Pack / Codex.Load / Search behave as in game.
 
@@ -33,7 +33,7 @@ function luaString(s) {
 // -> { dir, files (absolute, TOC order), loadLua, stubLua, cleanup }
 function writeCodexPack(codex, opts = {}) {
 	const out = emitPack(codex, { version: '0.0.0-test', build: '1.60.1.70338', ...opts });
-	const dir = tmpdir('polestar-codex-');
+	const dir = tmpdir('sendafh-codex-');
 	const addonDir = path.join(dir, ADDON);
 	fs.mkdirSync(addonDir);
 	for (const [rel, text] of Object.entries(out)) fs.writeFileSync(path.join(addonDir, rel), text);

@@ -1,5 +1,5 @@
 'use strict';
-// node tools/polestar.js profession build|draft|gathering ...
+// node tools/sendafh.js profession build|draft|gathering ...
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -7,9 +7,9 @@ const { parseArgs } = require('node:util');
 
 const { ROOT, DATA } = require('../lib/paths');
 
-const usage = `usage: node tools/polestar.js profession build [options]
-       node tools/polestar.js profession draft <Profession> [options]
-       node tools/polestar.js profession gathering build|check [options]
+const usage = `usage: node tools/sendafh.js profession build [options]
+       node tools/sendafh.js profession draft <Profession> [options]
+       node tools/sendafh.js profession gathering build|check [options]
 
 build: writes data/forever/professions.json from Blizzard Classic Era client
 tables (wago.tools CSV: SkillLine, SkillLineAbility, SpellName, SpellEffect,
@@ -80,7 +80,7 @@ async function runBuild(rest) {
 
 function loadJson(dir, name) {
 	const file = path.join(dir, `${name}.json`);
-	if (!fs.existsSync(file)) throw new Error(`${path.relative(process.cwd(), file)} missing (node tools/polestar.js ${name === 'professions' ? 'profession build' : 'data build'})`);
+	if (!fs.existsSync(file)) throw new Error(`${path.relative(process.cwd(), file)} missing (node tools/sendafh.js ${name === 'professions' ? 'profession build' : 'data build'})`);
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 

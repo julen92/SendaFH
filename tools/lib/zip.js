@@ -113,7 +113,7 @@ function writeZip(file, entries) {
 }
 
 // Entries for whole directory trees, each stored under its own basename:
-// directoryEntries(['/x/Polestar']) -> Polestar/, Polestar/Polestar.toc, ...
+// directoryEntries(['/x/SendaFH']) -> SendaFH/, SendaFH/SendaFH.toc, ...
 // Hidden files and folders (leading ".") are skipped; order is sorted.
 function directoryEntries(dirs) {
 	const entries = [];

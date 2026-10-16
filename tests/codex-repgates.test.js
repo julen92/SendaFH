@@ -25,7 +25,7 @@ function vendor(id, name, side, x) {
 // with the Vale Wardens, the Horde ones (7002, 7004) at Honored with the Ember
 // Clan. Two rows are stale: 7009 sells nothing, item 9599 does not exist.
 function inputs(rows) {
-	const dir = tmpdir('polestar-repgates-');
+	const dir = tmpdir('sendafh-repgates-');
 	const file = path.join(dir, 'repgates.json');
 	fs.writeFileSync(file, JSON.stringify({ gates: rows }));
 	const forever = {
@@ -104,11 +104,11 @@ w.level, w.race, w.raceName, w.faction = 60, "${race}", "${race}", "${faction}"
 w.class, w.className = "WARRIOR", "WARRIOR"
 w.moveTo(9001, 50, 50)
 ${setup}`,
-				addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Lookup/Lookup.xml'] }],
+				addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Lookup/Lookup.xml'] }],
 				login: true,
 				script: `
 local out = {}
-for _, r in ipairs((Polestar.Lookup.Sources("item", 9500))) do
+for _, r in ipairs((SendaFH.Lookup.Sources("item", 9500))) do
 	if r.type == "vendor" then out[#out + 1] = { label = r.label, available = r.available, why = r.why or false, whyText = r.whyText or false } end
 end
 table.sort(out, function(a, b) return a.label < b.label end)

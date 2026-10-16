@@ -14,7 +14,7 @@
 //   the first step with work they started or can do now.
 // Steps are found by their goals (stepOf), never by number.
 //
-// Needs data/forever (node tools/polestar.js data build); skips without it.
+// Needs data/forever (node tools/sendafh.js data build); skips without it.
 
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -73,13 +73,13 @@ function applies(persona, s) {
 
 function savedState(persona, { manual = [], skipped = [] } = {}) {
 	const id = PERSONAS[persona].id;
-	return `PolestarCharDB = { schema = 1, tabs = { "${id}" }, activeTab = 1,
+	return `SendaFHCharDB = { schema = 1, tabs = { "${id}" }, activeTab = 1,
 		manual = { ["${id}"] = { ${manual.map((k) => `["${k}"] = true`).join(', ')} } },
 		skipped = { ["${id}"] = { ${skipped.map((s) => `[${s}] = true`).join(', ')} } } }`;
 }
 
-const FRESH = 'PolestarDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }';
-const LOST = 'PolestarDB = nil; PolestarCharDB = nil';
+const FRESH = 'SendaFHDB = { schema = 1, settings = { behavior = { autoSelectGuide = false } } }';
+const LOST = 'SendaFHDB = nil; SendaFHCharDB = nil';
 
 // Quests a level-20 Undead Warlock had done or held on reaching 04-barrens
 // (from the player's report): the succubus chain done, Super Reaper 6000 done
@@ -98,8 +98,8 @@ function play({ persona = 'warlock', done = DONE, log = LOG, level = 20, at, sav
 			: '';
 	return runAddon({
 		stubs: ['stub_world.lua'],
-		addons: ['Polestar'],
-		saved: saved ? { Polestar: saved } : undefined,
+		addons: ['SendaFH'],
+		saved: saved ? { SendaFH: saved } : undefined,
 		before: `
 			local w = stub.world
 			${pack.maps}
@@ -112,7 +112,7 @@ function play({ persona = 'warlock', done = DONE, log = LOG, level = 20, at, sav
 			${pack.loads}
 			stub.login()
 			stub.fire("QUEST_LOG_UPDATE"); stub.advance(0.6)
-			E = Polestar.Engine
+			E = SendaFH.Engine
 			${load}
 			${script}`,
 	}).emitted;
@@ -174,7 +174,7 @@ test('Prev visits every step that applies to a Warlock, Next walks back to where
 			for k = 1, ${before.length + 1} do E.Prev(); stub.advance(0.6); back[k] = E.GetStepIndex() end
 			for k = 1, ${before.length} do E.Next(); stub.advance(0.6); forward[k] = E.GetStepIndex() end
 			local skips = {}
-			for s in pairs(PolestarCharDB.skipped["${PERSONAS.warlock.id}"]) do skips[#skips + 1] = s end
+			for s in pairs(SendaFHCharDB.skipped["${PERSONAS.warlock.id}"]) do skips[#skips + 1] = s end
 			table.sort(skips)
 			emit({ at = ${start}, back = back, forward = forward, skips = skips })
 		`,
@@ -238,7 +238,7 @@ function warriorJumped() {
 			local n = 0
 			while E.GetStepIndex() and E.GetStepIndex() < ${mound} and n < 100 do E.Skip(); stub.advance(0.3); n = n + 1 end
 			local skips = {}
-			for s in pairs(PolestarCharDB.skipped["${PERSONAS.warrior.id}"]) do skips[#skips + 1] = s end
+			for s in pairs(SendaFHCharDB.skipped["${PERSONAS.warrior.id}"]) do skips[#skips + 1] = s end
 			table.sort(skips)
 			emit({ at = E.GetStepIndex(), skips = skips })
 		`,
@@ -254,7 +254,7 @@ test('a reload keeps the Warrior at the mound they skipped to: skips stand even 
 		saved: jumped.saved,
 		script: `
 			local skips = {}
-			for s in pairs(PolestarCharDB.skipped["${PERSONAS.warrior.id}"]) do skips[#skips + 1] = s end
+			for s in pairs(SendaFHCharDB.skipped["${PERSONAS.warrior.id}"]) do skips[#skips + 1] = s end
 			table.sort(skips)
 			emit({ at = E.GetStepIndex(), skips = skips })
 		`,

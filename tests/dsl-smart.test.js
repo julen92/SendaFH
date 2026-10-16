@@ -244,13 +244,13 @@ test('every goal of a quest that needs a profession carries it; a Leveling guide
 	const file = path.join(writeTestPack(pack.guides, data).dir, 'Guides.lua');
 	assert.match(fs.readFileSync(file, 'utf8'), /profLine = 186, profName = "Mining", profRank = 50/);
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `
 			${TEST_PACK}
 			local results = {}
-			local real = Polestar.RegisterGuide
-			Polestar.RegisterGuide = function(g) local ok, e = real(g); results[#results + 1] = ok and "ok" or e; return ok, e end
-			assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+			local real = SendaFH.RegisterGuide
+			SendaFH.RegisterGuide = function(g) local ok, e = real(g); results[#results + 1] = ok and "ok" or e; return ok, e end
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 			emit({ results = results })`,
 	}).emitted;
 	assert.deepEqual(out.results, ['ok']);
@@ -265,13 +265,13 @@ test('smart goals emit Lua the real engine registry accepts, and round-trip', ()
 	assert.match(lua, /\{ t = "train", class = true, candidates = \{ \{ npc = 911, npcName = "Llane Beshere", map = 1429, x = 50\.2, y = 42\.3, f = "e", faction = "A", classes = \{ "WARRIOR" \} \}/);
 	assert.match(lua, /\{ t = "accept", quest = 9500, title = "Either Way", npc = 823, npcName = "Deputy Willem", minLevel = 1, qlvl = 3, pre = \{ 9201, 783 \},/);
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `
 			${TEST_PACK}
 			local got, results = nil, {}
-			local real = Polestar.RegisterGuide
-			Polestar.RegisterGuide = function(g) got = g; local ok, e = real(g); results[#results + 1] = ok and "ok" or e; return ok, e end
-			assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+			local real = SendaFH.RegisterGuide
+			SendaFH.RegisterGuide = function(g) got = g; local ok, e = real(g); results[#results + 1] = ok and "ok" or e; return ok, e end
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 			emit({ results = results, guide = got })`,
 	}).emitted;
 	assert.deepEqual(out.results, ['ok']);
@@ -318,8 +318,8 @@ test('trainers build: guide goals, recordings and the curated list, verified and
 		runAddon({
 			stubs: ['stub_world.lua'],
 			before: `stub.world.race, stub.world.faction, stub.world.class = "${race}", "${faction}", "WARRIOR"; stub.world.moveTo(${map}, ${x}, ${y})`,
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
-			script: `assert(loadfile(${JSON.stringify(lua)}))("Polestar", Polestar)\nstub.login()\nlocal t = Polestar.Engine.NearestClassTrainer()\nemit({ npc = t and t.npc, faction = t and t.faction })`,
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
+			script: `assert(loadfile(${JSON.stringify(lua)}))("SendaFH", SendaFH)\nstub.login()\nlocal t = SendaFH.Engine.NearestClassTrainer()\nemit({ npc = t and t.npc, faction = t and t.faction })`,
 		}).emitted[0];
 	assert.deepEqual(nearest('Human', 'Alliance', 1429, 48, 42), { npc: 911, faction: 'A' });
 	assert.deepEqual(nearest('Orc', 'Horde', 1411, 43, 68), { npc: 3153, faction: 'H' });
@@ -355,13 +355,13 @@ test('every Era-frame coordinate in an emitted pack, candidates included, has it
 	assert.deepEqual(r.errors, []);
 	const { files, scripts: order } = writeTestPack(r.guides);
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua'] }],
 		script: `
 			local frames, guides = {}, {}
-			Polestar.RegisterPack = function() end
-			Polestar.RegisterMapFrames = function(t) for k, v in pairs(t.era) do frames[k] = v end end
-			Polestar.RegisterGuide = function(g) guides[#guides + 1] = g end
-			for _, f in ipairs({ ${order.map((f) => JSON.stringify(f)).join(', ')} }) do assert(loadfile(f))("Polestar_Guides", {}) end
+			SendaFH.RegisterPack = function() end
+			SendaFH.RegisterMapFrames = function(t) for k, v in pairs(t.era) do frames[k] = v end end
+			SendaFH.RegisterGuide = function(g) guides[#guides + 1] = g end
+			for _, f in ipairs({ ${order.map((f) => JSON.stringify(f)).join(', ')} }) do assert(loadfile(f))("SendaFH_Guides", {}) end
 			local missing, era, seen = {}, 0, {}
 			local function walk(t, where)
 				if seen[t] then return end

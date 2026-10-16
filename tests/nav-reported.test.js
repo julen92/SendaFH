@@ -1,6 +1,6 @@
 'use strict';
 // Walking paths players reported as impossible, each on the real engine and
-// the shipped maps (addon/Polestar_Nav): the player's spot and the target as
+// the shipped maps (addon/SendaFH_Nav): the player's spot and the target as
 // the bug report gave them (Era map coordinates), the path the engine draws,
 // and the ground it must not cross. A report stays here once fixed, so the
 // next re-pack cannot bring it back.
@@ -26,9 +26,9 @@ function walk(from, to) {
 	assert.equal(from.c, to.c);
 	const [got] = runAddon({
 		stubs: ['stub_encoding.lua'],
-		addons: ['Polestar_Nav'],
+		addons: ['SendaFH_Nav'],
 		script: `
-local Path = Polestar_NavEngine
+local Path = SendaFH_NavEngine
 local frames = {}
 Path.after = function(fn) frames[#frames + 1] = fn end
 local got = false

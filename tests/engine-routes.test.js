@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 // Kalimdor (c = 1): Durotar east of the Barrens; Eastern Kingdoms (c = 0):
 // Tirisfal north of Silverpine. Frames are simplified squares.
@@ -23,17 +23,17 @@ w.race, w.raceName, w.faction, w.class = "Orc", "Orc", "Horde", "WARRIOR"
 `;
 
 const GUIDES = `
-Polestar.RegisterGuide({ id = "test/durotar", pack = "test", title = "Durotar", faction = "Horde", races = { "Orc", "Troll" }, minLevel = 1, maxLevel = 10,
+SendaFH.RegisterGuide({ id = "test/durotar", pack = "test", title = "Durotar", faction = "Horde", races = { "Orc", "Troll" }, minLevel = 1, maxLevel = 10,
 	next = "test/barrens", nextChoices = { "test/barrens", "test/silverpine", "test/mulgore-only" }, steps = {
 	{ goals = { { t = "accept", quest = 1, title = "Your Place In The World", map = 1411, x = 42, y = 68 } } },
 	{ goals = { { t = "turnin", quest = 1, title = "Your Place In The World", map = 1411, x = 52, y = 43 } } },
 } })
-Polestar.RegisterGuide({ id = "test/tirisfal", pack = "test", title = "Tirisfal Glades", faction = "Horde", races = { "Undead" }, minLevel = 1, maxLevel = 10,
+SendaFH.RegisterGuide({ id = "test/tirisfal", pack = "test", title = "Tirisfal Glades", faction = "Horde", races = { "Undead" }, minLevel = 1, maxLevel = 10,
 	next = "test/silverpine", nextChoices = { "test/silverpine", "test/barrens" }, steps = {
 	{ goals = { { t = "accept", quest = 2, title = "Rude Awakening", map = 1420, x = 30, y = 71 } } },
 	{ goals = { { t = "turnin", quest = 2, title = "Rude Awakening", map = 1420, x = 61, y = 52 } } },
 } })
-Polestar.RegisterGuide({ id = "test/barrens", pack = "test", title = "The Barrens", faction = "Horde", minLevel = 10, maxLevel = 20, zone = 1413,
+SendaFH.RegisterGuide({ id = "test/barrens", pack = "test", title = "The Barrens", faction = "Horde", minLevel = 10, maxLevel = 20, zone = 1413,
 	zoneName = "The Barrens", next = "test/stonetalon", pitch = "Dense quests around a central hub.",
 	pros = { "Most quests in one zone", "Crossroads flight path" }, cons = { "Busy at launch" }, steps = {
 	{ goals = {
@@ -43,26 +43,26 @@ Polestar.RegisterGuide({ id = "test/barrens", pack = "test", title = "The Barren
 	{ goals = { { t = "accept", quest = 60, title = "Kolkar Leaders", map = 1413, x = 52, y = 31 } } },
 	{ goals = { { t = "level", level = 20 } } },
 } })
-Polestar.RegisterGuide({ id = "test/silverpine", pack = "test", title = "Silverpine Forest", faction = "Horde", minLevel = 10, maxLevel = 18, zone = 1421,
+SendaFH.RegisterGuide({ id = "test/silverpine", pack = "test", title = "Silverpine Forest", faction = "Horde", minLevel = 10, maxLevel = 18, zone = 1421,
 	zoneName = "Silverpine Forest", next = "test/stonetalon", pitch = "A quiet zone next to Undercity.", steps = {
 	{ goals = { { t = "goto", map = 1421, x = 43, y = 41 } } },
 	{ goals = { { t = "level", level = 18 } } },
 } })
-Polestar.RegisterGuide({ id = "test/mulgore-only", pack = "test", title = "Tauren side road", faction = "Horde", races = { "Tauren" }, minLevel = 10, maxLevel = 20, steps = {
+SendaFH.RegisterGuide({ id = "test/mulgore-only", pack = "test", title = "Tauren side road", faction = "Horde", races = { "Tauren" }, minLevel = 10, maxLevel = 20, steps = {
 	{ goals = { { t = "level", level = 20 } } },
 } })
-Polestar.RegisterGuide({ id = "test/stonetalon", pack = "test", title = "Stonetalon Mountains", faction = "Horde", minLevel = 18, maxLevel = 22, steps = {
+SendaFH.RegisterGuide({ id = "test/stonetalon", pack = "test", title = "Stonetalon Mountains", faction = "Horde", minLevel = 18, maxLevel = 22, steps = {
 	{ goals = { { t = "level", level = 22 } } },
 } })
 `;
 
 const HELPERS = `
-E = Polestar.Engine
+E = SendaFH.Engine
 w = stub.world
 function flush() stub.advance(0.25) end
 LOG = {}
 for _, m in ipairs({ "ROUTE_CHOICE", "ROUTE_CHOSEN", "GUIDE_CHANGED" }) do
-	Polestar.On(m, function(a, b) LOG[#LOG + 1] = m .. " " .. tostring(a) .. (b and (" " .. tostring(b)) or "") end)
+	SendaFH.On(m, function(a, b) LOG[#LOG + 1] = m .. " " .. tostring(a) .. (b and (" " .. tostring(b)) or "") end)
 end
 function takeLog() local l = LOG; LOG = {}; return l end
 function finishStarter(q)
@@ -99,7 +99,7 @@ test('finishing a guide with a route choice asks, keeps the finished guide, and 
 			r.barrens = { c.options[1].pitch, c.options[1].pros[2], c.options[1].cons[1], c.options[1].quests, c.options[1].minLevel, c.options[1].maxLevel }
 			r.nearer = c.options[1].seconds < c.options[2].seconds
 			r.chose = E.ChooseRoute("test/durotar", "test/silverpine"); flush()
-			r.after = { guide = E.GetGuide().id, log = takeLog(), saved = PolestarCharDB.routes["test/durotar"], pending = E.PendingRouteChoice() }
+			r.after = { guide = E.GetGuide().id, log = takeLog(), saved = SendaFHCharDB.routes["test/durotar"], pending = E.PendingRouteChoice() }
 			r.bad = E.ChooseRoute("test/durotar", "test/stonetalon")
 			emit(r)`,
 	});
@@ -123,7 +123,7 @@ test('finishing a guide with a route choice asks, keeps the finished guide, and 
 test('a remembered choice, or behavior.routeChoice = "recommended", continues without asking', () => {
 	const remembered = run({
 		before: 'w.moveTo(1411, 52, 43)',
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, routes = { ["test/durotar"] = "test/silverpine" } }' },
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, routes = { ["test/durotar"] = "test/silverpine" } }' },
 		script: `
 			E.SetGuide("test/durotar"); flush(); takeLog()
 			finishStarter(1)
@@ -135,7 +135,7 @@ test('a remembered choice, or behavior.routeChoice = "recommended", continues wi
 	const recommended = run({
 		before: 'w.race, w.raceName = "Scourge", "Undead"; w.moveTo(1420, 61, 52)',
 		script: `
-			Polestar.Set("behavior.routeChoice", "recommended")
+			SendaFH.Set("behavior.routeChoice", "recommended")
 			E.SetGuide("test/tirisfal"); flush(); takeLog()
 			finishStarter(2)
 			emit({ guide = E.GetGuide().id, log = takeLog() })`,
@@ -161,7 +161,7 @@ test('turn-ins and objectives of quests the character never had no longer block'
 	assert.notEqual(out.withQuest, 'na');
 });
 
-test('a fresh start at the bottom of a bracket offers the choice; later levels and /polestar path', () => {
+test('a fresh start at the bottom of a bracket offers the choice; later levels and /sendafh path', () => {
 	const fresh = run({
 		before: 'w.level = 11; w.moveTo(1411, 52, 43)',
 		script: `emit({ guide = E.GetGuide().id, log = takeLog() })`,

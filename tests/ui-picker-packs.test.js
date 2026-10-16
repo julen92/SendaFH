@@ -1,5 +1,5 @@
 'use strict';
-// Guide packs in the guide menu (addon/Polestar/UI/Picker.lua) and the
+// Guide packs in the guide menu (addon/SendaFH/UI/Picker.lua) and the
 // credits line on every guide, over the real guide registry
 // (uistub.realGuides) and the UI's fake Engine (tests/lua/stub_ui.lua). Our
 // categories list only our guides; All lists every shown guide; a "Guide
@@ -13,24 +13,24 @@ const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 
 const SETUP = `
 uistub.install()
-Polestar.Guides = uistub.realGuides
+SendaFH.Guides = uistub.realGuides
 G = uistub.realGuides
 local function guide(id, pack, extra)
 	local g = { id = id, pack = pack, title = extra.title, minLevel = 10, maxLevel = 20, steps = { { goals = { { t = "level", level = 20 } } } } }
 	for k, v in pairs(extra) do g[k] = v end
-	assert(Polestar.RegisterGuide(g))
+	assert(SendaFH.RegisterGuide(g))
 end
-assert(Polestar.RegisterPack({ addon = "Polestar_Guides", id = "guides", format = 1, title = "Polestar Guides", author = OURS_AUTHOR or "Polestar", version = "0.1.0", license = "GPL-3.0" }))
+assert(SendaFH.RegisterPack({ addon = "SendaFH_Guides", id = "guides", format = 1, title = "SendaFH Guides", author = OURS_AUTHOR or "SendaFH", version = "0.1.0", license = "GPL-3.0" }))
 guide("forever/westfall", "guides", { title = "Westfall", category = "Leveling" })
 guide("forever/cooking", "guides", { title = "Cooking", category = "Professions" })
-assert(Polestar.RegisterPack({ addon = "JoeAddon", id = "joe", format = 1, title = JOE_TITLE or "Joe's Routes", author = "Joe", version = "1.2.0",
+assert(SendaFH.RegisterPack({ addon = "JoeAddon", id = "joe", format = 1, title = JOE_TITLE or "Joe's Routes", author = "Joe", version = "1.2.0",
 	license = "CC-BY-4.0", source = JOE_SOURCE or "Written from my own play" }))
 guide("joe/barrens", "joe", { title = "Joe's Barrens" })
 guide("joe/redridge", "joe", { title = "Joe's Redridge", minLevel = 15, maxLevel = 25 })
 guide("joe/tailoring", "joe", { title = "Joe's Tailoring", category = "Professions", author = "Ann" })
 guide("joe/night", "joe", { title = "Night Run", folder = "Night routes" })
 stub.login()
-UI, P = Polestar.UI, Polestar.UI.Picker
+UI, P = SendaFH.UI, SendaFH.UI.Picker
 function titles(entries)
 	local out = {}
 	for _, e in ipairs(entries) do out[#out + 1] = e.kind == "guide" and e.guide.title or ("[" .. e.text .. "]") end
@@ -38,7 +38,7 @@ function titles(entries)
 end
 function nav()
 	local out = {}
-	for _, b in ipairs(PolestarPicker.navButtons) do
+	for _, b in ipairs(SendaFHPicker.navButtons) do
 		if b:IsShown() then out[#out + 1] = (b.psHeading and "# " or "") .. b.Label:GetText() end
 	end
 	return out
@@ -53,7 +53,7 @@ end
 function run(script, { before = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `${before}\n${SETUP}\n${script}`,
 	}).emitted;
 }
@@ -78,7 +78,7 @@ test('the "Guide packs" heading and one entry per shown pack, "<title> · <autho
 	const [out] = run(`
 		UI.ShowPicker()
 		P.SetCategory("pack:joe")
-		local shown = { nav = nav(), title = PolestarPicker.Title:GetText(), joe = rowFor("Joe's Barrens") ~= nil }
+		local shown = { nav = nav(), title = SendaFHPicker.Title:GetText(), joe = rowFor("Joe's Barrens") ~= nil }
 		G.SetPackShown("joe", false)
 		emit({ shown = shown, hidden = { nav = nav(), category = P.Category(), joe = rowFor("Joe's Barrens") ~= nil,
 			all = titles(P.Entries("All", "", "All")) } })`);
@@ -96,9 +96,9 @@ test('our pack switched off while one of our categories is selected: back to All
 	const [out] = run(`
 		UI.ShowPicker()
 		P.SetCategory("Professions")
-		local before = { category = P.Category(), title = PolestarPicker.Title:GetText() }
+		local before = { category = P.Category(), title = SendaFHPicker.Title:GetText() }
 		G.SetPackShown("guides", false)
-		emit({ before = before, category = P.Category(), title = PolestarPicker.Title:GetText(), empty = PolestarPicker.Empty:IsShown() and PolestarPicker.Empty:GetText() or false,
+		emit({ before = before, category = P.Category(), title = SendaFHPicker.Title:GetText(), empty = SendaFHPicker.Empty:IsShown() and SendaFHPicker.Empty:GetText() or false,
 			joe = rowFor("Joe's Barrens") ~= nil })`);
 	assert.deepEqual(out.before, { category: 'Professions', title: 'Professions' });
 	assert.equal(out.category, 'All');
@@ -110,16 +110,16 @@ test('our pack switched off while one of our categories is selected: back to All
 test('no heading without a shown pack that has guides', () => {
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()
-			Polestar.Guides = uistub.realGuides
-			assert(Polestar.RegisterPack({ addon = "Polestar_Guides", id = "guides", format = 1, title = "Polestar Guides", author = "Polestar", version = "1", license = "GPL-3.0" }))
-			assert(Polestar.RegisterGuide({ id = "forever/a", pack = "guides", title = "A", steps = { { goals = { { t = "level", level = 2 } } } } }))
-			assert(Polestar.RegisterPack({ addon = "EmptyAddon", id = "empty", format = 1, title = "Empty", author = "E", version = "1", license = "MIT" }))
+			SendaFH.Guides = uistub.realGuides
+			assert(SendaFH.RegisterPack({ addon = "SendaFH_Guides", id = "guides", format = 1, title = "SendaFH Guides", author = "Polestar", version = "1", license = "GPL-3.0" }))
+			assert(SendaFH.RegisterGuide({ id = "forever/a", pack = "guides", title = "A", steps = { { goals = { { t = "level", level = 2 } } } } }))
+			assert(SendaFH.RegisterPack({ addon = "EmptyAddon", id = "empty", format = 1, title = "Empty", author = "E", version = "1", license = "MIT" }))
 			stub.login()
-			Polestar.UI.ShowPicker()
+			SendaFH.UI.ShowPicker()
 			local out = {}
-			for _, b in ipairs(PolestarPicker.navButtons) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
+			for _, b in ipairs(SendaFHPicker.navButtons) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
 			emit(out)`,
 	}).emitted;
 	assert.ok(!out.includes('Guide packs'), out.join(', '));
@@ -151,7 +151,7 @@ test('details: the credits line for every guide, with the pack\'s source; the gu
 		emit({ joe = credits("joe/barrens"), ann = credits("joe/tailoring"), ours = credits("forever/westfall") })`);
 	assert.deepEqual(out.joe, { credits: "By Joe  ·  Joe's Routes 1.2.0  ·  CC-BY-4.0", source: '“Written from my own play”' });
 	assert.deepEqual(out.ann, { credits: "By Ann  ·  Joe's Routes 1.2.0  ·  CC-BY-4.0", source: '“Written from my own play”' });
-	assert.deepEqual(out.ours, { credits: 'By Polestar', source: false });
+	assert.deepEqual(out.ours, { credits: 'By SendaFH', source: false });
 });
 
 test('a "|" in a pack title and source prints literally in the sidebar, the header, a row\'s note and the credits', () => {
@@ -162,7 +162,7 @@ test('a "|" in a pack title and source prints literally in the sidebar, the head
 		P.SetCategory("pack:joe")
 		P.Select("joe/barrens")
 		local d = P.details
-		emit({ nav = nav(), title = PolestarPicker.Title:GetText(), note = note, credits = d.Credits:GetText(), source = d.Source:GetText() })`,
+		emit({ nav = nav(), title = SendaFHPicker.Title:GetText(), note = note, credits = d.Credits:GetText(), source = d.Source:GetText() })`,
 	{ before: 'JOE_TITLE = "Joe |cffff0000Red|r Routes"; JOE_SOURCE = "My |Hitem:1|h notes"' });
 	// Every "|" doubled once: the client prints "||" as one "|", so no colour or link starts.
 	const title = 'Joe ||cffff0000Red||r Routes';
@@ -173,22 +173,22 @@ test('a "|" in a pack title and source prints literally in the sidebar, the head
 	assert.equal(out.source, '“My ||Hitem:1||h notes”');
 });
 
-test('the empty states name Polestar Guides and guide packs', () => {
+test('the empty states name SendaFH Guides and guide packs', () => {
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()
-			Polestar.Guides = uistub.realGuides
+			SendaFH.Guides = uistub.realGuides
 			stub.login()
-			Polestar.Set("ui.shown", true)
-			Polestar.Fire("GUIDE_CHANGED", nil)
-			Polestar.UI.ShowPicker()
-			Polestar.UI.Picker.SetCategory("All")
-			local GF = PolestarGuideFrame
-			emit({ picker = PolestarPicker.Empty:GetText(), frame = { uistub.findText(GF, "No guides installed") ~= nil,
-				uistub.findText(GF, "Enable Polestar Guides or a guide pack in the AddOns list on the character screen, then reload.") ~= nil } })`,
+			SendaFH.Set("ui.shown", true)
+			SendaFH.Fire("GUIDE_CHANGED", nil)
+			SendaFH.UI.ShowPicker()
+			SendaFH.UI.Picker.SetCategory("All")
+			local GF = SendaFHGuideFrame
+			emit({ picker = SendaFHPicker.Empty:GetText(), frame = { uistub.findText(GF, "No guides installed") ~= nil,
+				uistub.findText(GF, "Enable SendaFH Guides or a guide pack in the AddOns list on the character screen, then reload.") ~= nil } })`,
 	}).emitted;
-	assert.equal(out.picker, 'No guides installed. Enable Polestar Guides or a guide pack in the AddOns list on the character screen, then reload.');
+	assert.equal(out.picker, 'No guides installed. Enable SendaFH Guides or a guide pack in the AddOns list on the character screen, then reload.');
 	assert.deepEqual(out.frame, [true, true]);
 });
 
@@ -196,8 +196,8 @@ test('credits name our pack\'s author, whoever that is (nothing hard-coded)', ()
 	const [out] = run(`
 		UI.ShowPicker()
 		P.Select("forever/westfall")
-		emit({ credits = P.details.Credits:GetText() })`, { before: 'OURS_AUTHOR = "The Polestar Team"' });
-	assert.equal(out.credits, 'By The Polestar Team');
+		emit({ credits = P.details.Credits:GetText() })`, { before: 'OURS_AUTHOR = "The SendaFH Team"' });
+	assert.equal(out.credits, 'By The SendaFH Team');
 });
 
 test('a 64-character pack title is cut: in the sidebar, the header and a row\'s note', () => {
@@ -209,11 +209,11 @@ test('a 64-character pack title is cut: in the sidebar, the header and a row\'s 
 		local note = { text = row.Note:GetText(), w = row.Note:GetWidth(), row = row:GetWidth(), title = row.Title:GetWidth() }
 		P.SetCategory("pack:joe")
 		local entry
-		for _, b in ipairs(PolestarPicker.navButtons) do if b:IsShown() and b.psKey == "pack:joe" then entry = b end end
+		for _, b in ipairs(SendaFHPicker.navButtons) do if b:IsShown() and b.psKey == "pack:joe" then entry = b end end
 		local p2, rel, rp, x = entry.Label:GetPoint(2)
-		local t2, trel, trp, tx = PolestarPicker.Title:GetPoint(2)
+		local t2, trel, trp, tx = SendaFHPicker.Title:GetPoint(2)
 		emit({ note = note, label = { n = entry.Label:GetNumPoints(), point = p2, own = rel == entry, rp = rp, x = x },
-			title = { text = PolestarPicker.Title:GetText(), n = PolestarPicker.Title:GetNumPoints(), point = t2, own = trel == PolestarPicker.Header, x = tx } })`,
+			title = { text = SendaFHPicker.Title:GetText(), n = SendaFHPicker.Title:GetNumPoints(), point = t2, own = trel == SendaFHPicker.Header, x = tx } })`,
 	{ before: `JOE_TITLE = "${long}"` });
 	assert.equal(out.note.text, long);
 	assert.ok(out.note.w <= Math.floor(out.note.row * 0.45), `note ${out.note.w} within 45% of ${out.note.row}`);
@@ -227,7 +227,7 @@ test('a 64-character pack title is cut: in the sidebar, the header and a row\'s 
 
 test('a pooled row measures its note and title from scratch: longer ones after shorter ones get their own width', () => {
 	const [out] = run(`
-		assert(Polestar.RegisterPack({ addon = "AnnAddon", id = "ann", format = 1, title = "Ann's Long Winding Routes", author = "Ann", version = "1", license = "MIT" }))
+		assert(SendaFH.RegisterPack({ addon = "AnnAddon", id = "ann", format = 1, title = "Ann's Long Winding Routes", author = "Ann", version = "1", license = "MIT" }))
 		guide("ann/barrens", "ann", { title = "Ann's Barrens Loop" })
 		UI.ShowPicker()
 		P.SetCategory("All")
@@ -252,22 +252,22 @@ test('every pack switched off: the empty states point to the Guide packs page, n
 	const [out] = run(`
 		G.SetPackShown("guides", false)
 		G.SetPackShown("joe", false)
-		Polestar.Set("ui.shown", true)
-		Polestar.Fire("GUIDE_CHANGED", nil)
+		SendaFH.Set("ui.shown", true)
+		SendaFH.Fire("GUIDE_CHANGED", nil)
 		UI.ShowPicker()
 		P.SetCategory("All")
-		local GF = PolestarGuideFrame
+		local GF = SendaFHGuideFrame
 		local button
 		for _, f in ipairs(stub.frames) do
 			if rawget(f, "psAction") and rawget(f, "Label") and f:IsVisible() and f.Label:GetText() == "Guide packs" then button = f end
 		end
-		local r = { picker = PolestarPicker.Empty:GetText(), title = uistub.findText(GF, "No guides shown") ~= nil,
-			text = uistub.findText(GF, "The guide packs are switched off. Turn one on under Options, Guide packs (/polestar packs).") ~= nil,
+		local r = { picker = SendaFHPicker.Empty:GetText(), title = uistub.findText(GF, "No guides shown") ~= nil,
+			text = uistub.findText(GF, "The guide packs are switched off. Turn one on under Options, Guide packs (/sendafh packs).") ~= nil,
 			installed = uistub.findText(GF, "No guides installed") ~= nil, button = button ~= nil }
 		if button then button.psAction() end
-		r.options = PolestarOptions ~= nil and PolestarOptions:IsShown() and PolestarOptions.Title:GetText() or false
+		r.options = SendaFHOptions ~= nil and SendaFHOptions:IsShown() and SendaFHOptions.Title:GetText() or false
 		emit(r)`);
-	assert.equal(out.picker, 'No guides shown: the guide packs are switched off. Turn one on under Options, Guide packs (/polestar packs).');
+	assert.equal(out.picker, 'No guides shown: the guide packs are switched off. Turn one on under Options, Guide packs (/sendafh packs).');
 	assert.deepEqual({ title: out.title, text: out.text, installed: out.installed, button: out.button },
 		{ title: true, text: true, installed: false, button: true });
 	assert.equal(out.options, 'Guide packs');

@@ -1,5 +1,5 @@
 'use strict';
-// talents build|check: addon/Polestar/Talents/Builds.lua from the talent
+// talents build|check: addon/SendaFH/Talents/Builds.lua from the talent
 // plans in talents/forever/ and the Forever client's trait tables (see
 // tools/lib/talents/build.js).
 
@@ -15,18 +15,18 @@ const { TABLES, PREREQ_RULE, buildTalents } = require('../lib/talents/build');
 // review the diff when the client's talents change.
 const BUILD = '1.60.1.70374';
 
-const usage = `usage: node tools/polestar.js talents build|check [options]
+const usage = `usage: node tools/sendafh.js talents build|check [options]
 
 Resolves the talent plans in talents/forever/*.json (one pick per level, by
 talent name) against the Forever client's trait tables (wago.tools, build
 ${BUILD}, cached under data/sources/wago/), replays every pick under the
 client's rules (one point a level from 10, tier gates, arrows; arrows need
-their source at ${PREREQ_RULE === 'full' ? 'full rank' : 'one rank'}), and writes addon/Polestar/Talents/Builds.lua.
+their source at ${PREREQ_RULE === 'full' ? 'full rank' : 'one rank'}), and writes addon/SendaFH/Talents/Builds.lua.
 check rebuilds in memory and fails if the file differs or a plan breaks a rule.
 
 options:
   --plans <dir>    plan sources (default talents/forever/)
-  --out <dir>      output folder (default addon/Polestar/Talents/)
+  --out <dir>      output folder (default addon/SendaFH/Talents/)
   --sources <dir>  download cache (default data/sources/)
   --build <ver>    client build (default ${BUILD})
   --offline        use cached tables only`;
@@ -43,7 +43,7 @@ async function run(argv) {
 		return 2;
 	}
 	const plansDir = resolvePath(opts.plans, 'talents/forever', ROOT);
-	const outDir = resolvePath(opts.out, 'addon/Polestar/Talents', ROOT);
+	const outDir = resolvePath(opts.out, 'addon/SendaFH/Talents', ROOT);
 	const files = fs.readdirSync(plansDir).filter((f) => f.endsWith('.json')).sort();
 	if (files.length !== 1) {
 		console.error(`expected one plan file in ${plansDir} (Builds.lua holds one class for now), found ${files.length}`);

@@ -19,19 +19,19 @@ jobs:
           node-version: 24
       - name: Install Lua 5.1
         run: sudo apt-get update && sudo apt-get install -y lua5.1
-      - name: Install Polestar
+      - name: Install SendaFH
         run: |
-          git clone --depth 1 "{{repo}}" "$RUNNER_TEMP/polestar"
-          cd "$RUNNER_TEMP/polestar"
+          git clone --depth 1 "{{repo}}" "$RUNNER_TEMP/sendafh"
+          cd "$RUNNER_TEMP/sendafh"
           npm link
-          polestar data build --no-web-xp --no-wowhead
+          sendafh data build --no-web-xp --no-wowhead
       - name: Lint
-        run: polestar lint --format github
+        run: sendafh lint --format github
       - name: Playtest
-        run: polestar playtest
+        run: sendafh playtest
       - name: Pack
         if: startsWith(github.ref, 'refs/tags/v')
-        run: polestar pack
+        run: sendafh pack
       - name: Keep the zip for the release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4

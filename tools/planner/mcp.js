@@ -29,13 +29,13 @@ async function runMcp({ port = 8078, start, input = process.stdin, output = proc
 	let base = `http://127.0.0.1:${port}/`;
 	let local = null;
 	let list = await probe(base);
-	if (list) log(`polestar planner mcp: using the planner at ${base}`);
+	if (list) log(`sendafh planner mcp: using the planner at ${base}`);
 
 	async function startLocal() {
 		local = await start(port);
 		base = local.url;
 		list = await probe(base);
-		log(`polestar planner mcp: started the planner at ${base} (open it in a browser to watch)`);
+		log(`sendafh planner mcp: started the planner at ${base} (open it in a browser to watch)`);
 	}
 	if (!list) await startLocal();
 
@@ -47,7 +47,7 @@ async function runMcp({ port = 8078, start, input = process.stdin, output = proc
 		} catch (err) {
 			// The planner we proxied to went away: run one here and retry once.
 			if (local) throw err;
-			log(`polestar planner mcp: the planner at ${base} stopped answering (${err.message})`);
+			log(`sendafh planner mcp: the planner at ${base} stopped answering (${err.message})`);
 			await startLocal();
 			return post();
 		}
@@ -72,8 +72,8 @@ async function runMcp({ port = 8078, start, input = process.stdin, output = proc
 				result = {
 					protocolVersion: PROTOCOLS.includes(asked) ? asked : PROTOCOLS[0],
 					capabilities: { tools: { listChanged: false } },
-					serverInfo: { name: 'polestar-planner', version },
-					instructions: 'Polestar route planner: read and edit .guide leveling guides (edits are written to the files at once), play a route as a timeline, look up quests/NPCs/spawns. Start with planner_info and guides_list; guide_get gives the hash every edit needs.',
+					serverInfo: { name: 'sendafh-planner', version },
+					instructions: 'SendaFH route planner: read and edit .guide leveling guides (edits are written to the files at once), play a route as a timeline, look up quests/NPCs/spawns. Start with planner_info and guides_list; guide_get gives the hash every edit needs.',
 				};
 			} else if (method === 'ping') result = {};
 			else if (method === 'tools/list') {

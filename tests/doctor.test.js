@@ -1,5 +1,5 @@
 'use strict';
-// polestar doctor: one line per check, each failing one with its fix for
+// sendafh doctor: one line per check, each failing one with its fix for
 // Windows, macOS and Linux; exit 1 only when Node or the reference data fail.
 
 const { test } = require('node:test');

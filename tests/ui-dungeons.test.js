@@ -1,5 +1,5 @@
 'use strict';
-// The Dungeons section of the hub (addon/Polestar/UI/Dungeons.lua) over the
+// The Dungeons section of the hub (addon/SendaFH/UI/Dungeons.lua) over the
 // real Dungeons runtime and the synthetic Codex pack of
 // tests/fixtures/codex/dungeons.json (Wailing Caverns with its quests and
 // bosses, the Deadmines, a Forever dungeon with nothing known), against the
@@ -25,13 +25,13 @@ after(() => pack && pack.cleanup());
 const SETUP = `uistub.player.level, uistub.player.race, uistub.player.class, uistub.player.faction = 20, "Tauren", "DRUID", "Horde"
 OpenWorldMap = function(map) uistub.worldMap = map end
 local done, log = { [1490] = true }, { [914] = true }
-Polestar.Compat.IsQuestCompleted = function(id) return done[id] or false end
-Polestar.Compat.IsOnQuest = function(id) return log[id] or false end
-Polestar.Compat.IsQuestReadyForTurnIn = function() return false end
-local DS, P = Polestar.UI.DungeonsSection, Polestar.UI.Picker
+SendaFH.Compat.IsQuestCompleted = function(id) return done[id] or false end
+SendaFH.Compat.IsOnQuest = function(id) return log[id] or false end
+SendaFH.Compat.IsQuestReadyForTurnIn = function() return false end
+local DS, P = SendaFH.UI.DungeonsSection, SendaFH.UI.Picker
 local function navs()
 	local out = {}
-	for _, b in ipairs(PolestarPicker.navButtons) do
+	for _, b in ipairs(SendaFHPicker.navButtons) do
 		if b:IsShown() then out[#out + 1] = { b.psKey, b.Label:GetText(), b.Count:IsShown() and b.Count:GetText() or "" } end
 	end
 	return out
@@ -43,7 +43,7 @@ local function cardNames()
 end
 local function tabs()
 	local out = {}
-	for _, t in ipairs(PolestarPicker.tabButtons) do if t:IsShown() then out[#out + 1] = t.Label:GetText() end end
+	for _, t in ipairs(SendaFHPicker.tabButtons) do if t:IsShown() then out[#out + 1] = t.Label:GetText() end end
 	return out
 end
 local function segs()
@@ -80,16 +80,16 @@ function run(script, { withPack = true } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before: withPack ? pack.stubLua : '',
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()\nstub.login()\n${SETUP}\n${script}`,
 	}).emitted;
 }
 
 test('SHOW_DUNGEON(nil) opens the hub at Home: level bands in the sidebar, the dungeons for your level as cards, the faction filter yours first', () => {
 	const [out] = run(`
-		Polestar.Dungeons.Open()
-		emit({ section = P.Section(), navs = navs(), cards = cardNames(), segs = segs(), title = PolestarPicker.Title:GetText(),
-			sub = PolestarPicker.Subtitle:GetText(), tabRow = PolestarPicker.TabRow:IsShown(), shown = DS.Shown(),
+		SendaFH.Dungeons.Open()
+		emit({ section = P.Section(), navs = navs(), cards = cardNames(), segs = segs(), title = SendaFHPicker.Title:GetText(),
+			sub = SendaFHPicker.Subtitle:GetText(), tabRow = SendaFHPicker.TabRow:IsShown(), shown = DS.Shown(),
 			stats = DS.cards[1].Stats:GetText(), chip = DS.cards[1].Yours:IsShown() })`);
 	assert.equal(out.section, 'Dungeons');
 	assert.deepEqual(out.navs, [
@@ -108,18 +108,18 @@ test('SHOW_DUNGEON(nil) opens the hub at Home: level bands in the sidebar, the d
 
 test('Home: All dungeons groups by band; the faction filter changes the counts; search narrows and Enter opens the first', () => {
 	const [out] = run(`
-		Polestar.Dungeons.Open()
+		SendaFH.Dungeons.Open()
 		DS.SetBand("all")
 		local deadmines = DS.cards[1].Stats:GetText()
-		local all = { cards = cardNames(), heads = DS.Shown().heads, title = PolestarPicker.Title:GetText(), yours = DS.cards[2].Yours:IsShown(),
+		local all = { cards = cardNames(), heads = DS.Shown().heads, title = SendaFHPicker.Title:GetText(), yours = DS.cards[2].Yours:IsShown(),
 			forever = DS.cards[3].Forever:IsShown() }
 		DS.SetFaction("All")
 		local both = DS.cards[2].Stats:GetText()
 		DS.SetFaction("Alliance")
 		local alliance = { DS.cards[1].Stats:GetText(), segs() }
-		local box = Polestar.UI.Picker.search
+		local box = SendaFH.UI.Picker.search
 		box:SetText("wail"); stub.RunScript(box, "OnTextChanged", true)
-		local found = { cards = cardNames(), title = PolestarPicker.Title:GetText(), sub = PolestarPicker.Subtitle:GetText() }
+		local found = { cards = cardNames(), title = SendaFHPicker.Title:GetText(), sub = SendaFHPicker.Subtitle:GetText() }
 		DS.Enter()
 		emit({ deadmines = deadmines, all = all, both = both, alliance = alliance, found = found, page = DS.Page(), tab = DS.Tab() })`);
 	assert.deepEqual(out.all.cards, ['The Deadmines', 'Wailing Caverns', 'Blackmaw Hold']);
@@ -141,17 +141,17 @@ test('A page: the painting header with the name, facts and actions; tabs with co
 	const [out] = run(`
 		-- Nothing in the log: the hand-in stays away, so "Show on map" keeps its place among three actions.
 		log[914] = nil
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local _, _, pg = DS.Frames()
 		local head = { pg.Title:GetText(), pg.Sub:GetText(), pg.GoQuiet:IsShown(), pg.MapBtn:IsShown(), pg.Back:IsShown(), pg.Forever:IsShown(),
-			PolestarPicker.Title:GetText(), PolestarPicker.Title:GetAlpha(), PolestarPicker.Band:IsShown(), pg.Art:IsShown() }
+			SendaFHPicker.Title:GetText(), SendaFHPicker.Title:GetAlpha(), SendaFHPicker.Band:IsShown(), pg.Art:IsShown() }
 		local nav = {}
-		Polestar.Nav.SetTarget = function(map, x, y, label) nav = { map, x, y, label } return true end
+		SendaFH.Nav.SetTarget = function(map, x, y, label) nav = { map, x, y, label } return true end
 		pg.GoQuiet:Click()
 		pg.MapBtn:Click()
 		pg.Back:Click()
 		emit({ head = head, tabs = (function() DS.Open("wailing-caverns") return tabs() end)(), nav = nav, map = uistub.worldMap,
-			back = (function() DS.Home() return { DS.Page() or false, PolestarPicker.Title:GetAlpha(), PolestarPicker.Band:IsShown(), pg:IsShown() } end)() })`);
+			back = (function() DS.Home() return { DS.Page() or false, SendaFHPicker.Title:GetAlpha(), SendaFHPicker.Band:IsShown(), pg:IsShown() } end)() })`);
 	assert.deepEqual(out.head, ['Wailing Caverns', 'Levels 17\u201324  \u00b7  The Barrens  \u00b7  10 players  \u00b7  4 bosses', true, true, true, false,
 		'Wailing Caverns', 0, false, true]);
 	assert.deepEqual(out.tabs, ['Quests  4', 'Attunement', 'Bosses  4', 'Map'], 'the fixture gives Wailing Caverns an attunement');
@@ -163,8 +163,8 @@ test('A page: the painting header with the name, facts and actions; tabs with co
 test('A page with quests to pick up: "Pick up the quests" is the primary action, the entrance second; with none left, "Nothing to pick up" says why', () => {
 	const [open, none] = run(`
 		local printed = {}
-		Polestar.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local _, _, pg = DS.Frames()
 		local function shown(b) return b:IsShown() and b.Label:GetText() or false end
 		-- Right to left: the first shown button holds the band's corner.
@@ -176,7 +176,7 @@ test('A page with quests to pick up: "Pick up the quests" is the primary action,
 		DS.Render()
 		pg.PickupNone:Click()
 		emit({ pickup = shown(pg.Pickup), go = shown(pg.Go), none = shown(pg.PickupNone), corner = corner(), tip = pg.PickupNone.psTipLines, printed = printed,
-			tabs = #Polestar.Engine.GetTabs() })`);
+			tabs = #SendaFH.Engine.GetTabs() })`);
 	assert.deepEqual([open.pickup, open.go, open.quiet, open.none, open.corner],
 		['Pick up the quests', false, 'Guide me to the entrance', false, 'Pick up the quests']);
 	assert.equal(open.tip[0], 'Pick up the quests');
@@ -194,8 +194,8 @@ test('A page with quests to pick up: "Pick up the quests" is the primary action,
 test('"Hand in the quests" shows only while one of the page\'s quests is in the log, leads once one is finished, and opens the hand-in guide; nothing finished says what is open', () => {
 	const [open, gone, ready, done2] = run(`
 		local printed = {}
-		Polestar.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local _, _, pg = DS.Frames()
 		local function shown(b) return b:IsShown() and b.Label:GetText() or false end
 		local function corner() for _, b in ipairs({ pg.HandIn, pg.HandInQuiet, pg.Pickup, pg.PickupQuiet, pg.Go, pg.PickupNone, pg.GoQuiet, pg.MapBtn }) do
@@ -203,19 +203,19 @@ test('"Hand in the quests" shows only while one of the page\'s quests is in the 
 		-- Leaders of the Fang is in the log, its gems still to get.
 		pg.HandInQuiet:Click()
 		emit({ lead = shown(pg.HandIn), quiet = shown(pg.HandInQuiet), corner = corner(), tip = pg.HandInQuiet.psTipLines, printed = printed,
-			tabs = #Polestar.Engine.GetTabs(), fits = pg.Sub:GetWidth() > 0, map = pg.MapBtn:IsShown(), go = shown(pg.GoQuiet) })
+			tabs = #SendaFH.Engine.GetTabs(), fits = pg.Sub:GetWidth() > 0, map = pg.MapBtn:IsShown(), go = shown(pg.GoQuiet) })
 		log[914] = nil
 		DS.Render()
 		emit({ lead = shown(pg.HandIn), quiet = shown(pg.HandInQuiet) })
 		log[914] = true
-		Polestar.Compat.IsQuestReadyForTurnIn = function(id) return id == 914 end
+		SendaFH.Compat.IsQuestReadyForTurnIn = function(id) return id == 914 end
 		local asked = {}
-		Polestar.Dungeons.HandIn = function(key) asked[#asked + 1] = key return "lookup/handin/" .. key end
+		SendaFH.Dungeons.HandIn = function(key) asked[#asked + 1] = key return "lookup/handin/" .. key end
 		DS.Render()
 		emit({ lead = shown(pg.HandIn), quiet = shown(pg.HandInQuiet), pickup = shown(pg.Pickup), pickupQuiet = shown(pg.PickupQuiet),
 			corner = corner(), tip = pg.HandIn.psTipLines, fits = pg.Sub:GetWidth() > 0 })
 		pg.HandIn:Click()
-		emit({ asked = asked, hub = PolestarPicker:IsShown() })`);
+		emit({ asked = asked, hub = SendaFHPicker:IsShown() })`);
 	assert.deepEqual([open.lead, open.quiet, open.corner], [false, 'Hand in the quests', 'Pick up the quests'], 'beside "Pick up the quests", which leads');
 	assert.deepEqual(open.tip, ['Not finished yet: Leaders of the Fang.']);
 	assert.deepEqual(open.printed, [open.tip[0]], 'the action says so');
@@ -232,12 +232,12 @@ test('"Hand in the quests" shows only while one of the page\'s quests is in the 
 
 test('A finished pick-up guide offers the hand-in while the dungeon\'s quests are in the log', () => {
 	const [offer, none] = run(`
-		local GF = Polestar.UI.GuideFrame
+		local GF = SendaFH.UI.GuideFrame
 		local id = "lookup/pickup/wailing-caverns"
 		uistub.guides[id] = { id = id, pack = "lookup", title = "Wailing Caverns: pick up the quests", category = "Lookup",
 			lookup = { kind = "pickup", id = "wailing-caverns" }, steps = { { title = "Wailing Caverns", goals = { { t = "note", text = "n" } } } } }
 		local asked = {}
-		Polestar.Dungeons.HandIn = function(key) asked[#asked + 1] = key return "lookup/handin/" .. key end
+		SendaFH.Dungeons.HandIn = function(key) asked[#asked + 1] = key return "lookup/handin/" .. key end
 		uistub.setGuide(id)
 		uistub.complete()
 		local e = GF.parts.empty
@@ -260,9 +260,9 @@ test('A finished pick-up guide offers the hand-in while the dungeon\'s quests ar
 test('Quests: the giver line is a link; with a prerequisite still to do it points at that one', () => {
 	const [out] = run(`
 		done[1490], log[914] = nil, nil
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local pins = {}
-		Polestar.Nav.SetTarget = function(map, x, y, label) pins[#pins + 1] = { map, x, y, label } return true end
+		SendaFH.Nav.SetTarget = function(map, x, y, label) pins[#pins + 1] = { map, x, y, label } return true end
 		local fang, hides = block(914), block(1486)
 		fang.StartLink:Click()
 		hides.StartLink:Click()
@@ -275,12 +275,12 @@ test('Quests: the giver line is a link; with a prerequisite still to do it point
 
 test('Quests: one block per quest with state, level, flags, objective, start and end pins, the chain, choice tiles and reward chips', () => {
 	const [out] = run(`
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local fang = block(914)
 		local hides = block(1486)
 		local shard = block(6981)
 		local pins = {}
-		Polestar.Nav.SetTarget = function(map, x, y, label) pins[#pins + 1] = { map, x, y, label } return true end
+		SendaFH.Nav.SetTarget = function(map, x, y, label) pins[#pins + 1] = { map, x, y, label } return true end
 		fang.StartPin:Click()
 		for _, r in ipairs(kids("Chains")) do r.Pin:Click() end
 		local tile
@@ -321,10 +321,10 @@ test('Quests: one block per quest with state, level, flags, objective, start and
 test('Quests: too low shows the level it opens at; the other faction is counted when none are left', () => {
 	const [out] = run(`
 		uistub.player.level = 12
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local fang = block(914)
 		DS.SetFaction("Alliance")
-		Polestar.Dungeons.Open("deadmines")
+		SendaFH.Dungeons.Open("deadmines")
 		local _, _, pg = DS.Frames()
 		local dm = { DS.Shown().quests, pg.EmptyTitle:IsShown() }
 		DS.SetFaction("Horde")
@@ -339,7 +339,7 @@ test('Quests: too low shows the level it opens at; the other faction is counted 
 
 test('Bosses: kill order, level and the quests each serves; a quest line opens the Quests tab at it', () => {
 	const [out] = run(`
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		DS.SetTab("bosses")
 		local names = shownTexts(DS.bossRows, "Name")
 		local levels = shownTexts(DS.bossRows, "Level")
@@ -365,7 +365,7 @@ test('Map: the entrance on its zone with the quest givers there', () => {
 		C_Map = C_Map or {}
 		C_Map.GetMapArtLayers = function(id) if id == 1413 then return { { layerWidth = 1002, layerHeight = 668, tileWidth = 256, tileHeight = 256 } } end return {} end
 		C_Map.GetMapArtLayerTextures = function(id) if id == 1413 then local t = {} for i = 1, 12 do t[i] = 100 + i end return t end return {} end
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		DS.SetTab("map")
 		local _, _, pg = DS.Frames()
 		emit({ shown = DS.Shown(), note = pg.MapNote:GetText(), art = pg.MapArt:IsShown(), blocks = (function() for _, b in ipairs(DS.blocks) do if b:IsShown() then return true end end return false end)() })`);
@@ -381,12 +381,12 @@ test('Speed: pages reuse pooled frames, only cards in view are painted, open and
 		-- Thirty more dungeons, so Home scrolls.
 		local extra = {}
 		for i = 1, 30 do extra["extra-" .. i] = { name = "Extra " .. i, kind = "dungeon", minLevel = 10 + i, maxLevel = 14 + i, zone = 1413, entrance = { map = 1413, x = 40, y = 40 }, quests = { A = 1, H = 1 }, bosses = 1 } end
-		Polestar.Dungeons.Load()
-		Polestar.Dungeons.Register("dungeon", extra, {})
-		Polestar.Fire("CODEX_LOADED")
+		SendaFH.Dungeons.Load()
+		SendaFH.Dungeons.Register("dungeon", extra, {})
+		SendaFH.Fire("CODEX_LOADED")
 		local clock = os.clock
 		local t0 = clock()
-		Polestar.Dungeons.Open()
+		SendaFH.Dungeons.Open()
 		local tHome = clock() - t0
 		DS.SetBand("all")
 		local cards, painted = DS.Shown().cards, DS.Shown().painted
@@ -404,7 +404,7 @@ test('Speed: pages reuse pooled frames, only cards in view are painted, open and
 		for i = 1, 40 do
 			qs[i] = string.format('{id=%d,title="Errand %d",level=%d,minLevel=%d,objective="Collect 8 Things",start={kind="npc",id=1,name="Giver",map=1413,x=50,y=50},finish={kind="npc",id=1,name="Giver",map=1413,x=50,y=50},chain={},rewards={items={},xp=900,rep={}}}', 90000 + i, i, 20 + i % 5, 15)
 		end
-		Polestar.Dungeons.Register("dungeon", { big = { name = "Big Hold", kind = "dungeon", minLevel = 20, maxLevel = 25, quests = { A = 40, H = 40 }, bosses = 0 } },
+		SendaFH.Dungeons.Register("dungeon", { big = { name = "Big Hold", kind = "dungeon", minLevel = 20, maxLevel = 25, quests = { A = 40, H = 40 }, bosses = 0 } },
 			{ big = "return {quests={" .. table.concat(qs, ",") .. "},chain={},bosses={}}" })
 		t0 = clock()
 		DS.Open("big")
@@ -426,11 +426,11 @@ test('Speed: pages reuse pooled frames, only cards in view are painted, open and
 
 test('Without the Codex pack: an empty state that says where to get the release; leaving the section restores the header', () => {
 	const [out] = run(`
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local _, home = DS.Frames()
 		local empty = { DS.Shown().empty, home.EmptyTitle:GetText(), home.EmptyNote:GetText(), home.Watermark:IsVisible() }
 		P.ShowSection("Guides")
-		emit({ empty = empty, title = PolestarPicker.Title:GetAlpha(), band = PolestarPicker.Band:IsShown(), segs = segs() })`, { withPack: false });
+		emit({ empty = empty, title = SendaFHPicker.Title:GetAlpha(), band = SendaFHPicker.Band:IsShown(), segs = segs() })`, { withPack: false });
 	assert.equal(out.empty[0], 'missing');
 	assert.match(out.empty[2], /not installed.*Releases page.*not "Source code"/, 'points at the release download, not the source zip');
 	assert.equal(out.empty[3], true);
@@ -442,9 +442,9 @@ test('Without the Codex pack: an empty state that says where to get the release;
 test('review P3-13: "Show on map" in combat says in chat why the map stays shut, and opens it once combat is over', () => {
 	const [out] = run(`
 		local printed = {}
-		Polestar.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
+		SendaFH.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
 		uistub.worldMap = nil
-		Polestar.Dungeons.Open("wailing-caverns")
+		SendaFH.Dungeons.Open("wailing-caverns")
 		local _, _, pg = DS.Frames()
 		stub.inCombat = true
 		pg.MapBtn:Click()

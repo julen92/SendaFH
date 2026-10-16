@@ -1,8 +1,8 @@
 'use strict';
 // End to end: the arrow on Shortest Path Forever's real walking engine and
-// Polestar's packed maps (maps 0 and 1, `nav pack`). The
-// real Polestar (with TravelData, the guides' Era map frames, and the local
-// crossings when built) loads the real Polestar_Nav on demand at login, its
+// SendaFH's packed maps (maps 0 and 1, `nav pack`). The
+// real SendaFH (with TravelData, the guides' Era map frames, and the local
+// crossings when built) loads the real SendaFH_Nav on demand at login, its
 // maps decoded by tests/lua/stub_encoding.lua the way the client decodes them;
 // the stub world's maps are data/forever/map-frames.json's, and UnitPosition
 // answers from the same place (x north, y west, z, the instance map id). A
@@ -31,8 +31,8 @@ function skipReason() {
 	}
 	const data = needs('map-frames.json', 'zones.json');
 	if (data) return data;
-	if (!fs.existsSync(path.join(ADDONS, 'Polestar_Nav', 'Nav', 'Nav.xml'))) return 'addon/Polestar_Nav has no walking maps (node tools/polestar.js nav pack and nav vendor)';
-	if (!fs.existsSync(path.join(ADDONS, 'Polestar_Guides', 'MapFrames.lua'))) return 'addon/Polestar_Guides/MapFrames.lua not built (node tools/polestar.js compile)';
+	if (!fs.existsSync(path.join(ADDONS, 'SendaFH_Nav', 'Nav', 'Nav.xml'))) return 'addon/SendaFH_Nav has no walking maps (node tools/sendafh.js nav pack and nav vendor)';
+	if (!fs.existsSync(path.join(ADDONS, 'SendaFH_Guides', 'MapFrames.lua'))) return 'addon/SendaFH_Guides/MapFrames.lua not built (node tools/sendafh.js compile)';
 	return false;
 }
 const skip = skipReason();
@@ -51,13 +51,13 @@ function mapsLua() {
 let nsFile;
 function before() {
 	if (!nsFile) {
-		// Appended to Polestar_Nav's files: keeps its namespace, for the snapped-node check.
-		nsFile = path.join(tmpdir('polestar-nav-e2e-'), 'keep-ns.lua');
+		// Appended to SendaFH_Nav's files: keeps its namespace, for the snapped-node check.
+		nsFile = path.join(tmpdir('sendafh-nav-e2e-'), 'keep-ns.lua');
 		fs.writeFileSync(nsFile, 'local _, ns = ...\nstub.navNs = ns\n');
 	}
 	return `local w = stub.world
 ${mapsLua()}
-stub.packs.Polestar_Nav = { ${[...tocFiles('Polestar_Nav'), nsFile].map((f) => JSON.stringify(f)).join(', ')} }
+stub.packs.SendaFH_Nav = { ${[...tocFiles('SendaFH_Nav'), nsFile].map((f) => JSON.stringify(f)).join(', ')} }
 -- UnitPosition: the world position the live map frame gives, z as set, the instance map id.
 function UnitPosition(unit)
 	if unit ~= "player" or not w.map or w.inInstance then return nil end
@@ -68,13 +68,13 @@ end`;
 }
 
 const PRELUDE = `
-local w, N, C = stub.world, Polestar.Nav, Polestar.Compat
-local E = Polestar_NavEngine
+local w, N, C = stub.world, SendaFH.Nav, SendaFH.Compat
+local E = SendaFH_NavEngine
 local floor, sqrt = math.floor, math.sqrt
 local function r1(v) return v and floor(v * 10 + 0.5) / 10 end
 -- Every search the arrow asks for, with what it was asked and what came back.
 local finds = {}
-if E then -- nil when Polestar_Nav was not loaded (routing off)
+if E then -- nil when SendaFH_Nav was not loaded (routing off)
 	local realFind = E.Find
 	E.Find = function(map, from, to, callback, water)
 		local rec = { map = map, from = { from.x, from.y, from.z }, to = { to.x, to.y, to.z }, at = GetTime(), combat = InCombatLockdown() and true or false }
@@ -136,10 +136,10 @@ end
 `;
 
 // Runs the scenario; its emitted record goes to the test's diagnostics (the numbers behind each check).
-// shipped: only what the release zip carries (no local Polestar_Travel crossing data).
+// shipped: only what the release zip carries (no local SendaFH_Travel crossing data).
 function run(t, script, { shipped = false } = {}) {
-	const addons = ['Polestar', { name: 'Polestar_Guides', files: ['MapFrames.lua'] }];
-	if (!shipped && fs.existsSync(path.join(ADDONS, 'Polestar_Travel', 'Polestar_Travel.toc'))) addons.push('Polestar_Travel');
+	const addons = ['SendaFH', { name: 'SendaFH_Guides', files: ['MapFrames.lua'] }];
+	if (!shipped && fs.existsSync(path.join(ADDONS, 'SendaFH_Travel', 'SendaFH_Travel.toc'))) addons.push('SendaFH_Travel');
 	const [out] = runAddon({
 		stubs: ['stub_world.lua', 'stub_encoding.lua', 'stub_packs.lua'],
 		before: before(),
@@ -151,9 +151,9 @@ function run(t, script, { shipped = false } = {}) {
 	return out;
 }
 
-test('a: Polestar\'s world frame is the engine\'s: known UnitPosition spots and guide coordinates land on the engine\'s nodes, at their height, on instance map 0', { skip }, (t) => {
+test('a: SendaFH\'s world frame is the engine\'s: known UnitPosition spots and guide coordinates land on the engine\'s nodes, at their height, on instance map 0', { skip }, (t) => {
 	const out = run(t, `
-		local r = { loads = stub.packLoads.Polestar_Nav, engine = N.Path == E }
+		local r = { loads = stub.packLoads.SendaFH_Nav, engine = N.Path == E }
 		r.cs = stub.navNs.PathGrid.State(0).cs
 		local ns = stub.navNs
 		local G = ns.PathGrid
@@ -170,7 +170,7 @@ test('a: Polestar\'s world frame is the engine\'s: known UnitPosition spots and 
 			return { d = dist(cx, cy, x, y), z = st.z[k][n + 1] }
 		end
 		local function spot(map, ux, uy, uz)
-			-- UnitPosition -> Polestar's map coordinates -> Polestar's world point -> the engine's node there.
+			-- UnitPosition -> SendaFH's map coordinates -> SendaFH's world point -> the engine's node there.
 			local x, y = C.WorldToMap(0, ux, uy, map)
 			local c, wx, wy = C.MapToWorld(map, x, y, "e")
 			local n = node(wx, wy, uz)
@@ -181,7 +181,7 @@ test('a: Polestar\'s world frame is the engine\'s: known UnitPosition spots and 
 		local c, mx, my = C.MapToWorld(1429, 39.5, 82.4, "e")
 		r.mine = { c = c, node = node(mx, my).d }
 		r.available = { E.Available(c), E.Available(1429), E.Available(1415) }
-		-- What the arrow asks: the player's UnitPosition (with its height) on instance 0, to Polestar's target point.
+		-- What the arrow asks: the player's UnitPosition (with its height) on instance 0, to SendaFH's target point.
 		place(1429, GOLDSHIRE[1], GOLDSHIRE[2], GOLDSHIRE[3])
 		local pc, px, py = C.GetPlayerWorldPosition()
 		r.player = { pc, dist(px, py, GOLDSHIRE[1], GOLDSHIRE[2]) }
@@ -190,15 +190,15 @@ test('a: Polestar\'s world frame is the engine\'s: known UnitPosition spots and 
 		r.points = #f.points
 		r.secondZ = f.points[2].z
 		emit(r)`);
-	assert.equal(out.loads, 1, 'Data.Pack loaded Polestar_Nav once at login');
+	assert.equal(out.loads, 1, 'Data.Pack loaded SendaFH_Nav once at login');
 	assert.equal(out.engine, true);
 	// Goldshire: Elwynn 42.0,65.0; the mine's lower mouth 39.5,80.0.
 	assert.deepEqual(out.goldshire.map, [42, 65]);
 	assert.deepEqual(out.lowerMouth.map, [39.5, 80]);
 	for (const [name, s] of Object.entries({ goldshire: out.goldshire, lowerMouth: out.lowerMouth })) {
-		assert.equal(s.c, 0, `${name}: Polestar's continent is UnitPosition's instance map id`);
+		assert.equal(s.c, 0, `${name}: SendaFH's continent is UnitPosition's instance map id`);
 		assert.ok(s.back < 0.01, `${name}: map -> world gives the UnitPosition back (${s.back})`);
-		assert.ok(s.node < out.cs, `${name}: the engine's node is ${s.node.toFixed(2)} yd from Polestar's point (cells are ${out.cs.toFixed(2)} yd)`);
+		assert.ok(s.node < out.cs, `${name}: the engine's node is ${s.node.toFixed(2)} yd from SendaFH's point (cells are ${out.cs.toFixed(2)} yd)`);
 		assert.ok(s.dz < 3, `${name}: and at the height UnitPosition reads there (off by ${s.dz.toFixed(2)})`);
 		assert.equal(s.swapped, true, `${name}: north and west swapped would be off the engine's map`);
 	}
@@ -227,7 +227,7 @@ test('b, e, f: the arrow aims at the engine path\'s next point; the route lines 
 		r.aim = { state = a.state, index = indexOf(f, a.x, a.y), n = #pts, measured = a.measured, dist = a.dist, off = offPath(pts, a.x, a.y), toTarget = dist(a.x, a.y, tx, ty) }
 		r.path = { length = length(pts), straight = dist(GOLDSHIRE[1], GOLDSHIRE[2], tx, ty), endGap = dist(pts[#pts].x, pts[#pts].y, tx, ty) }
 		r.left = { walk = N.walk.Left(0, tx, ty), along = length(pts) }
-		r.shown = { text = N.arrow.distText:GetText(), want = Polestar.FormatDistance(floor(a.dist + 0.5)), visible = PolestarNavArrow:IsShown() }
+		r.shown = { text = N.arrow.distText:GetText(), want = SendaFH.FormatDistance(floor(a.dist + 0.5)), visible = SendaFHNavArrow:IsShown() }
 		-- e: the route lines' walk leg is the engine's path, the player first.
 		local g = N.GetRouteGeometry()
 		local walk
@@ -292,7 +292,7 @@ test('second review: after the path arrives the arrow, the panel\'s leg time and
 		local a = aim()
 		local legs, ci = N.GetRoute()
 		local T = N.travel
-		local view = Polestar.UI.JourneyPanel.Compute(legs, ci)
+		local view = SendaFH.UI.JourneyPanel.Compute(legs, ci)
 		emit({ arrow = T.Remaining(a.dist, true), leg = view.secs[1], header = view.total, planned = legs[ci].seconds + legs[ci].rest })`);
 	assert.ok(Math.abs(out.arrow - out.header) <= 1, `arrow ${out.arrow} s, header ${out.header} s`);
 	assert.ok(Math.abs(out.leg - out.header) <= 1, `leg ${out.leg} s, header ${out.header} s`);
@@ -461,7 +461,7 @@ test('Z1: a guide goal at Andron Gant (Undercity, Rogues\' Quarter) is walked to
 		local ANDRON = { 1389.34, 347.315, -65.96 } -- his CMaNGOS spawn; the guides' 54.81,76.33 (Era) on the Undercity's map
 		-- The walk itself, from Brill: without route planning the arrow searches player to target
 		-- (with it, Undercity's entrance chain takes the last stretch straight).
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		place(1420, 2269, 260, 34)
 		-- The last search for Andron's point, once it is in: what it was asked and the
 		-- engine's last point before the goal itself (the floor the walk ends on).
@@ -479,7 +479,7 @@ test('Z1: a guide goal at Andron Gant (Undercity, Rogues\' Quarter) is walked to
 			local pts = f and f.points or {}
 			return { z = f and f.to[3], endZ = #pts >= 3 and r1(pts[#pts - 1].z) or nil, asked = #finds, aim = aim().state }
 		end
-		Polestar.Fire("WAYPOINT_CHANGED", { map = 1458, x = 54.81, y = 76.33, f = "e", z = ANDRON[3], label = "Andron Gant", kind = "turnin", r = 5 })
+		SendaFH.Fire("WAYPOINT_CHANGED", { map = 1458, x = 54.81, y = 76.33, f = "e", z = ANDRON[3], label = "Andron Gant", kind = "turnin", r = 5 })
 		r.withZ = toAndron()
 		r.targetZ = select(4, N.GetTargetWorld())
 		N.SetTarget(1458, 54.81, 76.33, "Andron Gant", "e")
@@ -495,12 +495,12 @@ test('Z1: a guide goal at Andron Gant (Undercity, Rogues\' Quarter) is walked to
 	assert.ok(out.withoutZ.endZ > 20, `and ends on the street ${out.withoutZ.endZ - out.withZ.endZ} yd above him (${out.withoutZ.endZ})`);
 });
 
-test('K1: a walk into a cave is split at its mouth from Polestar_Nav\'s Chokepoints.lua, the step named by the cave (Kharanos into the Grizzled Den)', { skip }, (t) => {
+test('K1: a walk into a cave is split at its mouth from SendaFH_Nav\'s Chokepoints.lua, the step named by the cave (Kharanos into the Grizzled Den)', { skip }, (t) => {
 	const out = run(t, `
 		local c, sx, sy = C.MapToWorld(1426, 46.7, 53.0, "e")
 		place(1426, sx, sy, 401.5)
 		-- A goal inside the cave with its height (a guide's spawn point): the engine walks in, not over the hill above.
-		Polestar.Fire("WAYPOINT_CHANGED", { map = 1426, x = 41.18, y = 50.28, f = "e", z = 355, label = "Grizzled Den", kind = "turnin", r = 5 })
+		SendaFH.Fire("WAYPOINT_CHANGED", { map = 1426, x = 41.18, y = 50.28, f = "e", z = 355, label = "Grizzled Den", kind = "turnin", r = 5 })
 		aim()
 		local n = 0
 		while not (finds[#finds] and finds[#finds].done) and n < 200 do stub.advance(0.05); aim(); n = n + 1 end
@@ -512,9 +512,9 @@ test('K1: a walk into a cave is split at its mouth from Polestar_Nav\'s Chokepoi
 			list[#list + 1] = { kind = l.kind, label = l.label, step = l.step, choke = l.choke and l.choke.name, seconds = l.seconds }
 		end
 		local caves = 0
-		for _, e in ipairs(PolestarNavChokepoints and PolestarNavChokepoints[0] or {}) do if e.kind == "cave" then caves = caves + 1 end end
+		for _, e in ipairs(SendaFHNavChokepoints and SendaFHNavChokepoints[0] or {}) do if e.kind == "cave" then caves = caves + 1 end end
 		emit({ legs = list, caves = caves, points = finds[#finds] and finds[#finds].points and #finds[#finds].points })`);
-	assert.ok(out.caves > 50, `Chokepoints.lua loads with Polestar_Nav (${out.caves} caves on map 0)`);
+	assert.ok(out.caves > 50, `Chokepoints.lua loads with SendaFH_Nav (${out.caves} caves on map 0)`);
 	const cave = out.legs.find((l) => l.step === 'cave');
 	assert.ok(cave, `a cave step: ${JSON.stringify(out.legs)}`);
 	assert.equal(cave.choke, 'The Grizzled Den');
@@ -522,23 +522,23 @@ test('K1: a walk into a cave is split at its mouth from Polestar_Nav\'s Chokepoi
 	assert.ok(out.legs.every((l) => typeof l.label === 'string' && l.label !== '' && l.label !== 'Unknown'), 'K1: every step is named');
 });
 
-// Review conditions for shipping Polestar's maps (nav-maps): the maps load only with routing on; all of a
+// Review conditions for shipping SendaFH's maps (nav-maps): the maps load only with routing on; all of a
 // map's files missing from Nav.xml, or a corrupted grid block, leave the straight arrow, never a Lua error
 // (one missing part file: tests/nav-load.test.js); every zone the guides walk in routes.
-const NAV_DIR = path.join(ADDONS, 'Polestar_Nav', 'Nav');
+const NAV_DIR = path.join(ADDONS, 'SendaFH_Nav', 'Nav');
 
-test('the walking maps load on demand only with Walk real paths on (nav.navRouting off: Polestar_Nav is never loaded)', { skip }, () => {
+test('the walking maps load on demand only with Walk real paths on (nav.navRouting off: SendaFH_Nav is never loaded)', { skip }, () => {
 	const run1 = (routing) => runAddon({
 		stubs: ['stub_world.lua', 'stub_encoding.lua', 'stub_packs.lua'],
 		before: before(),
-		addons: ['Polestar', { name: 'Polestar_Guides', files: ['MapFrames.lua'] }],
-		saved: { Polestar: `PolestarDB = { schema = 1, settings = { nav = { navRouting = ${routing} } } }` },
+		addons: ['SendaFH', { name: 'SendaFH_Guides', files: ['MapFrames.lua'] }],
+		saved: { SendaFH: `SendaFHDB = { schema = 1, settings = { nav = { navRouting = ${routing} } } }` },
 		login: true,
 		script: `${PRELUDE}
 			place(1429, GOLDSHIRE[1], GOLDSHIRE[2], GOLDSHIRE[3])
 			N.SetTarget(1429, 39.5, 82.4, "Fargodeep Mine", "e")
 			for _ = 1, 40 do stub.advance(0.05); aim() end
-			emit({ loads = stub.packLoads.Polestar_Nav or 0, data = PolestarPathData ~= nil, chokepoints = PolestarNavChokepoints ~= nil, finds = #finds, state = aim().state })`,
+			emit({ loads = stub.packLoads.SendaFH_Nav or 0, data = SendaFHPathData ~= nil, chokepoints = SendaFHNavChokepoints ~= nil, finds = #finds, state = aim().state })`,
 	}).emitted[0];
 	const off = run1(false);
 	assert.deepEqual([off.loads, off.data, off.chokepoints, off.finds], [0, false, false, 0], 'routing off: no maps in memory, no search');
@@ -561,8 +561,8 @@ function clusterFile(wx, wy) {
 function withMaps(files, script) {
 	return runAddon({
 		stubs: ['stub_world.lua', 'stub_encoding.lua', 'stub_packs.lua'],
-		before: before().replace(/stub\.packs\.Polestar_Nav = \{[^\n]*\}/, `stub.packs.Polestar_Nav = { ${files.map((f) => JSON.stringify(f)).join(', ')} }`),
-		addons: ['Polestar', { name: 'Polestar_Guides', files: ['MapFrames.lua'] }],
+		before: before().replace(/stub\.packs\.SendaFH_Nav = \{[^\n]*\}/, `stub.packs.SendaFH_Nav = { ${files.map((f) => JSON.stringify(f)).join(', ')} }`),
+		addons: ['SendaFH', { name: 'SendaFH_Guides', files: ['MapFrames.lua'] }],
 		login: true,
 		script: `${PRELUDE}\n${script}`,
 	}).emitted[0];
@@ -577,7 +577,7 @@ const STRAIGHT = `
 	emit({ state = a.state, toTarget = a.x and dist(a.x, a.y, tx, ty), measured = a.measured, available = E and E.Available(0), points = f and f.points and #f.points or 0, cost = f and f.cost })`;
 
 test('a map whose files are all missing from Nav.xml (every Nav0*.lua) leaves the straight arrow on that map, with no Lua error', { skip }, () => {
-	const files = [...tocFiles('Polestar_Nav'), nsFile].filter((f) => !/[\\/]Nav0(_\d+)?\.lua$/.test(f));
+	const files = [...tocFiles('SendaFH_Nav'), nsFile].filter((f) => !/[\\/]Nav0(_\d+)?\.lua$/.test(f));
 	const out = withMaps(files, STRAIGHT);
 	assert.equal(out.available, false, 'no data for map 0');
 	assert.equal(out.state, 'travel');
@@ -588,10 +588,10 @@ test('a map whose files are all missing from Nav.xml (every Nav0*.lua) leaves th
 test('a corrupted grid block of the map leaves the straight arrow for that walk, with no Lua error', { skip }, () => {
 	const { k, file } = clusterFile(-9444.062, 77.667);
 	assert.ok(file, 'Goldshire\'s cluster is in one part file');
-	const bad = path.join(tmpdir('polestar-nav-bad-'), file);
+	const bad = path.join(tmpdir('sendafh-nav-bad-'), file);
 	fs.writeFileSync(bad, fs.readFileSync(path.join(NAV_DIR, file), 'utf8').replace(new RegExp(`^data\\.packed\\.grid\\[${k + 1}\\] = \\{[^}]*\\}$`, 'm'), `data.packed.grid[${k + 1}] = {"bm90IHpsaWI="}`));
 	assert.notEqual(fs.readFileSync(bad, 'utf8'), fs.readFileSync(path.join(NAV_DIR, file), 'utf8'));
-	const files = [...tocFiles('Polestar_Nav'), nsFile].map((f) => (path.basename(f) === file ? bad : f));
+	const files = [...tocFiles('SendaFH_Nav'), nsFile].map((f) => (path.basename(f) === file ? bad : f));
 	const out = withMaps(files, STRAIGHT);
 	assert.equal(out.available, true, 'the map is there');
 	assert.equal(out.points, 0, `no path through the broken cluster (${out.cost})`);
@@ -602,7 +602,7 @@ test('a corrupted grid block of the map leaves the straight arrow for that walk,
 test('every one of the 49 zones the guides walk in routes on the shipped maps (one walk between two of its located goals, 80-400 yd apart), and Zephras Isle on his', { skip }, () => {
 	const { Geo } = require('../tools/lib/planner/geo');
 	const geo = new Geo(JSON.parse(fs.readFileSync(path.join(DATA, 'map-frames.json'), 'utf8')), JSON.parse(fs.readFileSync(path.join(DATA, 'zones.json'), 'utf8')));
-	const src = fs.readFileSync(path.join(ADDONS, 'Polestar_Guides', 'Guides.lua'), 'utf8');
+	const src = fs.readFileSync(path.join(ADDONS, 'SendaFH_Guides', 'Guides.lua'), 'utf8');
 	const byZone = new Map();
 	// A goal's coordinates are in the Era frame with f = "e", else the live (Forever) frame (Compat.MapToWorld).
 	for (const m of src.matchAll(/map = (\d+), x = ([\d.]+), y = ([\d.]+)(?:, z = -?[\d.]+)?(, f = "e")?/g)) {
@@ -628,9 +628,9 @@ test('every one of the 49 zones the guides walk in routes on the shipped maps (o
 	const zeph2 = geo.toWorld(2521, 45, 60, 'l');
 	const [out] = runAddon({
 		stubs: ['stub_encoding.lua'],
-		addons: ['Polestar_Nav'],
+		addons: ['SendaFH_Nav'],
 		script: `
-local Path = Polestar_NavEngine
+local Path = SendaFH_NavEngine
 local out = { failed = {}, n = 0 }
 for _, z in ipairs({ ${lua} }) do
 	out.n = out.n + 1
@@ -669,7 +669,7 @@ emit(out)`,
 test('Ashenvale 40,70 from the Crossroads: the route lands where the engine\'s walk is short (Splintertree Post, not Sun Rock Retreat over the ridge), and its last walk follows the engine\'s path', { skip }, (t) => {
 	const out = run(t, `
 		w.faction = "Horde"
-		Polestar.CharState().flags.taxi = { [22] = true, [23] = true, [25] = true, [29] = true, [58] = true, [61] = true, [77] = true }
+		SendaFH.CharState().flags.taxi = { [22] = true, [23] = true, [25] = true, [29] = true, [58] = true, [61] = true, [77] = true }
 		local by = {}
 		for _, n in ipairs(N.GetTravelData().taxi) do by[n.id] = n end
 		local xr, sun, splinter = by[25], by[29], by[61]
@@ -739,7 +739,7 @@ test('Ashenvale 40,70 from the Crossroads: the route lands where the engine\'s w
 test('Ashenvale west of Astranaar: where a ridge makes the straight choice\'s measured walk dearer than straight x1.25, the measured route lands elsewhere', { skip }, (t) => {
 	const out = run(t, `
 		w.faction = "Horde"
-		Polestar.CharState().flags.taxi = { [22] = true, [23] = true, [25] = true, [58] = true, [61] = true, [77] = true }
+		SendaFH.CharState().flags.taxi = { [22] = true, [23] = true, [25] = true, [58] = true, [61] = true, [77] = true }
 		local by, byName = {}, {}
 		for _, n in ipairs(N.GetTravelData().taxi) do by[n.id] = n; byName[n.name] = n end
 		local xr = by[25]

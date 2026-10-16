@@ -193,7 +193,7 @@ function m2({ idx, verts, box = [0, 0, 0, 1, 2, 3] }) {
 // A CASC stand-in over in-memory files, with the client tables under
 // <sources>/wago/<build>/ as tileGeometry reads them.
 function fakeCasc(files, tables) {
-	const sources = tmpdir('polestar-navgeom-');
+	const sources = tmpdir('sendafh-navgeom-');
 	const build = '1.60.1.1';
 	fs.mkdirSync(path.join(sources, 'wago', build), { recursive: true });
 	for (const [name, text] of Object.entries(tables)) fs.writeFileSync(path.join(sources, 'wago', build, `${name}.csv`), text);
@@ -501,7 +501,7 @@ test('transform: WMO bounding boxes land on their MODF extents within 1 yd (real
 		return t.skip(`no CASC cache: ${err.message}`);
 	}
 	const lacking = REAL.filter((r) => !casc.has(r.obj0)).map((r) => r.obj0);
-	if (lacking.length) return t.skip(`CASC cache ${casc.build} lacks obj0 ${lacking.join(', ')} (node tools/polestar.js nav build)`);
+	if (lacking.length) return t.skip(`CASC cache ${casc.build} lacks obj0 ${lacking.join(', ')} (node tools/sendafh.js nav build)`);
 	let checked = 0;
 	for (const { tile, obj0 } of REAL) {
 		const { wmo } = parsePlacements(chunks(await casc.get(obj0)));

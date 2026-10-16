@@ -16,7 +16,7 @@ const { tmpdir } = require('./helpers/tmp');
 const { DATA_DIR } = require('./helpers/dsl');
 
 test('a cached world from other data or an older builder is ignored (reported stale), a current one is used', (t) => {
-	const dir = tmpdir('polestar-lint-');
+	const dir = tmpdir('sendafh-lint-');
 	const dataDir = path.join(dir, 'data');
 	const simDir = path.join(dir, 'sim');
 	fs.mkdirSync(dataDir);
@@ -33,7 +33,7 @@ test('a cached world from other data or an older builder is ignored (reported st
 });
 
 test('the note about a stale cached world is for our guides only, not another pack', async (t) => {
-	const dir = tmpdir('polestar-lint-');
+	const dir = tmpdir('sendafh-lint-');
 	fs.writeFileSync(path.join(dir, 'world-alliance.json'), JSON.stringify({ dataHash: 'builder 15', excluded: [] }));
 	const guides = path.join(dir, 'guides');
 	fs.mkdirSync(guides);

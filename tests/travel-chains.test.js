@@ -19,7 +19,7 @@ const { recordedWalks } = require('../tools/lib/travel/paths');
 const { buildTravel, writeTravel } = require('../tools/lib/travel/build');
 const { planRoute } = require('../tools/lib/travel/route');
 const { Frames } = require('../tools/lib/travel/geo');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 const { tmpdir } = require('./helpers/tmp');
 
 const FIX = path.join(__dirname, 'fixtures', 'travel');
@@ -153,20 +153,20 @@ test('only walks from beyond --within yards count, and a death breaks a walk', (
 });
 
 test('travel chain prints a candidate entry, and with it the planner enters the cave at its mouth', async () => {
-	const dir = tmpdir('polestar-chains-');
+	const dir = tmpdir('sendafh-chains-');
 	const recDir = path.join(dir, 'recordings');
 	fs.mkdirSync(recDir);
 	const { rec } = recording('both', [...FROM_SOUTH, ...[...FROM_EAST].reverse().slice(1)]);
 	fs.writeFileSync(path.join(recDir, 'both.json'), JSON.stringify(rec));
 	const args = ['travel', 'chain', '--to', `${MAP},${T.x},${T.y}`, '--name', 'Test Mine', '--reverse', '--data', path.join(FIX, 'data'), '--recordings', recDir];
 
-	const text = polestar(args);
+	const text = sendafh(args);
 	assert.equal(text.status, 0, text.stderr + text.stdout);
 	assert.match(text.stdout, /approach chain candidate for Westfall 50, 50: review it in game before use/);
 	assert.match(text.stdout, /2 walk\(s\) reach the target from 300 yd or more/);
 	assert.match(text.stdout, /"id": "test-mine"/);
 
-	const json = polestar([...args, '--json']);
+	const json = sendafh([...args, '--json']);
 	assert.equal(json.status, 0, json.stderr + json.stdout);
 	const chain = JSON.parse(json.stdout);
 	assert.equal(chain.nodes[0].caption, 'Go to Test Mine');
@@ -175,12 +175,12 @@ test('travel chain prints a candidate entry, and with it the planner enters the 
 	const crossingsFile = path.join(dir, 'crossings.json');
 	fs.writeFileSync(crossingsFile, JSON.stringify({ schema: 1, frame: 'e', chains: [chain] }));
 	const result = await buildTravel({ dataDir: path.join(FIX, 'data'), recordingsDir: path.join(FIX, 'recordings'), sourcesDir: path.join(FIX, 'sources'), offline: true, shippedFile: null, crossingsFile });
-	writeTravel(result, { jsonOut: path.join(dir, 'travel.json'), luaOut: path.join(dir, 'TravelData.lua'), travelAddonDir: path.join(dir, 'Polestar_Travel') });
+	writeTravel(result, { jsonOut: path.join(dir, 'travel.json'), luaOut: path.join(dir, 'TravelData.lua'), travelAddonDir: path.join(dir, 'SendaFH_Travel') });
 	for (const f of ['map-frames.json', 'zones.json']) fs.copyFileSync(path.join(FIX, 'data', f), path.join(dir, f));
 	const south = frames.toMap(MAP, O.c, world([0, -400]).wx, world([0, -400]).wy);
 	const common = { dataDir: dir, travelLua: path.join(dir, 'TravelData.lua'), from: { map: MAP, x: south.x, y: south.y }, to: T };
 	assert.equal(planRoute(common).length, 1, 'without the chain the arrow points straight at the target');
-	const legs = planRoute({ ...common, crossingsLua: path.join(dir, 'Polestar_Travel', 'Crossings.lua') });
+	const legs = planRoute({ ...common, crossingsLua: path.join(dir, 'SendaFH_Travel', 'Crossings.lua') });
 	assert.equal(legs[0].label, 'Go to Test Mine');
 	assert.ok(Math.hypot(legs[0].to.wx - world(MOUTH).wx, legs[0].to.wy - world(MOUTH).wy) <= 20, 'the first leg ends at the mouth');
 	assert.equal(legs[legs.length - 1].label, 'Westfall 50, 50');
@@ -189,25 +189,25 @@ test('travel chain prints a candidate entry, and with it the planner enters the 
 	const openDir = path.join(dir, 'open');
 	fs.mkdirSync(openDir);
 	fs.writeFileSync(path.join(openDir, 'straight.json'), JSON.stringify(recording('straight', [[0, -400], [0, 0]]).rec));
-	const open = polestar(['travel', 'chain', '--to', `${MAP},${T.x},${T.y}`, '--data', path.join(FIX, 'data'), '--recordings', openDir]);
+	const open = sendafh(['travel', 'chain', '--to', `${MAP},${T.x},${T.y}`, '--data', path.join(FIX, 'data'), '--recordings', openDir]);
 	assert.equal(open.status, 0, open.stderr + open.stdout);
 	assert.match(open.stdout, /no chain needed for Westfall 50, 50: every recorded walk reaches it on the straight line \(straight\)/);
 
 	// A straight walk beside a detour: warned about, and the chain is still drafted; --session picks walks.
 	fs.writeFileSync(path.join(openDir, 'around.json'), JSON.stringify(recording('around', FROM_SOUTH).rec));
 	const mixedArgs = ['travel', 'chain', '--to', `${MAP},${T.x},${T.y}`, '--data', path.join(FIX, 'data'), '--recordings', openDir];
-	const mixed = polestar(mixedArgs);
+	const mixed = sendafh(mixedArgs);
 	assert.equal(mixed.status, 0, mixed.stderr + mixed.stdout);
 	assert.match(mixed.stderr, /warning: straight reach Westfall 50, 50 on the straight line; drafting from the walks that detour/);
 	assert.match(mixed.stdout, /approach chain candidate for Westfall 50, 50/);
-	const picked = polestar([...mixedArgs, '--session', 'around']);
+	const picked = sendafh([...mixedArgs, '--session', 'around']);
 	assert.equal(picked.status, 0, picked.stderr + picked.stdout);
 	assert.doesNotMatch(picked.stderr, /warning/);
 	assert.match(picked.stdout, /1 walk\(s\) reach the target from 300 yd or more \(around\)/);
-	const onlyStraight = polestar([...mixedArgs, '--session', 'straight']);
+	const onlyStraight = sendafh([...mixedArgs, '--session', 'straight']);
 	assert.match(onlyStraight.stdout, /no chain needed/);
 
-	const none = polestar(['travel', 'chain', '--to', `${MAP},90,10`, '--data', path.join(FIX, 'data'), '--recordings', recDir]);
+	const none = sendafh(['travel', 'chain', '--to', `${MAP},90,10`, '--data', path.join(FIX, 'data'), '--recordings', recDir]);
 	assert.equal(none.status, 1);
 	assert.match(none.stdout, /no recorded walk reaches Westfall 90, 10 from 300 yd or more \(the nearest passes \d+ yd away\)/);
 });

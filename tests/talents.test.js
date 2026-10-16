@@ -1,5 +1,5 @@
 'use strict';
-// Talent plans (addon/Polestar/Talents): the plans in Builds.lua replayed
+// Talent plans (addon/SendaFH/Talents): the plans in Builds.lua replayed
 // under the snapshot's rules, plan progress (T.State: points from the
 // tree's currency, the level only as a fallback), the snapshot checked
 // against the live tree (moved IDs found by name, a missing talent makes the
@@ -16,7 +16,7 @@ const CORE = ['Core/Core.xml', 'Theme/Theme.xml', 'Talents/Talents.xml'];
 const WITH_UI = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml', 'Talents/Talents.xml'];
 
 const PRELUDE = `
-local T, TS = Polestar.Talents, stub.talents
+local T, TS = SendaFH.Talents, stub.talents
 local data = T.Data("PALADIN")
 TS.useSnapshot(data)
 local function plan(key) return T.BuildByKey(data, key) end
@@ -25,7 +25,7 @@ local function plan(key) return T.BuildByKey(data, key) end
 function run(script, { files = CORE, stubs = [] } = {}) {
 	return runAddon({
 		stubs: ['stub_world.lua', 'stub_talents.lua', ...stubs],
-		addons: [{ name: 'Polestar', files }],
+		addons: [{ name: 'SendaFH', files }],
 		script: `${PRELUDE}\n${script}`,
 	}).emitted;
 }
@@ -272,7 +272,7 @@ local nxt = markOf(s.next.node)
 local later
 for _, p in ipairs(b.picks) do if p.order > s.next.order and s.nodeNext[p.node] == p then later = p break end end
 local badges, muted = {}, 0
-local mr, mg, mb = Polestar.Theme.Color("textMuted")
+local mr, mg, mb = SendaFH.Theme.Color("textMuted")
 for id, m in pairs(O.marks) do
 	if m:IsShown() and m.Badge:IsShown() then
 		badges[#badges + 1] = m.Badge.Text:GetText()
@@ -289,7 +289,7 @@ local other = TS.button(later.node)
 GameTooltip:SetOwner(other, "ANCHOR_RIGHT")
 stub.RunScript(other, "OnEnter")
 emit({ lines = GameTooltip.lines, order = later.order })
-Polestar.Set("talents.tooltip", false)
+SendaFH.Set("talents.tooltip", false)
 GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
 stub.RunScript(btn, "OnEnter")
 emit(#GameTooltip.lines)`);
@@ -297,9 +297,9 @@ emit(#GameTooltip.lines)`);
 	for (const t of outs[0].badges) assert.match(t, /^\d+$/);
 	assert.equal(outs[0].muted, 0, 'no badge muted as "past the cap"');
 	assert.equal(outs[1].length, 1);
-	assert.match(outs[1][0], /^Polestar: pick #22, rank \d\/\d \(Retribution plan\)  next$/);
+	assert.match(outs[1][0], /^SendaFH: pick #22, rank \d\/\d \(Retribution plan\)  next$/);
 	assert.equal(outs[2].lines[0], outs[2].lines[0].replace(/level|cap/gi, ''), 'no level or cap wording');
-	assert.match(outs[2].lines[0], new RegExp(`^Polestar: pick #${outs[2].order}, rank \\d/\\d \\(Retribution plan\\)$`));
+	assert.match(outs[2].lines[0], new RegExp(`^SendaFH: pick #${outs[2].order}, rank \\d/\\d \\(Retribution plan\\)$`));
 	assert.equal(outs[3], 0);
 });
 
@@ -376,7 +376,7 @@ stub.fire("PLAYER_LEVEL_UP", 30)
 stub.advance(2)
 emit(#stub.messages)
 TS.currency = { quantity = 1, spent = 21 }
-Polestar.Set("talents.reminder", false)
+SendaFH.Set("talents.reminder", false)
 stub.messages = {}
 stub.fire("PLAYER_LEVEL_UP", 30)
 stub.advance(2)
@@ -398,7 +398,7 @@ local b = plan("retribution")
 TS.learn(b, 20)
 uistub = uistub
 stub.login()
-local TV = Polestar.UI.TalentsSection
+local TV = SendaFH.UI.TalentsSection
 TV.Show()
 local s = TV.Shown()
 local approx, exact = 0, 0
@@ -434,7 +434,7 @@ test('View: every spec tab shows the client\'s talent names, not only the follow
 for id, n in pairs(TS.nodes) do n.name = "es:" .. n.name end
 TS.learn(plan("retribution"), 20)
 stub.login()
-local TV = Polestar.UI.TalentsSection
+local TV = SendaFH.UI.TalentsSection
 TV.Show()
 local function english()
 	local n = 0
@@ -455,9 +455,9 @@ test('View: another class sees why there is no plan', () => {
 	const [out] = runAddon({
 		stubs: ['stub_world.lua', 'stub_talents.lua', 'stub_ui.lua'],
 		before: 'stub.talents.class, stub.talents.className = "MAGE", "Mage"',
-		addons: [{ name: 'Polestar', files: WITH_UI }],
+		addons: [{ name: 'SendaFH', files: WITH_UI }],
 		login: true,
-		script: 'Polestar.UI.TalentsSection.Show(); emit(Polestar.UI.TalentsSection.Shown().empty)',
+		script: 'SendaFH.UI.TalentsSection.Show(); emit(SendaFH.UI.TalentsSection.Shown().empty)',
 	}).emitted;
 	assert.equal(out, 'class');
 });

@@ -2,13 +2,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "polestar lint",
+			"label": "sendafh lint",
 			"type": "shell",
-			"command": "polestar lint",
+			"command": "sendafh lint",
 			"group": { "kind": "build", "isDefault": true },
 			"presentation": { "reveal": "silent", "clear": true },
 			"problemMatcher": {
-				"owner": "polestar",
+				"owner": "sendafh",
 				"fileLocation": ["autoDetect", "${workspaceFolder}"],
 				"pattern": {
 					"regexp": "^(.*):(\\d+): (error|warning): (.*)$",
@@ -20,9 +20,9 @@
 			}
 		},
 		{
-			"label": "polestar playtest",
+			"label": "sendafh playtest",
 			"type": "shell",
-			"command": "polestar playtest",
+			"command": "sendafh playtest",
 			"group": "test",
 			"problemMatcher": []
 		}

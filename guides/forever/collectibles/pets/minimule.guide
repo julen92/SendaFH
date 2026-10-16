@@ -11,7 +11,7 @@ zone Redridge Mountains
 # reputation camps.
 # The treat costs 1,500 Merchant's Favor, earned from crate hand-ins at the camps.
 # Sources: NPCs 256389 / 256384 (positions); Forever client 1.60.1.70338 via wago.tools.
-# Merchant's Favor is a currency Polestar cannot count.
+# Merchant's Favor is a currency SendaFH cannot count.
 
 step Azeroth Commerce Authority
   only Alliance

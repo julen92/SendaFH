@@ -1,7 +1,7 @@
 'use strict';
 // The names addons (`i18n names`, tools/lib/i18n/names.js) on fixture
 // sources (tests/fixtures/names): DingDB's names first and pfQuest's for the
-// ones it lacks, only the ids Polestar's data names (compiled guides, the
+// ones it lacks, only the ids SendaFH's data names (compiled guides, the
 // quest database, the Codex), DingDB pinned to a commit and its files'
 // sha256s, and --no-questie leaving DingDB out. The written addon loads in
 // Lua 5.1 and gives the names back.
@@ -13,7 +13,7 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { tmpdir } = require('./helpers/tmp');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 const { runAddon } = require('./helpers/lua');
 const { LOCALE_CODES } = require('../tools/lib/i18n/locales');
 const names = require('../tools/lib/i18n/names');
@@ -100,15 +100,15 @@ test('DingDB is pinned: a file that differs from the pin, or a checkout at anoth
 	for (const h of Object.values(names.DING.files)) assert.match(h, /^[0-9a-f]{64}$/);
 });
 
-test('the written addon: LoD toc, Names.lua that Lua 5.1 loads into Polestar.Names.Add, LICENSE-DATA with the pin, Ding\'s CREDITS.md', () => {
+test('the written addon: LoD toc, Names.lua that Lua 5.1 loads into SendaFH.Names.Add, LICENSE-DATA with the pin, Ding\'s CREDITS.md', () => {
 	const ding = names.ensureDing({ dir: DING, explicit: true, pin: fixturePin() });
 	const pf = { dir: PF, revision: 'b'.repeat(40) };
 	const out = build();
 	const files = names.emitNamesAddon('frFR', out.frFR, { sources: { ding, pin: fixturePin(), pf } });
-	assert.deepEqual(Object.keys(files).sort(), ['CREDITS.md', 'LICENSE-DATA.txt', 'Names.lua', 'Polestar_Names_frFR.toc']);
-	const toc = files['Polestar_Names_frFR.toc'];
+	assert.deepEqual(Object.keys(files).sort(), ['CREDITS.md', 'LICENSE-DATA.txt', 'Names.lua', 'SendaFH_Names_frFR.toc']);
+	const toc = files['SendaFH_Names_frFR.toc'];
 	assert.match(toc, /^## LoadOnDemand: 1$/m);
-	assert.match(toc, /^## Dependencies: Polestar$/m);
+	assert.match(toc, /^## Dependencies: SendaFH$/m);
 	assert.match(toc, new RegExp(`^## Version: ${VERSION.replace(/\./g, '\\.')}$`, 'm'));
 	assert.match(toc, /^Names\.lua$/m);
 	assert.equal(files['CREDITS.md'], fs.readFileSync(path.join(DING, 'Ding/DB/CREDITS.md'), 'utf8'));
@@ -123,13 +123,13 @@ test('the written addon: LoD toc, Names.lua that Lua 5.1 loads into Polestar.Nam
 	fs.writeFileSync(path.join(dir, 'Names.lua'), files['Names.lua']);
 	const [got] = runAddon({
 		script: `
-Polestar = { Names = { got = {} } }
-function Polestar.Names.Add(locale, kind, t)
-	for id, name in pairs(t) do Polestar.Names.got[#Polestar.Names.got + 1] = locale .. " " .. kind .. " " .. id .. " " .. name end
+SendaFH = { Names = { got = {} } }
+function SendaFH.Names.Add(locale, kind, t)
+	for id, name in pairs(t) do SendaFH.Names.got[#SendaFH.Names.got + 1] = locale .. " " .. kind .. " " .. id .. " " .. name end
 end
 dofile(${JSON.stringify(path.join(dir, 'Names.lua'))})
-table.sort(Polestar.Names.got)
-emit(Polestar.Names.got)`,
+table.sort(SendaFH.Names.got)
+emit(SendaFH.Names.got)`,
 	}).emitted;
 	assert.ok(got.includes('frFR npc 448 Lardeur'));
 	assert.ok(got.includes('frFR quest 176 Avis de recherche : "Lardeur"'));
@@ -144,12 +144,12 @@ test('--no-questie: pfQuest only, no DingDB credit; a language left without name
 	assert.equal(out.esMX.names.npc.size, 0);
 
 	const addons = tmpdir();
-	fs.mkdirSync(path.join(addons, 'Polestar_Names_esMX'));
-	fs.writeFileSync(path.join(addons, 'Polestar_Names_esMX', 'Names.lua'), '-- stale\n');
+	fs.mkdirSync(path.join(addons, 'SendaFH_Names_esMX'));
+	fs.writeFileSync(path.join(addons, 'SendaFH_Names_esMX', 'Names.lua'), '-- stale\n');
 	const written = names.writeNamesAddons(out, addons, { sources: { ding: null, pf: { dir: PF, revision: null } } });
 	assert.deepEqual(written.map((w) => w.locale), ['deDE', 'frFR']);
-	assert.ok(!fs.existsSync(path.join(addons, 'Polestar_Names_esMX')), 'the stale folder is gone');
-	assert.ok(!fs.existsSync(path.join(addons, 'Polestar_Names_frFR', 'CREDITS.md')));
+	assert.ok(!fs.existsSync(path.join(addons, 'SendaFH_Names_esMX')), 'the stale folder is gone');
+	assert.ok(!fs.existsSync(path.join(addons, 'SendaFH_Names_frFR', 'CREDITS.md')));
 	// Nothing DingDB alone holds reaches a written file: not its names, not its pin.
 	const dingOnly = ['Maréchal Dughan', 'Les loups à la frontière', 'Viande de loup coriace', 'Alguacil Dughan', ...Object.values(fixturePin().files)];
 	for (const dir of fs.readdirSync(addons)) {
@@ -160,17 +160,17 @@ test('--no-questie: pfQuest only, no DingDB credit; a language left without name
 	}
 });
 
-test('node tools/polestar.js i18n names writes the folders and reports what each language has', () => {
+test('node tools/sendafh.js i18n names writes the folders and reports what each language has', () => {
 	const out = tmpdir();
-	const r = polestar(['i18n', 'names', '--json', '--no-questie', '--pfquest', PF, '--guides', INPUTS.guides, '--questdb', INPUTS.questdb, '--codex', INPUTS.codex, '--out', out]);
+	const r = sendafh(['i18n', 'names', '--json', '--no-questie', '--pfquest', PF, '--guides', INPUTS.guides, '--questdb', INPUTS.questdb, '--codex', INPUTS.codex, '--out', out]);
 	assert.equal(r.status, 0, r.stderr);
 	const report = JSON.parse(r.stdout);
 	assert.equal(report.ding, null);
 	assert.deepEqual(report.locales.frFR.names, { quest: 2, npc: 2, object: 1, item: 1 });
-	assert.deepEqual(fs.readdirSync(out).sort(), ['Polestar_Names_deDE', 'Polestar_Names_frFR']);
-	const lua = fs.readFileSync(path.join(out, 'Polestar_Names_frFR', 'Names.lua'), 'utf8');
+	assert.deepEqual(fs.readdirSync(out).sort(), ['SendaFH_Names_deDE', 'SendaFH_Names_frFR']);
+	const lua = fs.readFileSync(path.join(out, 'SendaFH_Names_frFR', 'Names.lua'), 'utf8');
 	assert.ok(lua.includes('[448]="Lardeur (pfQuest)"'), 'the pfQuest name, written for the addon');
-	const bad = polestar(['i18n', 'names', 'xxXX', '--no-questie', '--pfquest', PF]);
+	const bad = sendafh(['i18n', 'names', 'xxXX', '--no-questie', '--pfquest', PF]);
 	assert.notEqual(bad.status, 0);
 });
 
@@ -178,10 +178,10 @@ test('the release zip and install take every names addon that is built, after th
 	const { releaseAddons } = require('../tools/lib/dsl/project');
 	const { fakeAddons } = require('./helpers/cli');
 	const { ADDONS } = require('./helpers/lua');
-	const dir = fakeAddons(tmpdir(), ['Polestar', 'Polestar_Guides', 'Polestar_Nav', 'Polestar_Codex', 'Polestar_Names_frFR']);
+	const dir = fakeAddons(tmpdir(), ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav', 'SendaFH_Codex', 'SendaFH_Names_frFR']);
 	const r = releaseAddons(dir);
-	assert.deepEqual(r.names, ['Polestar', 'Polestar_Guides', 'Polestar_Nav', 'Polestar_Codex', 'Polestar_Names_frFR']);
-	assert.ok(r.skipped.includes('Polestar_Names_deDE'), 'one not built is left out');
+	assert.deepEqual(r.names, ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav', 'SendaFH_Codex', 'SendaFH_Names_frFR']);
+	assert.ok(r.skipped.includes('SendaFH_Names_deDE'), 'one not built is left out');
 	const shipped = releaseAddons(ADDONS).names.filter((n) => n.startsWith(names.ADDON_PREFIX));
 	assert.deepEqual(shipped, LOCALE_CODES.map((l) => `${names.ADDON_PREFIX}${l}`));
 });

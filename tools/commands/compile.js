@@ -1,6 +1,6 @@
 'use strict';
 // compile: a guide pack's .guide files (with its pack.json) -> its addon
-// folder: ours (guides/) -> addon/Polestar_Guides, another pack -> <pack>/dist/<folder>.
+// folder: ours (guides/) -> addon/SendaFH_Guides, another pack -> <pack>/dist/<folder>.
 
 const path = require('node:path');
 const { printDiagnostics, plural } = require('../lib/cli');
@@ -10,7 +10,7 @@ const { placeCounts } = require('../lib/dsl/places');
 const { ROOT, DATA } = require('../lib/paths');
 const { packCommand, buildPack } = require('../lib/pack/build');
 
-const usage = `usage: node tools/polestar.js compile [<dir>] [options]
+const usage = `usage: node tools/sendafh.js compile [<dir>] [options]
 
 Compiles a guide pack's .guide files (docs/GUIDE_FORMAT.md) into its addon
 folder, as its pack.json describes it: the generated TOC, Pack.lua,
@@ -18,7 +18,7 @@ MapFrames.lua, Guides.lua and LICENSE-DATA.txt, plus the pack's LICENSE file
 as LICENSE.txt when it has one. The pack is the one in <dir> (or
 --pack), else the nearest folder holding a pack.json (this one or a parent),
 else our guides/. Another pack is checked with our guides as context and
-written to <pack>/dist/<folder>/; ours to addon/Polestar_Guides/. Nothing is
+written to <pack>/dist/<folder>/; ours to addon/SendaFH_Guides/. Nothing is
 written when there are errors, nor without reference data (\`data build\`):
 compile then stops with one error before reading any guide, unless --no-data
 says to compile without it.

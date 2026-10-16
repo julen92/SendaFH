@@ -5,10 +5,10 @@
 //   const [result] = runAddon({
 //     stubs: ['stub_world.lua'],             // extra files from tests/lua/, after wow_stub.lua
 //     before: 'stub.world.setLevel(3)',      // Lua run after the stubs, before any addon file
-//     addons: ['Polestar', 'Polestar_Guides'],
-//     saved: { Polestar: 'PolestarDB = { schema = 1, settings = {} }' },  // restored before ADDON_LOADED
+//     addons: ['SendaFH', 'SendaFH_Guides'],
+//     saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = {} }' },  // restored before ADDON_LOADED
 //     login: true,                           // fire PLAYER_LOGIN / PLAYER_ENTERING_WORLD after loading
-//     script: 'emit(Polestar.Engine.GetStepIndex())',
+//     script: 'emit(SendaFH.Engine.GetStepIndex())',
 //   }).emitted;
 //
 // Addons load the way the client loads them: every file listed by the TOC, XML
@@ -26,9 +26,9 @@ const path = require('node:path');
 const { findLua } = require('../../tools/lib/lua');
 
 const ROOT = path.join(__dirname, '..', '..');
-// POLESTAR_ADDON_DIR loads the addons from another copy (A/B profiling against
+// SENDAFH_ADDON_DIR loads the addons from another copy (A/B profiling against
 // an earlier build, tests/helpers/profile.js).
-const ADDONS = process.env.POLESTAR_ADDON_DIR ? path.resolve(process.env.POLESTAR_ADDON_DIR) : path.join(ROOT, 'addon');
+const ADDONS = process.env.SENDAFH_ADDON_DIR ? path.resolve(process.env.SENDAFH_ADDON_DIR) : path.join(ROOT, 'addon');
 const STUBS = path.join(ROOT, 'tests', 'lua');
 
 function norm(p) {
@@ -36,7 +36,7 @@ function norm(p) {
 }
 
 // Files an XML manifest loads, in order. Only <Script file> and <Include file>
-// are used by Polestar's manifests.
+// are used by SendaFH's manifests.
 function xmlFiles(xmlPath) {
 	const dir = path.dirname(xmlPath);
 	const text = fs.readFileSync(xmlPath, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
@@ -118,7 +118,7 @@ end`);
 
 function runAddon(opts = {}) {
 	const program = buildProgram(opts);
-	const file = path.join(os.tmpdir(), `polestar-test-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.lua`);
+	const file = path.join(os.tmpdir(), `sendafh-test-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.lua`);
 	fs.writeFileSync(file, program);
 	try {
 		const r = spawnSync(findLua(), [file], { encoding: 'utf8', cwd: ROOT, maxBuffer: 64 * 1024 * 1024 });

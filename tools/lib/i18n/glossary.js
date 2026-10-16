@@ -1,5 +1,5 @@
 'use strict';
-// The translators' glossary: about forty game and Polestar terms, each with
+// The translators' glossary: about forty game and SendaFH terms, each with
 // one chosen word per locale in glossary/<locale>.json, so a word reads the
 // same on every page. A value comes from the client's own strings first (the
 // GlobalStrings tag is kept in `client`), then from the reviewed translators'

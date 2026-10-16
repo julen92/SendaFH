@@ -68,7 +68,7 @@ function fakeDiscord() {
 		},
 		async send(channel, content, users = []) {
 			sent.push({ channel, content, users });
-			const msg = { id: String(nextId++), channel_id: channel, content, attachments: [], mentions: [], author: { id: BOT, username: 'Polestar Bot', bot: true } };
+			const msg = { id: String(nextId++), channel_id: channel, content, attachments: [], mentions: [], author: { id: BOT, username: 'SendaFH Bot', bot: true } };
 			if (messages.has(channel)) messages.get(channel).push(msg);
 			return msg;
 		},
@@ -82,7 +82,7 @@ function fakeDiscord() {
 	};
 }
 
-function fakeGitHub(repo = 'fitzforge/polestar') {
+function fakeGitHub(repo = 'fitzforge/sendafh') {
 	const issues = [];
 	const comments = new Map();
 	const labels = new Set();

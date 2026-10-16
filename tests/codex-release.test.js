@@ -143,7 +143,7 @@ test('buildInstances: a recorded encounter and entrance win; a guide goto names 
 });
 
 test("curatedEntrances reads every goto with a label from the guides, with its zone", () => {
-	const dir = tmpdir('polestar-entrances-');
+	const dir = tmpdir('sendafh-entrances-');
 	fs.writeFileSync(
 		path.join(dir, 'a.guide'),
 		'guide test/a\ntitle A\nzone Eastern Plaguelands\n\nstep Go\n  goto 47.9,23.8 "Stratholme Service Entrance"\n  goto 10,10\n',
@@ -243,18 +243,18 @@ test('release merge: rares from npc ranks (4 rare, 2 rare elite) with spawns and
 });
 
 test('buildCodex: a release build says so in its meta and ships its notices; a --local-extras build is refused by pack', async () => {
-	const tmp = tmpdir('polestar-codex-release-');
-	const safe = await buildCodex({ inputs: releaseInputs(), outDir: path.join(tmp, 'out'), packDir: path.join(tmp, 'safe', 'Polestar_Codex'), version: '1.0.0', measure: false });
+	const tmp = tmpdir('sendafh-codex-release-');
+	const safe = await buildCodex({ inputs: releaseInputs(), outDir: path.join(tmp, 'out'), packDir: path.join(tmp, 'safe', 'SendaFH_Codex'), version: '1.0.0', measure: false });
 	assert.equal(safe.codex.meta.localExtras, false);
 	assert.ok(!safe.codex.meta.sources.some((s) => /AtlasLoot|RareScanner|DungeonJournal/.test(s.name)));
 	const notice = fs.readFileSync(path.join(safe.packDir, 'LICENSE-DATA.txt'), 'utf8');
-	assert.match(notice, /^Polestar Codex: third-party notices/);
+	assert.match(notice, /^SendaFH Codex: third-party notices/);
 	assert.match(notice, /^pfQuest\n-------\nVersion: abc\nLicence: MIT$/m);
 	assert.doesNotMatch(notice, /LOCAL BUILD/);
 	assert.equal(releaseRefusal(safe.packDir), null);
 
 	const local = { ...releaseInputs(), localExtras: true, atlasloot: { meta: { version: 'Forever 1.60.1', licence: 'GPL-2.0' }, instances: [], collections: [], crafting: [], factions: [], pvp: [] } };
-	const x = await buildCodex({ inputs: local, outDir: path.join(tmp, 'outx'), packDir: path.join(tmp, 'local', 'Polestar_Codex'), version: '1.0.0', measure: false });
+	const x = await buildCodex({ inputs: local, outDir: path.join(tmp, 'outx'), packDir: path.join(tmp, 'local', 'SendaFH_Codex'), version: '1.0.0', measure: false });
 	assert.equal(x.codex.meta.localExtras, true);
 	assert.match(fs.readFileSync(path.join(x.packDir, 'LICENSE-DATA.txt'), 'utf8'), /LOCAL BUILD \(--local-extras\)/);
 	assert.match(releaseRefusal(x.packDir), /--local-extras build/);

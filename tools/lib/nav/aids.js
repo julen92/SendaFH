@@ -181,7 +181,7 @@ function loadZoneResolver({ dataDir, sourcesDir, build, frames }) {
 	if (!dir) {
 		const builds = fs.existsSync(wago) ? fs.readdirSync(wago).filter((b) => fs.existsSync(path.join(wago, b, 'AreaTable.csv'))) : [];
 		builds.sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
-		if (!builds.length) throw new Error(`no AreaTable.csv under ${wago} (node tools/polestar.js data build)`);
+		if (!builds.length) throw new Error(`no AreaTable.csv under ${wago} (node tools/sendafh.js data build)`);
 		dir = path.join(wago, builds[builds.length - 1]);
 	}
 	const areaRows = parseCsv(fs.readFileSync(path.join(dir, 'AreaTable.csv'), 'utf8'));
@@ -1336,7 +1336,7 @@ async function pocketsOf({ gen, nav, c, frames, zoneOfArea, scan, mine, workers,
 // continent of the nav index); workers: threads testing pockets (0: here).
 // -> Promise<{ doc, stats, set }> (set: validateCrossings of doc)
 async function generateAids({ nav, frames, zoneOfArea, targets = [], continents = null, log = () => {}, source = null, workers = 0 }) {
-	if (!nav.available) throw new Error('no navigation grid (node tools/polestar.js nav build)');
+	if (!nav.available) throw new Error('no navigation grid (node tools/sendafh.js nav build)');
 	const list = (continents || Object.keys(nav.index.continents).map(Number)).filter((c) => nav.index.continents[c]);
 	const doc = {
 		schema: 1,

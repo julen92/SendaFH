@@ -1,5 +1,5 @@
 'use strict';
-// The travel planner's newer legs (addon/Polestar/Nav/Travel.lua): timetable
+// The travel planner's newer legs (addon/SendaFH/Nav/Travel.lua): timetable
 // waits and departure captions from Nav/Transit.lua (a fake ns.Transit here),
 // class teleports, walk-in portals, a ghost's walk-only route, skipping a
 // leg, and the leg fields the prompts and map lines read. Runs the real
@@ -9,10 +9,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local T = N.travel
 local nav = stub.nav
 local function target(wx, wy, label)
@@ -29,7 +29,7 @@ local function route()
 	return out
 end
 local function known(...)
-	local flags = Polestar.CharState().flags
+	local flags = SendaFH.CharState().flags
 	flags.taxi = {}
 	for _, id in ipairs({ ... }) do flags.taxi[id] = true end
 end
@@ -57,7 +57,7 @@ test('a ride waits as the timetable says from when the player reaches the dock; 
 		nav.place(0, 0, 1)
 		target(-800, 100, "Docks quest")
 		r.average = leg("boat").seconds
-		Polestar.Transit = {
+		SendaFH.Transit = {
 			Now = function() return 1000 end,
 			NextDeparture = function(kind, id, now, side) seen = seen or { kind, id, now, side } return 500, 60 end,
 			Caption = function(kind, id, now, side) return "Next " .. kind .. " in 1:20 (" .. side .. ")" end,
@@ -81,7 +81,7 @@ test('a ride waits as the timetable says from when the player reaches the dock; 
 test('C11: a class teleport is a leg from the start when it is faster; a ghost only walks, with no error', () => {
 	const [out] = run(`
 		local r = {}
-		Polestar.Transit = {
+		SendaFH.Transit = {
 			Now = function() return 0 end,
 			Teleports = function() return { { spell = 3561, name = "Teleport: Testshire", cast = 10, ready = 0,
 				to = { name = "Testshire", c = 0, wx = -500, wy = -500, map = 9000, x = 75, y = 75 } } } end,
@@ -165,7 +165,7 @@ test('11: after skipping the Hearthstone, a class teleport is still planned', ()
 	const [out] = run(`
 		nav.items[6948] = 1
 		nav.bind = "Testshire Inn"
-		Polestar.Transit = {
+		SendaFH.Transit = {
 			Now = function() return 0 end,
 			Teleports = function() return { { spell = 3561, name = "Teleport: Testshire", cast = 10, ready = 200,
 				to = { name = "Testshire", c = 0, wx = -480, wy = -690, map = 9000, x = 84.5, y = 74 } } } end,
@@ -192,7 +192,7 @@ test('2, 3: no flight leg lands at or passes through an unknown flight master; t
 		nav.place(0, 850)
 		target(0, -890, "South")
 		r.unknownMiddle = route()
-		Polestar.CharState().flags.taxi[2] = true      -- learned in place, as the client does
+		SendaFH.CharState().flags.taxi[2] = true      -- learned in place, as the client does
 		target(0, -890, "South")
 		r.known = route()
 		local legs = N.GetRoute()
@@ -246,13 +246,13 @@ test('review P0-1: a timetable that raises or answers nonsense never breaks plan
 	const [out] = run(`
 		local r = {}
 		nav.place(0, 0, 1)
-		Polestar.Transit = { Now = function() return 0 end, NextDeparture = function() error("stops[0]") end }
+		SendaFH.Transit = { Now = function() return 0 end, NextDeparture = function() error("stops[0]") end }
 		target(-800, 100, "Docks quest")
 		r.raises = leg("boat") and leg("boat").seconds
-		Polestar.Transit = { Now = function() return 0 end, NextDeparture = function() return 0 / 0, 60 end }
+		SendaFH.Transit = { Now = function() return 0 end, NextDeparture = function() return 0 / 0, 60 end }
 		target(-800, 100, "Docks quest")
 		r.nan = leg("boat") and leg("boat").seconds
-		Polestar.Transit = { Now = function() return 0 end, NextDeparture = function() return -5, 60 end }
+		SendaFH.Transit = { Now = function() return 0 end, NextDeparture = function() return -5, 60 end }
 		target(-800, 100, "Docks quest")
 		r.negative = leg("boat") and leg("boat").seconds
 		emit(r)`);
@@ -262,12 +262,12 @@ test('review P0-1: a timetable that raises or answers nonsense never breaks plan
 test('security M3: shared times replan only a route using the changed service, at most every 20 s; own rides at once', () => {
 	const [out] = run(`
 		local r, plans = {}, 0
-		Polestar.On("ROUTE_CHANGED", function() plans = plans + 1 end)
+		SendaFH.On("ROUTE_CHANGED", function() plans = plans + 1 end)
 		nav.place(0, 0, 1)
 		target(-800, 100, "Docks quest")
 		local function count(changed, own)
 			local before = plans
-			Polestar.Fire("NAV_TRANSIT", changed, own)
+			SendaFH.Fire("NAV_TRANSIT", changed, own)
 			return plans - before
 		end
 		stub.advance(30)
@@ -279,7 +279,7 @@ test('security M3: shared times replan only a route using the changed service, a
 		r.tooSoon = count({ ["boat-test"] = "boat" })
 		local before = plans
 		stub.advance(21)
-		Polestar.Nav.Refresh()
+		SendaFH.Nav.Refresh()
 		r.owed = plans - before
 		emit(r)`);
 	assert.deepEqual(out, { other: 0, used: 1, tooSoon: 0, own: 1, all: 1, owed: 1 });
@@ -291,7 +291,7 @@ test('review P2-4: Progress counts a ride, flight or hearth down from when it be
 		nav.bind = "Testshire Inn"
 		nav.place(0, 0, 1)
 		target(-520, -690, "Innkeeper quest")
-		local T = Polestar.Nav.travel
+		local T = SendaFH.Nav.travel
 		local a = T.Progress()
 		stub.advance(5)
 		local b = T.Progress()
@@ -305,7 +305,7 @@ test('review P2-5: the arrow ETA adds the 1.25 detour only to straight distances
 		known(1, 2)
 		nav.place(0, 600)
 		target(0, -780, "Kobolds")
-		local T = Polestar.Nav.travel
+		local T = SendaFH.Nav.travel
 		local legs = N.GetRoute()
 		local rest = legs[1].rest
 		emit({ T.Remaining(70, true) - rest, T.Remaining(70) - rest })`);
@@ -315,7 +315,7 @@ test('review P2-5: the arrow ETA adds the 1.25 detour only to straight distances
 test('review P2-6: skipping a teleport, a flight or a ride plans the rest of the way without it', () => {
 	const [out] = run(`
 		local r = {}
-		Polestar.Transit = { Now = function() return 0 end, Teleports = function() return { ${TELEPORT} } end }
+		SendaFH.Transit = { Now = function() return 0 end, Teleports = function() return { ${TELEPORT} } end }
 		nav.place(0, 0, 1)
 		target(-500, -480, "Quest")
 		r.teleport = route()[1]
@@ -323,7 +323,7 @@ test('review P2-6: skipping a teleport, a flight or a ride plans the rest of the
 		r.afterTeleport = route()[1]
 		target(-500, -470, "Other")
 		r.otherTarget = route()[1]
-		Polestar.Transit = nil
+		SendaFH.Transit = nil
 		known(1, 2)
 		nav.place(0, 790)
 		target(0, -780, "Kobolds")
@@ -417,7 +417,7 @@ test('second review P2: API.Estimate answers "busy" past the budget and a number
 		emit(r)`);
 	assert.equal(out.first, true, 'the frame\'s first estimate is planned');
 	assert.deepEqual(out.busy, [true, 'busy'], 'no straight line stands in for it');
-	assert.equal(out.internal, true, 'Polestar\'s own estimates are never refused');
+	assert.equal(out.internal, true, 'SendaFH\'s own estimates are never refused');
 	assert.equal(out.nextFrame, true);
 });
 
@@ -431,7 +431,7 @@ test('second review P3: the arrow and the panel count down alike while waiting a
 		local s = T.Progress()
 		local secs = math.floor(T.Remaining(nil) + 0.5)
 		emit({ kind = leg.kind, waited = before - T.Remaining(nil), agree = T.Remaining(nil) - (s + leg.rest),
-			mode = Polestar.Nav.arrow.GetMode(), eta = Polestar.Nav.arrow.etaText:GetText(),
+			mode = SendaFH.Nav.arrow.GetMode(), eta = SendaFH.Nav.arrow.etaText:GetText(),
 			want = string.format("%d:%02d total", math.floor(secs / 60), secs % 60) })`);
 	assert.equal(out.kind, 'boat');
 	assert.equal(out.waited, 20);
@@ -448,7 +448,7 @@ test('second review P3: a flight counts down from take-off, not from reaching th
 		local leg = T.CurrentLeg()
 		stub.advance(30)                       -- talking to the flight master
 		nav.taxi = true
-		Polestar.Nav.Refresh()
+		SendaFH.Nav.Refresh()
 		stub.advance(10)
 		emit({ kind = leg.kind, seconds = leg.seconds, left = T.Progress(), remaining = T.Remaining(nil) - leg.rest })`);
 	assert.equal(out.kind, 'fly');
@@ -459,11 +459,11 @@ test('second review P3: a flight counts down from take-off, not from reaching th
 
 test("review P3-10: the arrow dial shows the leg's own glyph for a teleport", () => {
 	const [out] = run(`
-		Polestar.Transit = { Now = function() return 0 end, Teleports = function() return { ${TELEPORT} } end }
+		SendaFH.Transit = { Now = function() return 0 end, Teleports = function() return { ${TELEPORT} } end }
 		nav.place(0, 0, 1)
 		target(-500, -480, "Quest")
 		stub.advance(0.2)
-		local A = Polestar.Nav.arrow
+		local A = SendaFH.Nav.arrow
 		emit({ A.GetMode(), (A.legIcon:GetTexture() or ""):match("[^\\\\]+$") })`);
 	assert.deepEqual(out, ['instruction', 'icon-use']);
 });

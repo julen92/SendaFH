@@ -1,7 +1,7 @@
 'use strict';
 // Attunements and keys: the builder (tools/lib/codex/attunements.js through
 // the journal), the cited goal table (tools/lib/codex/attunements.json), the
-// runtime's states and guide (addon/Polestar/Dungeons/Attune.lua) in the real
+// runtime's states and guide (addon/SendaFH/Dungeons/Attune.lua) in the real
 // engine over the stub world, and the Attunement tab (UI/Dungeons.lua) over
 // the fake engine of tests/lua/stub_ui.lua.
 //
@@ -132,7 +132,7 @@ test('auditReport compares our chains with Attune\'s by their quests', () => {
 	const md = auditReport(j, attune, codex, { verdicts: '- Ours is right.' });
 	assert.match(md, /## Verdicts\n\n- Ours is right\.\n$/);
 	assert.doesNotMatch(auditReport(j, attune, codex, { verdicts: '' }), /## Verdicts/);
-	assert.match(md, /^# Attunements: Polestar against Attune/);
+	assert.match(md, /^# Attunements: SendaFH against Attune/);
 	assert.match(md, /\| Wailing Caverns \(RAIDS\) \| Horde \| Wailing Caverns: Fang of the Serpent \| 2 \| 1 \| 2 \|/);
 	assert.match(md, /- Only Attune: 77777: not in our Codex/);
 	assert.match(md, /- Only ours: The Serpent's Trial \(90002\): a prerequisite of Fang of the Serpent \(90003\)\./);
@@ -149,10 +149,10 @@ test('auditReport compares our chains with Attune\'s by their quests', () => {
 const MAPS = Object.entries(codex.frames)
 	.map(([id, f]) => `w.addMap(${id}, { name = ${JSON.stringify(codex.zones[id].name)}, c = ${f.c}, left = ${f.left}, right = ${f.right}, top = ${f.top}, bottom = ${f.bottom} })`)
 	.join('\n');
-const ADDON = { name: 'Polestar', files: ['Core/Core.xml', 'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml'] };
+const ADDON = { name: 'SendaFH', files: ['Core/Core.xml', 'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml'] };
 
 const LUA = `
-local D = Polestar.Dungeons
+local D = SendaFH.Dungeons
 local function att(key, id) for _, a in ipairs(D.Attunements(key)) do if a.id == id then return a end end end
 local function states(key, id)
 	local st = D.AttunementState(att(key, id))
@@ -230,7 +230,7 @@ local last = def.steps[#def.steps]
 emit({ title = def.title, steps = describe(def), goto = { last.goals[2].map, last.goals[2].x, last.goals[2].y, last.goals[2].text }, note = last.goals[1].text })
 local gid = D.Attune("wailing-caverns", "fang")
 local tabs = {}
-for i, t in ipairs(Polestar.Engine.GetTabs()) do tabs[i] = t.guideId end
+for i, t in ipairs(SendaFH.Engine.GetTabs()) do tabs[i] = t.guideId end
 emit({ gid = gid, tabs = tabs })
 stub.world.complete({ 90002, 90003 })
 local none, why = D.AttuneGuide("wailing-caverns", "fang")
@@ -309,7 +309,7 @@ end
 local notes = {}
 for i, s in ipairs(def.steps) do notes[i] = s.note or false end
 emit({ steps = describe(def), at = at, notes = notes })
-local E = Polestar.Engine
+local E = SendaFH.Engine
 D.Attune("wailing-caverns", "heart")
 stub.advance(0.6)
 local walk = {}
@@ -378,15 +378,15 @@ function runUI(script, { locale = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before: `${pack.stubLua}\n${locale}`,
-		addons: [{ name: 'Polestar', files: UI_FILES }],
+		addons: [{ name: 'SendaFH', files: UI_FILES }],
 		script: `uistub.install()
 stub.login()
 uistub.player.level, uistub.player.race, uistub.player.class, uistub.player.faction = 18, "Tauren", "WARRIOR", "Horde"
 local done, log = {}, {}
-Polestar.Compat.IsQuestCompleted = function(id) return done[id] or false end
-Polestar.Compat.IsOnQuest = function(id) return log[id] or false end
-Polestar.Compat.IsQuestReadyForTurnIn = function() return false end
-local DS = Polestar.UI.DungeonsSection
+SendaFH.Compat.IsQuestCompleted = function(id) return done[id] or false end
+SendaFH.Compat.IsOnQuest = function(id) return log[id] or false end
+SendaFH.Compat.IsQuestReadyForTurnIn = function() return false end
+local DS = SendaFH.UI.DungeonsSection
 local function plain(s) return (s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") end
 local function rows()
 	local out = {}
@@ -395,7 +395,7 @@ local function rows()
 end
 local function tabs()
 	local out = {}
-	for _, t in ipairs(PolestarPicker.tabButtons) do if t:IsShown() then out[#out + 1] = t.Label:GetText() end end
+	for _, t in ipairs(SendaFHPicker.tabButtons) do if t:IsShown() then out[#out + 1] = t.Label:GetText() end end
 	return out
 end
 ${script}`,
@@ -404,7 +404,7 @@ ${script}`,
 
 test('the Attunement tab: the head with its facts and note, a row per step of this side with its state, and "Guide me through it" opening the guide', () => {
 	const [first, progress, deadmines] = runUI(`
-Polestar.Dungeons.Open("wailing-caverns")
+SendaFH.Dungeons.Open("wailing-caverns")
 DS.SetTab("attune")
 local h = DS.atts[1]
 emit({ tab = DS.Tab(), tabs = tabs(), title = h.Title:GetText(), meta = h.Meta:GetText(), note = h.Note:GetText(), chip = h.State:IsShown(),
@@ -413,10 +413,10 @@ done[90001] = true
 log[90002] = true
 DS.Render()
 local asked = {}
-Polestar.Dungeons.Attune = function(key, id) asked[#asked + 1] = key .. ":" .. id return "lookup/attune/" .. key .. ":" .. id end
+SendaFH.Dungeons.Attune = function(key, id) asked[#asked + 1] = key .. ":" .. id return "lookup/attune/" .. key .. ":" .. id end
 h.Guide:Click()
-emit({ chip = h.State.Text:GetText(), rows = rows(), asked = asked, hub = PolestarPicker:IsShown() })
-Polestar.Dungeons.Open("deadmines")
+emit({ chip = h.State.Text:GetText(), rows = rows(), asked = asked, hub = SendaFHPicker:IsShown() })
+SendaFH.Dungeons.Open("deadmines")
 local tabsDm = tabs()
 DS.SetTab("attune")
 emit({ tabs = tabsDm, heads = { DS.atts[1].Title:GetText(), DS.atts[2] and DS.atts[2]:IsShown() or false }, rows = rows(), owned = DS.atts[1].Owned:GetText() })`);
@@ -445,7 +445,7 @@ emit({ tabs = tabsDm, heads = { DS.atts[1].Title:GetText(), DS.atts[2] and DS.at
 test('the Attunement tab: the kind beside the title is in the client language', () => {
 	const [meta] = runUI(
 		`
-Polestar.Dungeons.Open("wailing-caverns")
+SendaFH.Dungeons.Open("wailing-caverns")
 DS.SetTab("attune")
 emit(DS.atts[1].Meta:GetText())`,
 		{ locale: fakeLocale('itIT', { Attunement: 'Zugangsquest', 'Everyone entering needs it': 'Jeder braucht sie', 'From level %d': 'Ab Stufe %d' }) },

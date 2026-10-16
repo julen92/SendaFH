@@ -73,16 +73,16 @@ test('reward and why reach the registry and the guide list (Lua); bad shapes are
 		/reward = \{ \{ item = 750, itemName = "Wolf Steak", quality = 2, choice = true \}, \{ item = 159, itemName = "Refreshing Spring Water", choice = true \}, \{ spell = 23161, spellName = "Summon Dreadsteed" \} \},\n\t+why = "Worth it\.",/,
 	);
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
-assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 local h
-for _, g in ipairs(Polestar.Guides.List()) do if g.id == "test/main" then h = g end end
+for _, g in ipairs(SendaFH.Guides.List()) do if g.id == "test/main" then h = g end end
 local function bad(extra)
 	local def = { id = "test/bad", pack = "test", title = "B", steps = { { goals = { { t = "note", text = "n" } } } } }
 	for k, v in pairs(extra) do def[k] = v end
-	return { Polestar.RegisterGuide(def) }
+	return { SendaFH.RegisterGuide(def) }
 end
 emit({ reward = h.reward, why = h.why, noId = bad({ reward = { { itemName = "x" } } }), why3 = bad({ why = 3 }) })`,
 	}).emitted;

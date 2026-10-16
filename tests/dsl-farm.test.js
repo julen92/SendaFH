@@ -85,13 +85,13 @@ test('farm spots and prerequisite titles emit Lua that the engine registry accep
 	assert.match(lua, /\{ npcName = "Cloth Kobold", map = 1429, x = 65\.4, y = 75\.3, f = "e", faction = "A", lvl = \{ min = 5, max = 5 \}, rate = 0\.3, spawns = 4 \}/);
 	assert.match(lua, /pre = \{ 9201, 783 \}, preTitles = \{ \[783\] = "A Threat Within", \[9201\] = "The First Step" \}/);
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `
 			${TEST_PACK}
 			local got, res
-			local real = Polestar.RegisterGuide
-			Polestar.RegisterGuide = function(g) got = g; local ok, e = real(g); res = ok and "ok" or e; return ok, e end
-			assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+			local real = SendaFH.RegisterGuide
+			SendaFH.RegisterGuide = function(g) got = g; local ok, e = real(g); res = ok and "ok" or e; return ok, e end
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 			emit({ res = res, title = got.steps[1].goals[2].preTitles[783], guide = got })`,
 	}).emitted;
 	assert.equal(out.res, 'ok');

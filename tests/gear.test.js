@@ -1,5 +1,5 @@
 'use strict';
-// Polestar.Gear (addon/Polestar/Gear): item stats from ItemDB and the client,
+// SendaFH.Gear (addon/SendaFH/Gear): item stats from ItemDB and the client,
 // leveling weights, scoring and comparison across slot types, spec detection,
 // the tooltip line (also on quest reward choices) and the options page.
 
@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { fakeLocale } = require('./helpers/locale');
 
-const ADDON = { name: 'Polestar', files: ['Core/Core.xml', 'Gear/Gear.xml'] };
+const ADDON = { name: 'SendaFH', files: ['Core/Core.xml', 'Gear/Gear.xml'] };
 
 // Fixture item entries in the generated format (see tools/lib/itemdb/stats.js).
 const FIXTURE = `{
@@ -41,8 +41,8 @@ w.race, w.raceName, w.raceID, w.faction = "${race}", "${race}", ${raceID}, "${fa
 ${before}`,
 		addons: [ADDON],
 		login,
-		script: `G = Polestar.Gear
-Polestar.ItemDB.Register({ schema = 1, build = "test" }, ${FIXTURE})
+		script: `G = SendaFH.Gear
+SendaFH.ItemDB.Register({ schema = 1, build = "test" }, ${FIXTURE})
 ${script}`,
 	}).emitted;
 }
@@ -51,7 +51,7 @@ const r1 = (n) => Math.round(n * 10) / 10;
 
 test('ItemDB parses entries: header fields, stat tokens, weapon DPS, class mask, unique, mp5 alias', () => {
 	const [sword, legs, ring, missing] = run(`
-		emit(Polestar.ItemDB.Get(9032)); emit(Polestar.ItemDB.Get(9050)); emit(Polestar.ItemDB.Get(9013)); emit(Polestar.ItemDB.Get(1) == nil)
+		emit(SendaFH.ItemDB.Get(9032)); emit(SendaFH.ItemDB.Get(9050)); emit(SendaFH.ItemDB.Get(9013)); emit(SendaFH.ItemDB.Get(1) == nil)
 	`);
 	assert.deepEqual(
 		{ inv: sword.inv, ilvl: sword.ilvl, req: sword.req, quality: sword.quality, class: sword.class, subclass: sword.subclass, speed: sword.speed },
@@ -170,7 +170,7 @@ test('a two-hander is weighed against main hand + off hand, and a one-hander aga
 
 test('dual wielders try a one-hander in the off hand at half weapon DPS', () => {
 	const [dw, noDw] = run(`
-		Polestar.Set("gear.spec.WARRIOR", "fury")
+		SendaFH.Set("gear.spec.WARRIOR", "fury")
 		g.equip(16, "item:9030")
 		emit(G.CompareToEquipped("item:9033"))
 		w.level = 12; w.setLevel(12)
@@ -233,9 +233,9 @@ test('spec: automatic from the talent spread, the chosen primary tree, the class
 		g.setSpecs({ { "Arms", 5 }, { "Fury", 21 }, { "Protection", 0 } })
 		g.primary = 1
 		emit({ G.GetSpec() })
-		Polestar.Set("gear.spec.WARRIOR", "protection")
+		SendaFH.Set("gear.spec.WARRIOR", "protection")
 		emit({ G.GetSpec() })
-		Polestar.Set("gear.spec.WARRIOR", "auto")
+		SendaFH.Set("gear.spec.WARRIOR", "auto")
 		emit({ G.GetSpec() })
 	`);
 	assert.deepEqual(none, ['arms', 'Arms', 'default']);
@@ -256,19 +256,19 @@ test('tooltip line: upgrade and downgrade percentages, empty slot, later level; 
 		emit(g.showTooltip(GameTooltip, "item:9002"))
 		g.secret["item:9002"] = nil
 		emit(g.showTooltip(ShoppingTooltip1, "item:9002"))
-		Polestar.Set("gear.tooltip", false)
+		SendaFH.Set("gear.tooltip", false)
 		emit(g.showTooltip(GameTooltip, "item:9002"))
-		Polestar.Set("gear.tooltip", true)
+		SendaFH.Set("gear.tooltip", true)
 		g.showTooltip(GameTooltip, "item:9002")
 		local up = GameTooltip.colors[1]
 		g.showTooltip(GameTooltip, "item:9004")
 		emit({ up, GameTooltip.colors[1] })
 	`);
 	// The slot it replaces follows the gain; an empty slot needs no name.
-	assert.deepEqual(up, ['Polestar · Arms | +62% upgrade · Head']);
-	assert.deepEqual(down, ['Polestar · Arms | -88% downgrade · Head']);
-	assert.deepEqual(empty, ['Polestar · Arms | upgrade (empty slot)']);
-	assert.deepEqual(later, ['Polestar · Arms | +89% upgrade at level 40 · Head']);
+	assert.deepEqual(up, ['SendaFH · Arms | +62% upgrade · Head']);
+	assert.deepEqual(down, ['SendaFH · Arms | -88% downgrade · Head']);
+	assert.deepEqual(empty, ['SendaFH · Arms | upgrade (empty slot)']);
+	assert.deepEqual(later, ['SendaFH · Arms | +89% upgrade at level 40 · Head']);
 	assert.deepEqual(secret, {});
 	assert.deepEqual(shopping, {});
 	assert.deepEqual(off, {});
@@ -279,7 +279,7 @@ test('tooltip line: upgrade and downgrade percentages, empty slot, later level; 
 test('tooltip line: the slot is the client\'s own word (BACKSLOT, CHESTSLOT), apart from the Back button and the boss chest', () => {
 	const [back, chest] = run(
 		`
-		Polestar.ItemDB.Register(nil, { [9041] = "16 25 20 2 4 1 sta8", [9060] = "5 20 15 2 4 3 str5 sta3 armor200", [9061] = "5 25 20 2 4 3 str10 sta4 armor260" })
+		SendaFH.ItemDB.Register(nil, { [9041] = "16 25 20 2 4 1 sta8", [9060] = "5 20 15 2 4 3 str5 sta3 armor200", [9061] = "5 25 20 2 4 3 str10 sta4 armor260" })
 		g.equip(15, "item:9040")
 		g.equip(5, "item:9060")
 		emit(g.showTooltip(GameTooltip, "item:9041"))
@@ -287,8 +287,8 @@ test('tooltip line: the slot is the client\'s own word (BACKSLOT, CHESTSLOT), ap
 	`,
 		{ before: `${fakeLocale('itIT', { Back: 'Atrás', Chest: 'Cofre', 'boss: Chest': 'Arca' })}\nBACKSLOT, CHESTSLOT = "Espalda", "Pecho"` },
 	);
-	assert.match(back[0], /^Polestar · Arms \| .*upgrade · Espalda$/);
-	assert.match(chest[0], /^Polestar · Arms \| .*upgrade · Pecho$/);
+	assert.match(back[0], /^SendaFH · Arms \| .*upgrade · Espalda$/);
+	assert.match(chest[0], /^SendaFH · Arms \| .*upgrade · Pecho$/);
 });
 
 test('quest reward tooltips: hovering a choice (SetQuestItem, SetQuestLogItem) shows the % upgrade line, also before its link is cached', () => {
@@ -299,12 +299,12 @@ test('quest reward tooltips: hovering a choice (SetQuestItem, SetQuestLogItem) s
 		emit(GameTooltip:SetQuestLogItem("choice", 2))
 		g.rewards({ "item:9004", "item:9002" }, { uncached = true })
 		emit(GameTooltip:SetQuestItem("choice", 2))
-		Polestar.Set("gear.tooltip", false)
+		SendaFH.Set("gear.tooltip", false)
 		emit(GameTooltip:SetQuestItem("choice", 2))
 	`);
-	assert.deepEqual(hover, [['Polestar · Arms | -88% downgrade · Head'], ['Polestar · Arms | +62% upgrade · Head']]);
-	assert.deepEqual(log, ['Polestar · Arms | +62% upgrade · Head']);
-	assert.deepEqual(uncached, ['Polestar · Arms | +62% upgrade · Head']);
+	assert.deepEqual(hover, [['SendaFH · Arms | -88% downgrade · Head'], ['SendaFH · Arms | +62% upgrade · Head']]);
+	assert.deepEqual(log, ['SendaFH · Arms | +62% upgrade · Head']);
+	assert.deepEqual(uncached, ['SendaFH · Arms | +62% upgrade · Head']);
 	assert.deepEqual(off, {});
 });
 
@@ -312,7 +312,7 @@ test('options: the gear advice on Questing with the class spec dropdown, registe
 	const [defs] = run(
 		`
 		local seen = {}
-		Polestar.RegisterOptions = function(def) seen[#seen + 1] = def end
+		SendaFH.RegisterOptions = function(def) seen[#seen + 1] = def end
 		stub.login()
 		local out = {}
 		for _, def in ipairs(seen) do
@@ -340,7 +340,7 @@ test('options: the gear advice on Questing with the class spec dropdown, registe
 
 test('gains read in whole percents, and in words past doubling', () => {
 	const [out] = run(`
-		local G = Polestar.Gear
+		local G = SendaFH.Gear
 		local function t(p) local s, big = G.GainText(p); return { s, big } end
 		emit({ t(62.14), t(-88.4), t(0.2), t(-0.3), t(99.4), t(100), t(625) })`);
 	assert.deepEqual(out, [['+62%', false], ['-88%', false], ['+<1%', false], ['-<1%', false], ['+99%', false], ['big upgrade', true], ['big upgrade', true]]);

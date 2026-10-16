@@ -22,7 +22,7 @@ const { playPackRoot, untilStopped, defaultArt, playDataDir } = require('./play'
 
 const DEBOUNCE_MS = 200;
 
-const usage = `usage: node tools/polestar.js dev [<dir>] [options]
+const usage = `usage: node tools/sendafh.js dev [<dir>] [options]
 
 On a guide pack (<dir>, --pack, or run inside one): watches pack.json and
 the pack's .guide files. On every save it lints, printing the diagnostics,
@@ -85,7 +85,7 @@ async function run(argv, env = process.env) {
 		return 1;
 	}
 	if (opts.play && !fs.existsSync(path.join(ROOT, 'data', 'forever', 'races.json'))) {
-		console.error('dev --play: data/forever is not built (the playground needs it): run node tools/polestar.js data build first');
+		console.error('dev --play: data/forever is not built (the playground needs it): run node tools/sendafh.js data build first');
 		return 1;
 	}
 	const packDir = first.dir;
@@ -178,7 +178,7 @@ async function run(argv, env = process.env) {
 			console.error(`dev: the playground could not start: ${e.message}${e.code === 'EADDRINUSE' ? ` (port ${port} is taken; pass --port <n>, 0 picks a free one)` : ''}`);
 			return 1;
 		}
-		console.log(`Polestar playground: ${play.url}${art ? `  (art from ${art})` : '  (no client art)'}`);
+		console.log(`SendaFH playground: ${play.url}${art ? `  (art from ${art})` : '  (no client art)'}`);
 	}
 	let timer = null;
 	const watcher = fs.watch(packDir, { recursive: true }, (_event, name) => {

@@ -216,7 +216,7 @@ function writeQuestie(dir, store = {}) {
 }
 
 async function build(extra = {}, store = {}) {
-	const root = tmpdir('polestar-questie-');
+	const root = tmpdir('sendafh-questie-');
 	const questieDir = writeQuestie(root, store);
 	const outDir = path.join(root, 'out');
 	const result = await buildData({
@@ -266,7 +266,7 @@ describe('QuestieDB decoder', () => {
 	});
 
 	test('reads every entity with defaults, presence masks and constants', () => {
-		const dir = writeQuestie(tmpdir('polestar-questie-'));
+		const dir = writeQuestie(tmpdir('sendafh-questie-'));
 		assert.equal(questieDbDir(path.dirname(dir)), dir, 'an AddOns folder resolves to its QuestieDB');
 		const qz = readQuestie(dir);
 		assert.deepEqual([...qz.quests.keys()], [100, 101, 102, 92460, 92461]);
@@ -309,7 +309,7 @@ describe('QuestieDB decoder', () => {
 	});
 
 	test('refuses a store that is not baked Forever', () => {
-		const dir = writeQuestie(tmpdir('polestar-questie-'));
+		const dir = writeQuestie(tmpdir('sendafh-questie-'));
 		const toc = path.join(dir, 'QuestieDB_Forever.toc');
 		fs.writeFileSync(toc, fs.readFileSync(toc, 'utf8').replace('## X-Flavor: Forever', '## X-Flavor: Era'));
 		assert.throws(() => readQuestie(dir), /flavor Era, not Forever/);
@@ -458,7 +458,7 @@ describe('QuestieDB frames', () => {
 	});
 
 	test('with Forever client tables, frame changes decide and Forever maps get names and frames', async () => {
-		const sourcesDir = tmpdir('polestar-questie-');
+		const sourcesDir = tmpdir('sendafh-questie-');
 		fs.cpSync(path.join(FIX, 'sources', 'wago'), path.join(sourcesDir, 'wago'), { recursive: true });
 		const era = path.join(sourcesDir, 'wago', '1.15.9.11111');
 		const fv = path.join(sourcesDir, 'wago', '1.60.1.1');
@@ -481,7 +481,7 @@ describe('QuestieDB frames', () => {
 	});
 
 	test('instance npcs and objects (QuestieDB spawns without coordinates) get the instance map ids of their areas', async () => {
-		const sourcesDir = tmpdir('polestar-questie-');
+		const sourcesDir = tmpdir('sendafh-questie-');
 		fs.cpSync(path.join(FIX, 'sources', 'wago'), path.join(sourcesDir, 'wago'), { recursive: true });
 		const era = path.join(sourcesDir, 'wago', '1.15.9.11111');
 		// The Deadmines (1581) and Blackfathom Deeps (719) lie on their instance maps 36 and 48; Zephras Isle on the open-world continent 2991.
@@ -510,7 +510,7 @@ describe('QuestieDB frames', () => {
 	});
 
 	test("the Forever client's ItemSparse gives the items that vanish after a while their duration in seconds", async () => {
-		const sourcesDir = tmpdir('polestar-questie-');
+		const sourcesDir = tmpdir('sendafh-questie-');
 		fs.cpSync(path.join(FIX, 'sources', 'wago'), path.join(sourcesDir, 'wago'), { recursive: true });
 		const era = path.join(sourcesDir, 'wago', '1.15.9.11111');
 		const fv = path.join(sourcesDir, 'wago', '1.60.1.1');

@@ -1,5 +1,5 @@
 'use strict';
-// `polestar draft`: route generation on the synthetic Testvale fixture
+// `sendafh draft`: route generation on the synthetic Testvale fixture
 // (tests/fixtures/route). The guide text is checked the way the compiler and
 // engine will read it: DSL grammar, quest order, conditions.
 
@@ -21,7 +21,7 @@ const { tmpdir } = require('./helpers/tmp');
 
 const ROOT = path.resolve(__dirname, '..');
 const FIXTURE = path.join(__dirname, 'fixtures', 'route');
-const CLI = path.join(ROOT, 'tools', 'polestar.js');
+const CLI = path.join(ROOT, 'tools', 'sendafh.js');
 
 const fixture = () => loadData(FIXTURE);
 const BASE = { faction: 'Alliance', race: 'Human', zones: ['Testvale'], levels: [1, 8] };
@@ -395,7 +395,7 @@ test('CLI: draft writes the same guide to stdout and --out, and rejects bad argu
 		title: 'Testvale 1-8', faction: 'Alliance', races: ['Human'],
 		levels: { min: 1, max: 8 }, zone: { name: 'Testvale', line: 6 }, next: ['forever/alliance/human/02-next'],
 	});
-	const dir = tmpdir('polestar-route-');
+	const dir = tmpdir('sendafh-route-');
 	const file = path.join(dir, 'sub', 'draft.guide');
 	const r = spawnSync(process.execPath, [CLI, ...args.filter((a) => a !== '--quiet'), '--out', file], { encoding: 'utf8' });
 	assert.equal(r.status, 0, r.stderr);

@@ -6,8 +6,8 @@ const path = require('node:path');
 const { parseArgs } = require('node:util');
 const { reportSync } = require('../lib/generated');
 
-const usage = `usage: node tools/polestar.js exploration build [options]
-       node tools/polestar.js exploration check [options]
+const usage = `usage: node tools/sendafh.js exploration build [options]
+       node tools/sendafh.js exploration check [options]
 
 build: rewrites guides/forever/exploration/*.guide, one guide per continent
 and level range plus Zephras Isle, from the Forever client's map tables

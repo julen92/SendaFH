@@ -1,7 +1,7 @@
 'use strict';
-// The languages of Polestar's interface (docs/TRANSLATING.md): the client
+// The languages of SendaFH's interface (docs/TRANSLATING.md): the client
 // locales WoW: Forever ships besides English. Each has one file,
-// addon/Polestar/Locales/<locale>.lua, loaded by Core/Core.xml once it
+// addon/SendaFH/Locales/<locale>.lua, loaded by Core/Core.xml once it
 // exists. `status`: "reviewed" when a native speaker wrote or checked it
 // (tooling never fills or rewrites its translations; `i18n sync` only adds
 // the new keys commented out), "ai" when a machine made it (Options' About
@@ -13,7 +13,7 @@
 const LOCALES = {
 	deDE: { language: 'German', status: 'reviewed', translators: ['thecodingcortex'] },
 	esES: { language: 'Spanish (Spain)', status: 'ai', translators: [] },
-	esMX: { language: 'Spanish (Latin America)', status: 'reviewed', translators: ['CDVolvik'] },
+	esMX: { language: 'Spanish (Latin America)', status: 'ai', translators: ['CDVolvik'] },
 	frFR: { language: 'French', status: 'reviewed', translators: ['Yendi'] },
 	koKR: { language: 'Korean', status: 'ai', translators: [] },
 	ptBR: { language: 'Portuguese (Brazil)', status: 'ai', translators: [] },

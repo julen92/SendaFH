@@ -1,14 +1,14 @@
 'use strict';
 // Guide packs switched off and on, where suggestions come from, and the
 // installed packs the core finds in the AddOns list
-// (addon/Polestar/Core/Guides.lua, Search.lua, Lookup/Guide.lua).
+// (addon/SendaFH/Core/Guides.lua, Search.lua, Lookup/Guide.lua).
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
-const WITH_LOOKUP = { name: 'Polestar', files: ['Core/Core.xml', 'Lookup/Lookup.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
+const WITH_LOOKUP = { name: 'SendaFH', files: ['Core/Core.xml', 'Lookup/Lookup.xml'] };
 
 // A Horde character at level 12 in the Barrens.
 const WORLD = `
@@ -18,23 +18,23 @@ w.moveTo(1413, 52, 31)
 w.race, w.raceName, w.faction, w.class, w.className, w.level = "Orc", "Orc", "Horde", "WARRIOR", "Warrior", 12
 `;
 
-// Ours (`guides`, from Polestar_Guides) and Joe's pack, each with a Horde and
+// Ours (`guides`, from SendaFH_Guides) and Joe's pack, each with a Horde and
 // an Alliance leveling guide for 10-20 and a guide collecting item 8000.
 const PACKS = `
-G = Polestar.Guides
+G = SendaFH.Guides
 local function meta(addon, id, title)
 	return { addon = addon, id = id, format = 1, title = title, author = "A", version = "1", license = "MIT" }
 end
 local function guide(id, pack, extra)
 	local g = { id = id, pack = pack, title = "T " .. id, minLevel = 10, maxLevel = 20, steps = { { goals = { { t = "level", level = 20 } } } } }
 	for k, v in pairs(extra or {}) do g[k] = v end
-	assert(Polestar.RegisterGuide(g))
+	assert(SendaFH.RegisterGuide(g))
 end
-assert(Polestar.RegisterPack(meta("Polestar_Guides", "guides", "Polestar Guides")))
+assert(SendaFH.RegisterPack(meta("SendaFH_Guides", "guides", "SendaFH Guides")))
 guide("forever/horde", "guides", { faction = "Horde" })
 guide("forever/alliance", "guides", { faction = "Alliance" })
 guide("forever/mount", "guides", { category = "Collectibles", collects = { 8000 } })
-assert(Polestar.RegisterPack(meta("JoeAddon", "joe", "Joe's Routes")))
+assert(SendaFH.RegisterPack(meta("JoeAddon", "joe", "Joe's Routes")))
 guide("joe/a", "joe", { faction = "Horde", nextChoices = { "joe/b" } })
 guide("joe/b", "joe", { faction = "Horde" })
 guide("joe/mount", "joe", { category = "Collectibles", collects = { 8000 } })
@@ -46,25 +46,25 @@ function run(script, { before = '', saved, addon = CORE, stubs = [] } = {}) {
 		stubs: ['stub_world.lua', ...stubs],
 		before: WORLD + before,
 		addons: [addon],
-		saved: saved ? { Polestar: saved } : undefined,
+		saved: saved ? { SendaFH: saved } : undefined,
 		script: `${PACKS}\nstub.login()\n${script}`,
 	}).emitted;
 }
 
 test('a hidden pack\'s guides leave Get, List, Suggest and OfferedBy, and come back when it is shown', () => {
 	const [out] = run(`
-		Polestar.Set("behavior.suggestFrom", "joe")
+		SendaFH.Set("behavior.suggestFrom", "joe")
 		local fired = {}
-		Polestar.On("PACKS_CHANGED", function(id) fired[#fired + 1] = id end)
+		SendaFH.On("PACKS_CHANGED", function(id) fired[#fired + 1] = id end)
 		local r = { before = { suggest = G.Suggest(), offered = #G.OfferedBy("joe/b") } }
 		G.SetPackShown("joe", false)
 		r.hidden = { get = G.Get("joe/a") ~= nil, list = ids(G.List()), suggest = G.Suggestions(), offered = #G.OfferedBy("joe/b"),
-			shown = G.PackShown("joe"), off = PolestarDB.packs.joe.off, status = G.Pack("joe").status, fired = #fired, firedWith = fired[1] }
+			shown = G.PackShown("joe"), off = SendaFHDB.packs.joe.off, status = G.Pack("joe").status, fired = #fired, firedWith = fired[1] }
 		G.SetPackShown("joe", false)
 		r.again = #fired
 		G.SetPackShown("joe", true)
 		r.back = { get = G.Get("joe/a") ~= nil, list = ids(G.List()), suggest = G.Suggest(), shown = G.PackShown("joe"),
-			status = G.Pack("joe").status, fired = fired, stored = PolestarDB.packs and PolestarDB.packs.joe and PolestarDB.packs.joe.off or false }
+			status = G.Pack("joe").status, fired = fired, stored = SendaFHDB.packs and SendaFHDB.packs.joe and SendaFHDB.packs.joe.off or false }
 		emit(r)
 	`);
 	assert.deepEqual(out.before, { suggest: 'joe/a', offered: 1 });
@@ -82,7 +82,7 @@ test('a hidden pack\'s guides leave Get, List, Suggest and OfferedBy, and come b
 test('suggestions come from the chosen pack, with ours filling in where it has nothing', () => {
 	const [out] = run(`
 		local r = { default = G.SuggestSource(), ours = G.Suggest() }
-		Polestar.Set("behavior.suggestFrom", "joe")
+		SendaFH.Set("behavior.suggestFrom", "joe")
 		r.source = G.SuggestSource()
 		r.joe = G.Suggest()
 		stub.world.faction, stub.world.race = "Alliance", "Human"
@@ -92,7 +92,7 @@ test('suggestions come from the chosen pack, with ours filling in where it has n
 		r.hiddenSource = G.SuggestSource()
 		r.hidden = G.Suggest()
 		G.SetPackShown("joe", true)
-		Polestar.Set("behavior.suggestFrom", "nope")
+		SendaFH.Set("behavior.suggestFrom", "nope")
 		r.nope = G.SuggestSource()
 		emit(r)
 	`);
@@ -104,12 +104,12 @@ test('suggestions come from the chosen pack, with ours filling in where it has n
 
 test('Lookup\'s curated guide comes from the suggestion source, then ours', () => {
 	const [out] = run(`
-		local r = { default = Polestar.Lookup.CuratedGuide("mount", 8000) }
-		Polestar.Set("behavior.suggestFrom", "joe")
-		r.joe = Polestar.Lookup.CuratedGuide("mount", 8000)
+		local r = { default = SendaFH.Lookup.CuratedGuide("mount", 8000) }
+		SendaFH.Set("behavior.suggestFrom", "joe")
+		r.joe = SendaFH.Lookup.CuratedGuide("mount", 8000)
 		G.SetPackShown("guides", false)
-		Polestar.Set("behavior.suggestFrom", "guides")
-		r.oursHidden = Polestar.Lookup.CuratedGuide("mount", 8000) or false
+		SendaFH.Set("behavior.suggestFrom", "guides")
+		r.oursHidden = SendaFH.Lookup.CuratedGuide("mount", 8000) or false
 		emit(r)
 	`, { addon: WITH_LOOKUP, stubs: ['stub_lookup_runtime.lua'] });
 	assert.deepEqual(out, { default: 'forever/mount', joe: 'joe/mount', oursHidden: false });
@@ -117,7 +117,7 @@ test('Lookup\'s curated guide comes from the suggestion source, then ours', () =
 
 test('installed packs: on, broken, turned off, not loaded, too new, never registered', () => {
 	const [out] = run(`
-		Polestar.RegisterPack({ addon = "EmptyAddon", id = "empty", format = 1, title = "Empty", author = "E", version = "1", license = "MIT" })
+		SendaFH.RegisterPack({ addon = "EmptyAddon", id = "empty", format = 1, title = "Empty", author = "E", version = "1", license = "MIT" })
 		G.ScanInstalled()
 		G.ScanInstalled()
 		local rows = {}
@@ -133,8 +133,8 @@ test('installed packs: on, broken, turned off, not loaded, too new, never regist
 		before: `
 			ADDON_INTERFACE_VERSION = "Out of date"
 			stub.addons = {
-				{ name = "Polestar", loaded = true },
-				{ name = "Polestar_Guides", loaded = true },
+				{ name = "SendaFH", loaded = true },
+				{ name = "SendaFH_Guides", loaded = true },
 				{ name = "JoeAddon", loaded = true },
 				{ name = "EmptyAddon", loaded = true },
 				{ name = "Off", reason = "DISABLED", enabled = false },
@@ -148,18 +148,18 @@ test('installed packs: on, broken, turned off, not loaded, too new, never regist
 				for k, v in pairs(extra or {}) do m[k] = v end
 				return m
 			end
-			stub.addonMeta.Polestar_Guides = toc("guides", "Polestar Guides")
+			stub.addonMeta.SendaFH_Guides = toc("guides", "SendaFH Guides")
 			stub.addonMeta.JoeAddon = toc("joe", "Joe's Routes")
 			stub.addonMeta.EmptyAddon = toc("empty", "Empty")
-			stub.addonMeta.Off = toc("off", "Switched Off", { Title = "Polestar Pack: Switched Off" })
+			stub.addonMeta.Off = toc("off", "Switched Off", { Title = "SendaFH Pack: Switched Off" })
 			stub.addonMeta.Old = toc("old", "Old Pack")
 			stub.addonMeta.Future = toc("future", "Future Pack", { ["X-Polestar-Format"] = "3", ["X-Polestar-Needs"] = "0.4.0" })
 			stub.addonMeta.Crash = toc("crash", "Crashing Pack")`,
 	});
 	const by = Object.fromEntries(out.rows.map((r) => [r.addon, r]));
-	assert.deepEqual(out.rows.map((r) => r.addon), ['Polestar_Guides', 'Crash', 'EmptyAddon', 'Future', 'JoeAddon', 'Old', 'Off'],
+	assert.deepEqual(out.rows.map((r) => r.addon), ['SendaFH_Guides', 'Crash', 'EmptyAddon', 'Future', 'JoeAddon', 'Old', 'Off'],
 		'ours first, then by title; each addon once after two scans');
-	assert.equal(by.Polestar_Guides.status, 'on');
+	assert.equal(by.SendaFH_Guides.status, 'on');
 	assert.equal(by.JoeAddon.status, 'on');
 	assert.equal(by.EmptyAddon.status, 'broken');
 	assert.deepEqual(by.EmptyAddon.problems, ['no-guides']);
@@ -173,7 +173,7 @@ test('installed packs: on, broken, turned off, not loaded, too new, never regist
 	assert.deepEqual(
 		{ id: by.Off.id, title: by.Off.title, author: by.Off.author, version: by.Off.version, license: by.Off.license, website: by.Off.website },
 		{ id: 'off', title: 'Switched Off', author: 'Switched Off Author', version: '2.0', license: 'CC0-1.0', website: 'https://example.org/off' },
-		'an unregistered pack reads its TOC, without the "Polestar Pack: " the compiler puts before its title',
+		'an unregistered pack reads its TOC, without the "SendaFH Pack: " the compiler puts before its title',
 	);
 	assert.equal(by.JoeAddon.title, "Joe's Routes", 'a registered pack keeps what it registered');
 	assert.equal(out.problems, 2);
@@ -188,11 +188,11 @@ test('a pack not loaded for a reason the client has no text for shows the reason
 	`, {
 		before: `
 			stub.addons = {
-				{ name = "Polestar", loaded = true },
-				{ name = "Polestar_Guides", loaded = true },
+				{ name = "SendaFH", loaded = true },
+				{ name = "SendaFH_Guides", loaded = true },
 				{ name = "Lonely", reason = "DEP_MISSING" },
 			}
-			stub.addonMeta.Polestar_Guides = { ["X-Polestar-Pack"] = "guides", ["X-Polestar-Format"] = "1", Title = "Polestar Guides" }
+			stub.addonMeta.SendaFH_Guides = { ["X-Polestar-Pack"] = "guides", ["X-Polestar-Format"] = "1", Title = "SendaFH Guides" }
 			stub.addonMeta.Lonely = { ["X-Polestar-Pack"] = "lonely", ["X-Polestar-Format"] = "1", Title = "Lonely Pack" }`,
 	});
 	assert.deepEqual(out, { addon: 'Lonely', status: 'not-loaded', reason: 'DEP_MISSING', global: false });
@@ -201,13 +201,13 @@ test('a pack not loaded for a reason the client has no text for shows the reason
 test('a pack whose file errors after two guides keeps them and stays on', () => {
 	const [out] = run(`
 		local ok = pcall(function()
-			Polestar.RegisterPack({ addon = "PartAddon", id = "part", format = 1, title = "Part", author = "P", version = "1", license = "MIT" })
-			Polestar.RegisterGuide({ id = "part/a", pack = "part", title = "A", steps = { { goals = { { t = "level", level = 30 } } } } })
-			Polestar.RegisterGuide({ id = "part/b", pack = "part", title = "B", steps = { { goals = { { t = "level", level = 30 } } } } })
+			SendaFH.RegisterPack({ addon = "PartAddon", id = "part", format = 1, title = "Part", author = "P", version = "1", license = "MIT" })
+			SendaFH.RegisterGuide({ id = "part/a", pack = "part", title = "A", steps = { { goals = { { t = "level", level = 30 } } } } })
+			SendaFH.RegisterGuide({ id = "part/b", pack = "part", title = "B", steps = { { goals = { { t = "level", level = 30 } } } } })
 			error("boom")
 		end)
 		G.ScanInstalled()
-		local E = Polestar.Engine
+		local E = SendaFH.Engine
 		local a, b = E.OpenTab("part/a"), E.OpenTab("part/b")
 		local tabs = {}
 		for i, t in ipairs(E.GetTabs()) do tabs[i] = t.guideId end
@@ -225,7 +225,7 @@ test('a pack whose file errors after two guides keeps them and stays on', () => 
 test('search finds a shown pack\'s guide by title, and not once the pack is hidden', () => {
 	const [out] = run(`
 		local function found()
-			for _, r in ipairs(Polestar.Search.Query("T joe/a")) do
+			for _, r in ipairs(SendaFH.Search.Query("T joe/a")) do
 				if r.kind == "guide" and r.id == "joe/a" then return true end
 			end
 			return false

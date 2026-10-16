@@ -12,9 +12,9 @@ const { findLua } = require('../lib/lua');
 const { detectAddonsDirs, pickAddonsDir, isDir } = require('../lib/addons');
 const { findPackDir, resolvePack, packArgument } = require('../lib/pack/locate');
 
-const usage = `usage: node tools/polestar.js doctor [<dir> | --pack <dir>]
+const usage = `usage: node tools/sendafh.js doctor [<dir> | --pack <dir>]
 
-Checks what the Polestar tools need, one line per check (\`ok\` or \`fix\`,
+Checks what the SendaFH tools need, one line per check (\`ok\` or \`fix\`,
 with the fix for Windows, macOS and Linux):
   node      Node 24 or newer (every command)
   lua       a Lua 5.1 interpreter: lua5.1, LuaJIT, or a \`lua\` that is 5.1
@@ -43,9 +43,9 @@ const FIX = {
 		linux: 'sudo apt install lua5.1 (Debian, Ubuntu), sudo pacman -S lua51 (Arch) or sudo dnf install luajit (Fedora; or sudo dnf install compat-lua, then export LUA=lua-5.1)',
 	},
 	data: {
-		win32: 'in the Polestar folder: node tools/polestar.js data build',
-		darwin: 'in the Polestar folder: node tools/polestar.js data build',
-		linux: 'in the Polestar folder: node tools/polestar.js data build',
+		win32: 'in the SendaFH folder: node tools/sendafh.js data build',
+		darwin: 'in the SendaFH folder: node tools/sendafh.js data build',
+		linux: 'in the SendaFH folder: node tools/sendafh.js data build',
 	},
 	addons: {
 		win32: 'setx WOW_FOREVER_ADDONS "C:\\Program Files (x86)\\World of Warcraft\\_forever_\\Interface\\AddOns", then open a new terminal; or pass --dest <folder>',
@@ -63,7 +63,7 @@ function defaultLuaVersion(bin) {
 function checks(opts, env) {
 	const out = [];
 	const major = Number(String(env.nodeVersion).split('.')[0]);
-	out.push(major >= 24 ? { check: 'node', ok: true, detail: `Node ${env.nodeVersion}` } : { check: 'node', ok: false, detail: `Node ${env.nodeVersion} is too old: Polestar needs 24 or newer`, fixes: FIX.node });
+	out.push(major >= 24 ? { check: 'node', ok: true, detail: `Node ${env.nodeVersion}` } : { check: 'node', ok: false, detail: `Node ${env.nodeVersion} is too old: SendaFH needs 24 or newer`, fixes: FIX.node });
 
 	let lua = null;
 	try {

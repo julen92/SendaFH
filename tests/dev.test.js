@@ -1,5 +1,5 @@
 'use strict';
-// polestar dev: watches a pack, rebuilds into <dest>/<folder> on
+// sendafh dev: watches a pack, rebuilds into <dest>/<folder> on
 // every save, says once that a new addon needs a restart, and never replaces
 // a folder it did not generate. Runs the real command in a child process.
 
@@ -12,13 +12,13 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { DATA_DIR } = require('./helpers/dsl');
 const { tmpdir } = require('./helpers/tmp');
-const { CLI, polestar, quiet } = require('./helpers/cli');
+const { CLI, sendafh, quiet } = require('./helpers/cli');
 const { needs } = require('./helpers/data');
 const { TOC_MARKER } = require('../tools/lib/pack/format');
 
 const PACKS = path.join(__dirname, 'fixtures', 'packs');
-const FOLDER = 'PolestarPack_MiniPack';
-const RESTART = /New addon: restart the game once so it sees PolestarPack_MiniPack; after that \/reload shows every change\./g;
+const FOLDER = 'SendaFHPack_MiniPack';
+const RESTART = /New addon: restart the game once so it sees SendaFHPack_MiniPack; after that \/reload shows every change\./g;
 
 function miniCopy() {
 	const dir = tmpdir();
@@ -35,7 +35,7 @@ function dev(cwd, dest, ...extra) {
 	const playData = path.join(tmpdir(), 'play');
 	const art = tmpdir();
 	fs.writeFileSync(path.join(art, 'maps.json'), '{}\n');
-	const env = { ...process.env, POLESTAR_PLAY_DATA: playData, POLESTAR_CLIENT_ART: art };
+	const env = { ...process.env, SENDAFH_PLAY_DATA: playData, SENDAFH_CLIENT_ART: art };
 	const child = spawn(process.execPath, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
 	let text = '';
 	const waiters = [];
@@ -105,7 +105,7 @@ test('dev refuses to replace a folder it did not generate', { timeout: 30000 }, 
 	fs.writeFileSync(path.join(dest, FOLDER, 'notes.txt'), 'mine\n');
 	const d = dev(pack, dest);
 	try {
-		await d.waitFor(/refusing to write into .*PolestarPack_MiniPack: it is not a generated guide pack/);
+		await d.waitFor(/refusing to write into .*SendaFHPack_MiniPack: it is not a generated guide pack/);
 		assert.deepEqual(fs.readdirSync(path.join(dest, FOLDER)), ['notes.txt']);
 		assert.doesNotMatch(d.out(), RESTART);
 	} finally {
@@ -122,7 +122,7 @@ test('dev refuses a generated folder of another pack with the same folder name, 
 	fs.writeFileSync(path.join(other, `${FOLDER}.toc`), toc);
 	const d = dev(pack, dest);
 	try {
-		await d.waitFor(/refusing to write into .*PolestarPack_MiniPack: it holds the guide pack "someone-else", not "mini"; set "folder" in pack\.json/);
+		await d.waitFor(/refusing to write into .*SendaFHPack_MiniPack: it holds the guide pack "someone-else", not "mini"; set "folder" in pack\.json/);
 		assert.equal(fs.readFileSync(path.join(other, `${FOLDER}.toc`), 'utf8'), toc);
 		assert.deepEqual(fs.readdirSync(other), [`${FOLDER}.toc`]);
 	} finally {
@@ -154,10 +154,10 @@ test('dev takes the pack folder as its one argument; two folders, or one without
 	} finally {
 		await d.stop();
 	}
-	const two = polestar(['dev', pack, miniCopy(), '--no-game'], { cwd: tmpdir() });
+	const two = sendafh(['dev', pack, miniCopy(), '--no-game'], { cwd: tmpdir() });
 	assert.equal(two.status, 2, two.stderr);
 	assert.match(two.stderr, /one pack folder only/);
-	const none = polestar(['dev', '../my-pack', '--no-game'], { cwd: miniCopy() });
+	const none = sendafh(['dev', '../my-pack', '--no-game'], { cwd: miniCopy() });
 	assert.equal(none.status, 2, none.stderr);
 	assert.match(none.stderr, /no pack\.json in \.\.\/my-pack/);
 });
@@ -170,11 +170,11 @@ test('without reference data dev prints one error and exits instead of watching'
 	assert.equal(code, 1, d.out());
 	assert.equal(d.out().split('\n').filter((l) => /error:/.test(l)).length, 1, d.out());
 	assert.match(d.out(), new RegExp(`${missing.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}: error: no reference data: the folder does not exist`));
-	assert.match(d.out(), /hint: run `node tools\/polestar\.js data build`, or pass --data <dir>; --no-data/);
+	assert.match(d.out(), /hint: run `node tools\/sendafh\.js data build`, or pass --data <dir>; --no-data/);
 	assert.match(d.out(), /dev: not started: no reference data\n$/);
 	assert.doesNotMatch(d.out(), /watching|\.guide/);
 	assert.deepEqual(fs.readdirSync(dest), []);
-	const both = polestar(['dev', miniCopy(), '--no-game', '--no-data', '--data', missing], { cwd: tmpdir() });
+	const both = sendafh(['dev', miniCopy(), '--no-game', '--no-data', '--data', missing], { cwd: tmpdir() });
 	assert.equal(both.status, 2, both.stderr);
 	assert.match(both.stderr, /--no-data and --data cannot be used together/);
 });
@@ -217,7 +217,7 @@ test('dev --play on a taken port exits 1 promptly and leaves no Lua session behi
 		assert.ok(Date.now() - t0 < 30000, 'exits on its own');
 		assert.match(d.out(), new RegExp(`the playground could not start: .*port ${port} is taken`));
 		assert.ok(fs.existsSync(d.playData), 'the playground used the temp SavedVariables folder');
-		const tag = `polestar-play-${d.child.pid}-`;
+		const tag = `sendafh-play-${d.child.pid}-`;
 		assert.deepEqual(fs.readdirSync(os.tmpdir()).filter((f) => f.startsWith(tag)), [], 'no Lua program file left');
 		if (fs.existsSync('/proc')) {
 			const left = fs.readdirSync('/proc').filter((p) => /^\d+$/.test(p)).filter((p) => {
@@ -253,7 +253,7 @@ test('dev --no-game builds and rebuilds without writing anywhere, and never look
 test('dev and play: a --port that is not a port number is a usage error', async () => {
 	const play = require('../tools/commands/play');
 	for (const port of ['abc', '-1', '65536', '1.5']) {
-		const r = polestar(['dev', miniCopy(), '--no-game', '--port', port], { cwd: tmpdir() });
+		const r = sendafh(['dev', miniCopy(), '--no-game', '--port', port], { cwd: tmpdir() });
 		assert.equal(r.status, 2, `dev --port ${port}: ${r.stderr}`);
 		assert.match(r.stderr, /^--port needs a port number$/m);
 		const p = await quiet(() => play.run(['--port', port]));

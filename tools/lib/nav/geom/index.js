@@ -46,7 +46,7 @@ function wagoTable(casc, name) {
 	const file = path.join(sourcesOf(casc), 'wago', casc.build, `${name}.csv`);
 	if (!tables.has(file)) {
 		const get = async (url) => {
-			const res = await (casc.fetchImpl || globalThis.fetch)(url, { headers: { 'user-agent': 'polestar-nav' } });
+			const res = await (casc.fetchImpl || globalThis.fetch)(url, { headers: { 'user-agent': 'sendafh-nav' } });
 			if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 			return res.text();
 		};

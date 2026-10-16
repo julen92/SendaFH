@@ -109,7 +109,7 @@ function Lookup.Guide(kind, id, index)
 	if lookupstub.guideResult ~= nil then return nil, lookupstub.guideResult end
 	return lookupstub.curated[kind .. ":" .. tostring(id)] or ("lookup/" .. kind .. "/" .. tostring(id))
 end
-function Lookup.Show(q, kind, id) Polestar.Fire("SHOW_LOOKUP", q, kind, id) end
+function Lookup.Show(q, kind, id) SendaFH.Fire("SHOW_LOOKUP", q, kind, id) end
 
 -- The two sample selections: a vendor mount and a rare drop.
 lookupstub.sources["mount:8631"] = {
@@ -132,7 +132,7 @@ lookupstub.sources["mount:12302"] = {
 lookupstub.entity["mount:13335"] = { id = 13335, name = "Deathcharger's Reins", quality = 4, kind = "mount", reqLevel = 60 }
 
 function lookupstub.install()
-	Polestar.Search = Search
-	Polestar.Codex = Codex
-	Polestar.Lookup = Lookup
+	SendaFH.Search = Search
+	SendaFH.Codex = Codex
+	SendaFH.Lookup = Lookup
 end

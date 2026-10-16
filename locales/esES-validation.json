@@ -1,0 +1,38 @@
+{
+  "version": "0.5.0-beta.1",
+  "upstream": {
+    "tag": "v0.2.5-test.1",
+    "commit": "5445b96713ad1176da173721edd7aa927b29bf1a",
+    "prerelease": true
+  },
+  "interface": {
+    "esES": {
+      "covered": 1606,
+      "total": 1606
+    },
+    "esMX": {
+      "covered": 1606,
+      "total": 1606
+    },
+    "format_errors": 0
+  },
+  "guides": {
+    "count": 220,
+    "catalogue": 9370,
+    "new_strings": 1639,
+    "display_fields": 14075,
+    "missing": 0,
+    "gameplay_data_unchanged_by_translation": true
+  },
+  "validation": {
+    "runtime_passed": 766,
+    "runtime_skipped": 21,
+    "navigation_passed": 43,
+    "navigation_skipped": 1,
+    "all_modules_smoke_passed": 2,
+    "spanish_layout_passed": 42,
+    "in_game": "Pending"
+  },
+  "discord": "https://discord.gg/qkW5Y8yzk6",
+  "translation_review": "Partially AI-assisted; 12 esES corrections reviewed for upstream PR; guide catalogue not fully human reviewed"
+}

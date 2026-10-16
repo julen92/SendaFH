@@ -1,5 +1,5 @@
 'use strict';
-// The guide pack registry (addon/Polestar/Core/Guides.lua): pack ids and
+// The guide pack registry (addon/SendaFH/Core/Guides.lua): pack ids and
 // ownership, clashes, formats, problems recorded per pack, map frames and
 // author text escaped once at registration.
 
@@ -7,19 +7,19 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const PRELUDE = `
-G = Polestar.Guides
+G = SendaFH.Guides
 function pack(id, addon, extra)
 	local m = { addon = addon or "JoeAddon", id = id, format = 1, title = "Joe's Routes", author = "Joe", version = "1.0.0", license = "MIT" }
 	for k, v in pairs(extra or {}) do m[k] = v end
-	return { Polestar.RegisterPack(m) }
+	return { SendaFH.RegisterPack(m) }
 end
 function guide(id, packId, extra)
 	local g = { id = id, pack = packId, title = "Guide " .. id, steps = { { goals = { { t = "level", level = 2 } } } } }
 	for k, v in pairs(extra or {}) do g[k] = v end
-	return { Polestar.RegisterGuide(g) }
+	return { SendaFH.RegisterGuide(g) }
 end
 function messages(r)
 	local out = {}
@@ -96,9 +96,9 @@ test('a pack id already taken refuses the second pack whole: the guides it regis
 
 test('a pack refused for a reserved id drops the guides it registers while loading', () => {
 	const [out] = run(`
-		pack("guides", "Polestar_Guides")
+		pack("guides", "SendaFH_Guides")
 		guide("forever/a", "guides")
-		stub.addonLoaded("Polestar_Guides")
+		stub.addonLoaded("SendaFH_Guides")
 		pack("guides", "Imposter")
 		local g = guide("forever/a", "guides", { title = "Not ours" })
 		local refused
@@ -107,7 +107,7 @@ test('a pack refused for a reserved id drops the guides it registers while loadi
 	`);
 	assert.equal(out.g, false);
 	assert.equal(out.title, 'Guide forever/a');
-	assert.deepEqual(out.problems, ['pack-refused: Pack id guides is reserved for Polestar. 1 guide dropped.']);
+	assert.deepEqual(out.problems, ['pack-refused: Pack id guides is reserved for SendaFH. 1 guide dropped.']);
 });
 
 test('a guide registered before its pack is refused and the pack records it', () => {
@@ -178,22 +178,22 @@ test('reserved, internal and malformed pack ids are refused', () => {
 	const [out] = run(`
 		local res = {}
 		res.forever = pack("forever")[1]
-		res.polestar = pack("polestar")[1]
+		res.sendafh = pack("sendafh")[1]
 		res.draft = pack("draft")[1]
 		res.guidesElsewhere = pack("guides", "NotOurs")[1]
 		res.lookupPlain = pack("lookup")[1]
-		res.internalOther = Polestar.RegisterPack({ id = "joe", title = "Joe", internal = true })
+		res.internalOther = SendaFH.RegisterPack({ id = "joe", title = "Joe", internal = true })
 		res.upper = pack("Joe")[1]
 		res.short = pack("x")[1]
 		res.long = pack(string.rep("a", 33))[1]
 		res.ok = pack("joe")[1]
-		res.internalLookup = Polestar.RegisterPack({ id = "lookup", title = "Lookup", internal = true })
+		res.internalLookup = SendaFH.RegisterPack({ id = "lookup", title = "Lookup", internal = true })
 		local listed = {}
 		for _, r in ipairs(G.Packs()) do listed[#listed + 1] = r.id .. ":" .. r.status end
 		emit({ res = res, listed = listed, lookupInternal = G.Pack("lookup").internal, guidesHeld = G.Pack("guides").status })
 	`);
 	assert.deepEqual(out.res, {
-		forever: false, polestar: false, draft: false, guidesElsewhere: false, lookupPlain: false,
+		forever: false, sendafh: false, draft: false, guidesElsewhere: false, lookupPlain: false,
 		internalOther: false, upper: false, short: false, long: false, ok: true, internalLookup: true,
 	});
 	assert.equal(out.lookupInternal, true);
@@ -202,10 +202,10 @@ test('reserved, internal and malformed pack ids are refused', () => {
 	assert.ok(out.listed.includes('joe:on'));
 });
 
-test('our pack is only ours from Polestar_Guides and comes first in the list', () => {
+test('our pack is only ours from SendaFH_Guides and comes first in the list', () => {
 	const [out] = run(`
 		pack("aaa", "Aaa", { title = "Aardvark" })
-		local ours = pack("guides", "Polestar_Guides", { title = "Polestar Guides" })
+		local ours = pack("guides", "SendaFH_Guides", { title = "SendaFH Guides" })
 		pack("zed", "Zed", { title = "beta" })
 		guide("forever/a", "guides")
 		guide("draft/b", "guides")
@@ -230,11 +230,11 @@ test('map frames: ours win for a map both cover, whatever the load order; packs 
 		local B = { c = 0, left = 2, right = -2, top = 2, bottom = -2 }
 		local C = { c = 1, left = 3, right = -3, top = 3, bottom = -3 }
 		local calls = {
-			joe = function() Polestar.RegisterMapFrames({ era = { [1429] = A, [9999] = C } }, "joe") end,
-			guides = function() Polestar.RegisterMapFrames({ era = { [1429] = B } }, "guides") end,
+			joe = function() SendaFH.RegisterMapFrames({ era = { [1429] = A, [9999] = C } }, "joe") end,
+			guides = function() SendaFH.RegisterMapFrames({ era = { [1429] = B } }, "guides") end,
 		}
 		calls.${first}(); calls.${second}()
-		local era = Polestar.MapFrames.era
+		local era = SendaFH.MapFrames.era
 		emit({ era[1429] == B, era[9999] == C })
 	`;
 	assert.deepEqual(run(script('joe', 'guides'))[0], [true, true]);
@@ -250,7 +250,7 @@ test('author text prints literally: every | doubled once at registration, ids un
 		local r = G.Pack("joe")
 		emit({ title = g.title, header = G.List()[1].title, step = g.steps[1].title, text = g.steps[1].goals[1].text,
 			note = g.steps[1].goals[2].note, text2 = g.steps[1].goals[2].text, id = g.id, next = g.next, pack = g.pack,
-			packTitle = r.title, packNotes = r.notes, esc = Polestar.EscapeText("a|b|c"), plain = Polestar.EscapeText("abc") })
+			packTitle = r.title, packNotes = r.notes, esc = SendaFH.EscapeText("a|b|c"), plain = SendaFH.EscapeText("abc") })
 	`);
 	assert.deepEqual(out, {
 		title: '||cffff0000Red||r', header: '||cffff0000Red||r', step: 'S||1', text: 'x||y', note: 'n||n', text2: 'lvl||2',
@@ -260,7 +260,7 @@ test('author text prints literally: every | doubled once at registration, ids un
 
 test('a pack missing a required field is refused and the problem names the field', () => {
 	const [out] = run(`
-		local p = Polestar.RegisterPack({ addon = "JoeAddon", id = "joe", format = 1, title = "Joe", version = "1", license = "MIT" })
+		local p = SendaFH.RegisterPack({ addon = "JoeAddon", id = "joe", format = 1, title = "Joe", version = "1", license = "MIT" })
 		local g = guide("joe/a", "joe")
 		local r = G.Pack("joe")
 		emit({ p = p, g = g[1], status = r.status, problems = messages(r) })
@@ -274,8 +274,8 @@ test('a pack missing a required field is refused and the problem names the field
 
 test('a pack misusing `internal` or the lookup id is refused, listed with its problem, and never reported broken', () => {
 	const [out] = run(`
-		local a = { Polestar.RegisterPack({ addon = "IntlAddon", id = "intl", format = 1, title = "Intl", author = "I", version = "1", license = "MIT", internal = true }) }
-		local b = { Polestar.RegisterPack({ addon = "LookAddon", id = "lookup", format = 1, title = "Look", author = "L", version = "1", license = "MIT" }) }
+		local a = { SendaFH.RegisterPack({ addon = "IntlAddon", id = "intl", format = 1, title = "Intl", author = "I", version = "1", license = "MIT", internal = true }) }
+		local b = { SendaFH.RegisterPack({ addon = "LookAddon", id = "lookup", format = 1, title = "Look", author = "L", version = "1", license = "MIT" }) }
 		G.ScanInstalled()
 		local rows = {}
 		for _, r in ipairs(G.Packs()) do rows[r.addon] = { id = r.id, status = r.status, problems = messages(r) } end
@@ -291,7 +291,7 @@ test('a pack misusing `internal` or the lookup id is refused, listed with its pr
 	assert.match(out.rows.IntlAddon.problems[0], /^pack-refused: .*internal/);
 	assert.doesNotMatch(out.rows.IntlAddon.problems[0], /reserved/);
 	assert.equal(out.rows.LookAddon.status, 'refused');
-	assert.deepEqual(out.rows.LookAddon.problems, ['pack-refused: Pack id lookup is reserved for Polestar.']);
+	assert.deepEqual(out.rows.LookAddon.problems, ['pack-refused: Pack id lookup is reserved for SendaFH.']);
 	assert.equal(out.count, 2);
 });
 
@@ -303,8 +303,8 @@ test('an `internal` pack whose id is taken or reserved is refused whole: its gui
 		pack("joe", "B", { internal = true })
 		local taken = guide("joe/b", "joe")
 		stub.addonLoaded("B")
-		pack("guides", "Polestar_Guides")
-		stub.addonLoaded("Polestar_Guides")
+		pack("guides", "SendaFH_Guides")
+		stub.addonLoaded("SendaFH_Guides")
 		pack("guides", "C", { internal = true })
 		local reserved = guide("forever/x", "guides")
 		emit({ taken = taken[1], reserved = reserved[1], hasB = G.Get("joe/b") ~= nil, hasX = G.Get("forever/x") ~= nil, guides = G.Pack("joe").guides })
@@ -319,12 +319,12 @@ test('map frames of a refused pack are ignored, even under the holder\'s id', ()
 		pack("joe", "A")
 		stub.addonLoaded("A")
 		pack("joe", "B")
-		Polestar.RegisterMapFrames({ era = { [9999] = B } }, "joe")
+		SendaFH.RegisterMapFrames({ era = { [9999] = B } }, "joe")
 		pack("guides", "C")
-		Polestar.RegisterMapFrames({ era = { [8888] = B } }, "guides")
+		SendaFH.RegisterMapFrames({ era = { [8888] = B } }, "guides")
 		stub.addonLoaded("C")
-		Polestar.RegisterMapFrames({ era = { [7777] = A } }, "joe")
-		local era = Polestar.MapFrames.era
+		SendaFH.RegisterMapFrames({ era = { [7777] = A } }, "joe")
+		local era = SendaFH.MapFrames.era
 		emit({ era[9999] == nil, era[8888] == nil, era[7777] == A })
 	`);
 	assert.deepEqual(out, [true, true, true]);

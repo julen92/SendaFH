@@ -1,5 +1,5 @@
 'use strict';
-// polestar new: a pack folder from tools/templates/pack/. The end-to-end test
+// sendafh new: a pack folder from tools/templates/pack/. The end-to-end test
 // needs data/forever and Lua 5.1; it skips without them.
 
 const { test } = require('node:test');
@@ -24,17 +24,17 @@ function hasLua() {
 
 // The origin URL `new` reads stands in for this clone's git remote; without
 // one, the test's own environment must not leak a value.
-function polestar(args, { cwd, origin, env = {}, input = '' } = {}) {
-	return cli.polestar(args, { cwd, input, env: { ...env, POLESTAR_ORIGIN_URL: origin } });
+function sendafh(args, { cwd, origin, env = {}, input = '' } = {}) {
+	return cli.sendafh(args, { cwd, input, env: { ...env, SENDAFH_ORIGIN_URL: origin } });
 }
 
-const tmp = () => tmpdir('polestar-new-');
+const tmp = () => tmpdir('sendafh-new-');
 
 const read = (dir, f) => fs.readFileSync(path.join(dir, f), 'utf8');
 
 test('new --yes writes the template with the values filled in', () => {
 	const dir = path.join(tmp(), 'ann');
-	const r = polestar(['new', dir, ...ARGS, '--license', 'CC0-1.0'], { origin: '' });
+	const r = sendafh(['new', dir, ...ARGS, '--license', 'CC0-1.0'], { origin: '' });
 	assert.equal(r.status, 0, r.stderr);
 	assert.deepEqual(JSON.parse(read(dir, 'pack.json')), { id: 'ann-routes', title: "Ann's Routes", author: 'Ann', version: '0.1.0', license: 'CC0-1.0' });
 	const guide = read(dir, 'guides/example.guide');
@@ -42,7 +42,7 @@ test('new --yes writes the template with the values filled in', () => {
 	assert.match(guide, /^next forever\/alliance\/02-westfall$/m);
 	assert.ok(fs.existsSync(path.join(ROOT, 'guides', 'forever', 'alliance', '02-westfall.guide')));
 	assert.match(read(dir, 'README.md'), /^# Ann's Routes$/m);
-	assert.match(read(dir, 'README.md'), /PolestarPack_AnnsRoutes-<version>\.zip/);
+	assert.match(read(dir, 'README.md'), /SendaFHPack_AnnsRoutes-<version>\.zip/);
 	assert.match(read(dir, 'LICENSE'), /CC0-1\.0/);
 	assert.match(read(dir, 'LICENSE'), /https:\/\/creativecommons\.org\/publicdomain\/zero\/1\.0\//);
 	assert.deepEqual(read(dir, '.gitignore').split('\n').filter(Boolean), ['dist/', 'drafts/']);
@@ -52,7 +52,7 @@ test('new --yes writes the template with the values filled in', () => {
 	assert.equal(lint.problemMatcher.pattern.regexp, '^(.*):(\\d+): (error|warning): (.*)$');
 	const agents = read(dir, 'AGENTS.md');
 	assert.match(agents, /`ann-routes\/`/);
-	for (const s of ['polestar find', '--json', 'polestar lint --format json', 'polestar playtest']) assert.ok(agents.includes(s), s);
+	for (const s of ['sendafh find', '--json', 'sendafh lint --format json', 'sendafh playtest']) assert.ok(agents.includes(s), s);
 	assert.match(read(dir, 'CLAUDE.md'), /AGENTS\.md/);
 	for (const f of ['pack.json', 'guides/example.guide', 'README.md', 'AGENTS.md']) assert.doesNotMatch(read(dir, f), /\{\{\w+\}\}/, f);
 });
@@ -65,40 +65,40 @@ function filesUnder(dir, rel = '') {
 		.sort();
 }
 
-test('new copies the polestar-guide-pack skill into .agents/skills and .claude/skills, and AGENTS.md points to it', () => {
+test('new copies the sendafh-guide-pack skill into .agents/skills and .claude/skills, and AGENTS.md points to it', () => {
 	const dir = path.join(tmp(), 'ann');
-	assert.equal(polestar(['new', dir, ...ARGS], { origin: '' }).status, 0);
-	const skill = path.join(ROOT, 'skills', 'polestar-guide-pack');
+	assert.equal(sendafh(['new', dir, ...ARGS], { origin: '' }).status, 0);
+	const skill = path.join(ROOT, 'skills', 'sendafh-guide-pack');
 	const files = filesUnder(skill);
 	assert.ok(files.includes('SKILL.md') && files.includes(path.join('references', 'guide-format.md')), files.join(', '));
 	for (const into of ['.agents/skills', '.claude/skills']) {
-		const copy = path.join(dir, into, 'polestar-guide-pack');
+		const copy = path.join(dir, into, 'sendafh-guide-pack');
 		assert.deepEqual(filesUnder(copy), files, into);
 		for (const f of files) assert.equal(read(copy, f), read(skill, f), `${into}/${f}`);
 	}
 	const agents = read(dir, 'AGENTS.md');
-	for (const p of ['.agents/skills/polestar-guide-pack/SKILL.md', '.claude/skills/']) assert.ok(agents.includes(`\`${p}\``), p);
+	for (const p of ['.agents/skills/sendafh-guide-pack/SKILL.md', '.claude/skills/']) assert.ok(agents.includes(`\`${p}\``), p);
 });
 
 test("LICENSE: GPL-3.0-only names the pack and its author before the GPL's text, MIT has the author and year, others a reminder", () => {
 	const gpl = path.join(tmp(), 'p');
-	assert.equal(polestar(['new', gpl, ...ARGS, '--license', 'GPL-3.0-only'], { origin: '' }).status, 0);
+	assert.equal(sendafh(['new', gpl, ...ARGS, '--license', 'GPL-3.0-only'], { origin: '' }).status, 0);
 	const text = read(gpl, 'LICENSE');
 	const lines = text.split('\n');
 	assert.equal(lines[0], "Ann's Routes");
 	assert.equal(lines[1], `Copyright (c) ${new Date().getFullYear()} Ann`);
 	assert.match(text, /under\nthe terms of the GNU General Public License as published by the Free Software\nFoundation, version 3\./);
-	assert.doesNotMatch(text, /Polestar|THIRD_PARTY/);
+	assert.doesNotMatch(text, /SendaFH|THIRD_PARTY/);
 	const ours = read(ROOT, 'LICENSE');
 	const gplStart = ours.indexOf('                    GNU GENERAL PUBLIC LICENSE');
 	assert.ok(gplStart > 0);
 	assert.ok(text.endsWith(ours.slice(gplStart)), 'the licence text follows, as our LICENSE carries it');
 	const mit = path.join(tmp(), 'p');
-	assert.equal(polestar(['new', mit, ...ARGS, '--license', 'MIT'], { origin: '' }).status, 0);
+	assert.equal(sendafh(['new', mit, ...ARGS, '--license', 'MIT'], { origin: '' }).status, 0);
 	assert.match(read(mit, 'LICENSE'), new RegExp(`^Copyright \\(c\\) ${new Date().getFullYear()} Ann$`, 'm'));
 	assert.match(read(mit, 'LICENSE'), /Permission is hereby granted/);
 	const other = path.join(tmp(), 'p');
-	assert.equal(polestar(['new', other, ...ARGS, '--license', 'Apache-2.0'], { origin: '' }).status, 0);
+	assert.equal(sendafh(['new', other, ...ARGS, '--license', 'Apache-2.0'], { origin: '' }).status, 0);
 	assert.equal(read(other, 'LICENSE').trim().split('\n').length, 1);
 	assert.match(read(other, 'LICENSE'), /Apache-2\.0.*full text/);
 });
@@ -106,24 +106,24 @@ test("LICENSE: GPL-3.0-only names the pack and its author before the GPL's text,
 test('a non-empty folder is refused and left alone; a bad id is refused', () => {
 	const dir = tmp();
 	fs.writeFileSync(path.join(dir, 'notes.txt'), 'mine');
-	const r = polestar(['new', dir, ...ARGS], { origin: '' });
+	const r = sendafh(['new', dir, ...ARGS], { origin: '' });
 	assert.equal(r.status, 1);
 	assert.match(r.stderr, /not an empty folder/);
 	assert.deepEqual(fs.readdirSync(dir), ['notes.txt']);
 	const bad = path.join(tmp(), 'p');
-	const b = polestar(['new', bad, '--yes', '--id', 'polestar'], { origin: '' });
+	const b = sendafh(['new', bad, '--yes', '--id', 'sendafh'], { origin: '' });
 	assert.equal(b.status, 1);
 	assert.equal(fs.existsSync(bad), false);
 });
 
-test('with an origin URL the workflow and dev container install Polestar from it; without one they are skipped and why is printed', () => {
+test('with an origin URL the workflow and dev container install SendaFH from it; without one they are skipped and why is printed', () => {
 	const withRepo = path.join(tmp(), 'p');
-	const a = polestar(['new', withRepo, ...ARGS], { origin: REPO });
+	const a = sendafh(['new', withRepo, ...ARGS], { origin: REPO });
 	assert.equal(a.status, 0, a.stderr);
 	const wf = read(withRepo, '.github/workflows/pack.yml');
 	assert.ok(wf.includes(`git clone --depth 1 "${REPO}"`));
-	for (const s of ['lua5.1', 'npm link', 'polestar lint --format github', 'polestar playtest', 'polestar pack', "tags: ['v*']", '${{ github.token }}']) assert.ok(wf.includes(s), s);
-	// The check job runs Polestar's data build: it gets read access only; the
+	for (const s of ['lua5.1', 'npm link', 'sendafh lint --format github', 'sendafh playtest', 'sendafh pack', "tags: ['v*']", '${{ github.token }}']) assert.ok(wf.includes(s), s);
+	// The check job runs SendaFH's data build: it gets read access only; the
 	// release job, on version tags after the check passed, writes.
 	const [top, jobs] = wf.split(/^jobs:$/m);
 	assert.match(top, /^permissions:\n {2}contents: read$/m);
@@ -133,17 +133,17 @@ test('with an origin URL the workflow and dev container install Polestar from it
 	assert.match(release, /^ {4}if: startsWith\(github\.ref, 'refs\/tags\/v'\)$/m);
 	assert.match(release, /^ {4}needs: check$/m);
 	assert.match(release, /^ {4}permissions:\n {6}contents: write$/m);
-	assert.doesNotMatch(release, /polestar|npm|git clone/, 'the release job runs no third-party code');
+	assert.doesNotMatch(release, /sendafh|npm|git clone/, 'the release job runs no third-party code');
 	assert.match(release, /gh release create/);
 	const dc = JSON.parse(read(withRepo, '.devcontainer/devcontainer.json'));
 	assert.match(dc.image, /node:24/);
 	assert.ok(dc.postCreateCommand.includes(REPO) && /lua5\.1/.test(dc.postCreateCommand) && /npm link/.test(dc.postCreateCommand));
 	// Never fetch from community web sites (quest XP, Wowhead) from a runner or Codespace.
-	for (const text of [wf, dc.postCreateCommand]) assert.deepEqual(text.match(/polestar data build[^\n"&]*/g).map((s) => s.trim()), ['polestar data build --no-web-xp --no-wowhead']);
+	for (const text of [wf, dc.postCreateCommand]) assert.deepEqual(text.match(/sendafh data build[^\n"&]*/g).map((s) => s.trim()), ['sendafh data build --no-web-xp --no-wowhead']);
 	assert.doesNotMatch(a.stdout, /skipped/);
 
 	const without = path.join(tmp(), 'p');
-	const b = polestar(['new', without, ...ARGS], { origin: '' });
+	const b = sendafh(['new', without, ...ARGS], { origin: '' });
 	assert.equal(b.status, 0, b.stderr);
 	assert.equal(fs.existsSync(path.join(without, '.github')), false);
 	assert.equal(fs.existsSync(path.join(without, '.devcontainer')), false);
@@ -154,18 +154,18 @@ const skip = needs('quests.json') || (!hasLua() && 'no Lua 5.1');
 
 test('end to end: the new pack lints clean, playtests and packs from its own folder', { skip }, () => {
 	const dir = path.join(tmp(), 'ann');
-	assert.equal(polestar(['new', dir, ...ARGS, '--license', 'CC-BY-4.0'], { origin: '' }).status, 0);
-	const lint = polestar(['lint', '--format', 'json'], { cwd: dir });
+	assert.equal(sendafh(['new', dir, ...ARGS, '--license', 'CC-BY-4.0'], { origin: '' }).status, 0);
+	const lint = sendafh(['lint', '--format', 'json'], { cwd: dir });
 	assert.equal(lint.status, 0, lint.stdout + lint.stderr);
 	const doc = JSON.parse(lint.stdout);
 	const diags = Array.isArray(doc) ? doc : doc.diagnostics;
 	assert.deepEqual(diags, []);
-	const play = polestar(['playtest'], { cwd: dir });
+	const play = sendafh(['playtest'], { cwd: dir });
 	assert.equal(play.status, 0, play.stdout + play.stderr);
 	assert.match(play.stdout, /ok {2}ann-routes\/example/);
-	const pack = polestar(['pack'], { cwd: dir });
+	const pack = sendafh(['pack'], { cwd: dir });
 	assert.equal(pack.status, 0, pack.stdout + pack.stderr);
-	assert.ok(fs.existsSync(path.join(dir, 'dist', 'PolestarPack_AnnsRoutes-0.1.0.zip')));
+	assert.ok(fs.existsSync(path.join(dir, 'dist', 'SendaFHPack_AnnsRoutes-0.1.0.zip')));
 });
 
 test('the default author is git config user.name, read from where new runs', () => {
@@ -177,7 +177,7 @@ test('the default author is git config user.name, read from where new runs', () 
 	const cfg = path.join(home, '.gitconfig');
 	fs.writeFileSync(cfg, '[user]\n\tname = Stub Author\n');
 	const dir = path.join(tmp(), 'p');
-	const r = polestar(['new', dir, '--yes', '--id', 'stub-pack', '--license', 'MIT'], {
+	const r = sendafh(['new', dir, '--yes', '--id', 'stub-pack', '--license', 'MIT'], {
 		cwd: home,
 		origin: '',
 		env: { GIT_CONFIG_GLOBAL: cfg, GIT_CONFIG_NOSYSTEM: '1', HOME: home, XDG_CONFIG_HOME: path.join(home, '.config') },
@@ -189,8 +189,8 @@ test('the default author is git config user.name, read from where new runs', () 
 
 test('origin URLs: SSH and http become https; credentials, query and fragment are dropped; anything else is skipped with the reason', () => {
 	for (const [origin, want] of [
-		['git@github.com:example/polestar.git', 'https://github.com/example/polestar.git'],
-		['ssh://git@github.com/example/polestar.git', 'https://github.com/example/polestar.git'],
+		['git@github.com:example/sendafh.git', 'https://github.com/example/polestar.git'],
+		['ssh://git@github.com/example/sendafh.git', 'https://github.com/example/polestar.git'],
 		['https://someone:s3cret@github.com/example/polestar.git', 'https://github.com/example/polestar.git'],
 		['http://github.com/example/polestar.git', 'https://github.com/example/polestar.git'],
 		['http://git.example.com:3000/o/r.git', 'https://git.example.com:3000/o/r.git'],
@@ -198,16 +198,16 @@ test('origin URLs: SSH and http become https; credentials, query and fragment ar
 		['https://github.com/example/polestar.git?ref=x;rm%20-rf#frag', 'https://github.com/example/polestar.git'],
 	]) {
 		const dir = path.join(tmp(), 'p');
-		assert.equal(polestar(['new', dir, ...ARGS], { origin }).status, 0);
+		assert.equal(sendafh(['new', dir, ...ARGS], { origin }).status, 0);
 		const wf = read(dir, '.github/workflows/pack.yml');
 		assert.ok(wf.includes(`git clone --depth 1 "${want}" `), origin);
 		const dc = JSON.parse(read(dir, '.devcontainer/devcontainer.json'));
 		assert.ok(dc.postCreateCommand.includes(`git clone --depth 1 "${want}" `), origin);
 		assert.doesNotMatch(wf + dc.postCreateCommand, /s3cret|git@|http:|\?|#frag/);
 	}
-	for (const origin of ['/srv/git/polestar.git', 'ftp://example.test/polestar.git', 'https://example.test/$(id)/polestar.git']) {
+	for (const origin of ['/srv/git/sendafh.git', 'ftp://example.test/sendafh.git', 'https://example.test/$(id)/polestar.git']) {
 		const dir = path.join(tmp(), 'p');
-		const r = polestar(['new', dir, ...ARGS], { origin });
+		const r = sendafh(['new', dir, ...ARGS], { origin });
 		assert.equal(r.status, 0, r.stderr);
 		assert.equal(fs.existsSync(path.join(dir, '.github')), false, origin);
 		assert.equal(fs.existsSync(path.join(dir, '.devcontainer')), false, origin);
@@ -217,14 +217,14 @@ test('origin URLs: SSH and http become https; credentials, query and fragment ar
 
 test('the example guide carries no author line: it takes the pack author, whatever characters the name has', () => {
 	const dir = path.join(tmp(), 'p');
-	assert.equal(polestar(['new', dir, '--yes', '--id', 'ann-routes', '--title', "Ann's Routes", '--author', 'Ann #1 -- the best', '--license', 'CC0-1.0'], { origin: '' }).status, 0);
+	assert.equal(sendafh(['new', dir, '--yes', '--id', 'ann-routes', '--title', "Ann's Routes", '--author', 'Ann #1 -- the best', '--license', 'CC0-1.0'], { origin: '' }).status, 0);
 	assert.doesNotMatch(read(dir, 'guides/example.guide'), /^author /m);
 	assert.equal(JSON.parse(read(dir, 'pack.json')).author, 'Ann #1 -- the best');
 });
 
 test('without --yes and without a terminal, new exits 1 and says how to pass the values', () => {
 	const dir = path.join(tmp(), 'p');
-	const r = polestar(['new', dir, '--id', 'ann-routes'], { origin: '', input: '' });
+	const r = sendafh(['new', dir, '--id', 'ann-routes'], { origin: '', input: '' });
 	assert.equal(r.status, 1);
 	assert.match(r.stderr, /--yes/);
 	assert.equal(fs.existsSync(dir), false);
@@ -233,7 +233,7 @@ test('without --yes and without a terminal, new exits 1 and says how to pass the
 test('known licence ids are written in their canonical case', () => {
 	for (const [given, want] of [['mit', 'MIT'], ['cc-by-4.0', 'CC-BY-4.0'], ['cc0-1.0', 'CC0-1.0'], ['gpl-3.0-only', 'GPL-3.0-only']]) {
 		const dir = path.join(tmp(), 'p');
-		assert.equal(polestar(['new', dir, ...ARGS, '--license', given], { origin: '' }).status, 0);
+		assert.equal(sendafh(['new', dir, ...ARGS, '--license', given], { origin: '' }).status, 0);
 		assert.equal(JSON.parse(read(dir, 'pack.json')).license, want);
 		if (want === 'MIT') assert.match(read(dir, 'LICENSE'), /^MIT License/);
 	}

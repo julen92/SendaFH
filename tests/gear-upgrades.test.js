@@ -1,5 +1,5 @@
 'use strict';
-// Polestar.Gear upgrade advice (addon/Polestar/Gear): the tooltip upgrade
+// SendaFH.Gear upgrade advice (addon/SendaFH/Gear): the tooltip upgrade
 // line's decisions (usable or not, two-hand vs one-hand, rings and trinkets
 // against the weaker one, unique items, empty slots), the reward pick on
 // quest choices and its tooltip line, racials, every spec's shipped weights,
@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { fakeLocale } = require('./helpers/locale');
 
-const ADDON = { name: 'Polestar', files: ['Core/Core.xml', 'Gear/Gear.xml'] };
+const ADDON = { name: 'SendaFH', files: ['Core/Core.xml', 'Gear/Gear.xml'] };
 
 // Items in the generated ItemDB format (tools/lib/itemdb/stats.js encode).
 const ITEMS = `{
@@ -48,11 +48,11 @@ w.race, w.raceName, w.raceID, w.faction = "${race}", "${race}", ${raceID}, "${fa
 ${locale}`,
 		addons: [ADDON],
 		login: true,
-		script: `G = Polestar.Gear
-${register ? `Polestar.ItemDB.Register({ schema = 1, build = "test" }, ${ITEMS})
-Polestar.ItemDB.RegisterLeveling({ source = "test" }, ${LEVELING})` : ''}
+		script: `G = SendaFH.Gear
+${register ? `SendaFH.ItemDB.Register({ schema = 1, build = "test" }, ${ITEMS})
+SendaFH.ItemDB.RegisterLeveling({ source = "test" }, ${LEVELING})` : ''}
 G.RefreshPlayer()
-local function line(link) for _, l in ipairs(g.showTooltip(GameTooltip, link)) do if l:find("^Polestar") then return l end end return false end
+local function line(link) for _, l in ipairs(g.showTooltip(GameTooltip, link)) do if l:find("^SendaFH") then return l end end return false end
 ${script}`,
 	}).emitted;
 }
@@ -89,8 +89,8 @@ test('upgrade line: unusable items say why; class-restricted; the downgrade in r
 		run('g.equip(1, "item:9101"); emit(line("item:9101"))'),
 	).slice(0, 4);
 	assert.equal(mail, false, 'the worn helm itself');
-	assert.equal(mage, 'Polestar · Frost | armor you cannot wear');
-	assert.equal(clsOnly, 'Polestar · Arms | not for your class');
+	assert.equal(mage, 'SendaFH · Frost | armor you cannot wear');
+	assert.equal(clsOnly, 'SendaFH · Arms | not for your class');
 	assert.equal(worn, false);
 });
 
@@ -98,8 +98,8 @@ test('upgrade line: why an item is unusable is in the client language', () => {
 	const es = fakeLocale('itIT', { 'armor you cannot wear': 'armadura que no puedes llevar', 'not for your class': 'no es para tu clase' });
 	const [mage] = run('emit(line("item:9101"))', { cls: 'MAGE', className: 'Mage', classID: 8, locale: es });
 	const [cls] = run('emit(line("item:9150"))', { locale: es });
-	assert.equal(mage, 'Polestar · Frost | armadura que no puedes llevar');
-	assert.equal(cls, 'Polestar · Arms | no es para tu clase');
+	assert.equal(mage, 'SendaFH · Frost | armadura que no puedes llevar');
+	assert.equal(cls, 'SendaFH · Arms | no es para tu clase');
 });
 
 test('two-hand vs one-hand: a two-hander against main + off hand; a one-hander against a worn two-hander pairs with the best bag off-hand', () => {
@@ -111,9 +111,9 @@ test('two-hand vs one-hand: a two-hander against main + off hand; a one-hander a
 		emit(MAINHANDSLOT)
 	`);
 	// The slot is the client's word for it (MAINHANDSLOT).
-	assert.match(twoHand, /^Polestar · Arms \| \+[\d.]+% upgrade · /);
+	assert.match(twoHand, /^SendaFH · Arms \| \+[\d.]+% upgrade · /);
 	assert.ok(twoHand.endsWith(` · ${mainHand}`), twoHand);
-	assert.match(oneHand, /^Polestar · Arms \| -[\d.]+% downgrade · /);
+	assert.match(oneHand, /^SendaFH · Arms \| -[\d.]+% downgrade · /);
 	assert.ok(oneHand.endsWith(` · ${mainHand}`), oneHand);
 });
 
@@ -128,10 +128,10 @@ test('rings and trinkets: against the weaker equipped one; a unique ring only ag
 		emit(line("item:9131"))
 	`);
 	// 9122 (str 2) against the weaker ring 9120 (str 4): -50%
-	assert.equal(ring, 'Polestar · Arms | -50% downgrade · Finger');
-	assert.equal(unique, 'Polestar · Arms | +50% upgrade · Finger');
-	assert.equal(trinket, 'Polestar · Arms | big upgrade · Trinket');
-	assert.equal(empty, 'Polestar · Arms | upgrade (empty slot)');
+	assert.equal(ring, 'SendaFH · Arms | -50% downgrade · Finger');
+	assert.equal(unique, 'SendaFH · Arms | +50% upgrade · Finger');
+	assert.equal(trinket, 'SendaFH · Arms | big upgrade · Trinket');
+	assert.equal(empty, 'SendaFH · Arms | upgrade (empty slot)');
 });
 
 test('reward picks: a known upgrade above a known downgrade, the same in any order; ties to the lower item ID; nothing better still names the best', () => {
@@ -162,7 +162,7 @@ test('reward-item tooltips: "Best pick" on an upgrade pick, "Reward pick" naming
 		emit(g.showTooltip(GameTooltip, "item:9101"))
 		g.equip(1, "item:9102")
 		G.Invalidate("equipment")
-		Polestar.Set("gear.pickTooltip", false)
+		SendaFH.Set("gear.pickTooltip", false)
 		emit(g.showTooltip(GameTooltip, "item:9101"))
 	`);
 	assert.equal(best[1], 'Best pick | Alliance Choice');
@@ -182,14 +182,14 @@ test('racials: Mace Specialization makes a Dwarf Shaman (a Forever pair) prefer 
 	assert.equal(orc, true);
 });
 
-test('lazy: login loads no item data and reads no bags; the first tooltip loads Polestar_ItemDB once', () => {
+test('lazy: login loads no item data and reads no bags; the first tooltip loads SendaFH_ItemDB once', () => {
 	const [out] = run(`
 		local calls, bagReads = 0, 0
 		C_AddOns.LoadAddOn = function(name) calls = calls + 1; return true end
 		local slots = C_Container.GetContainerItemLink
 		C_Container.GetContainerItemLink = function(...) bagReads = bagReads + 1; return slots(...) end
 		stub.login()
-		local atLogin = { calls, bagReads, Polestar.ItemDB.IsLoaded() }
+		local atLogin = { calls, bagReads, SendaFH.ItemDB.IsLoaded() }
 		g.showTooltip(GameTooltip, "item:9101")
 		emit({ atLogin = atLogin, after = calls })
 	`, { register: false });

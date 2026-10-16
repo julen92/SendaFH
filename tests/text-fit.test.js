@@ -1,6 +1,6 @@
 'use strict';
-// Text stays inside its window. Every scene of `node tools/polestar.js
-// preview` that shows one of Polestar's windows (the guide window, the hub on
+// Text stays inside its window. Every scene of `node tools/sendafh.js
+// preview` that shows one of SendaFH's windows (the guide window, the hub on
 // each section, Options on every page and tab, the welcome, the route
 // choice, the rare alert, the report window and the copy window) is laid out
 // through the preview's frame dump, in the game font and in Inter, and every
@@ -21,11 +21,12 @@ const { runAddon } = require('./helpers/lua');
 const P = require('../tools/commands/preview');
 const { resolve, wrap, measure } = require('../tools/preview/render');
 
+const localeSetup = process.env.SENDA_TEST_LOCALE ? `GetLocale=function() return ${JSON.stringify(process.env.SENDA_TEST_LOCALE)} end\n` : "";
 const SLACK = 1.15;
 const H = { LEFT: 0, CENTER: 0.5, RIGHT: 1, TOPLEFT: 0, TOP: 0.5, TOPRIGHT: 1, BOTTOMLEFT: 0, BOTTOM: 0.5, BOTTOMRIGHT: 1 };
 const V = { TOP: 0, CENTER: 0.5, BOTTOM: 1, TOPLEFT: 0, LEFT: 0.5, TOPRIGHT: 0, RIGHT: 0.5, BOTTOMLEFT: 1, BOTTOMRIGHT: 1 };
-const WINDOWS = new Set(['PolestarGuideFrame', 'PolestarOptions', 'PolestarPicker', 'PolestarWelcome', 'PolestarRouteChoice', 'PolestarMenu', 'PolestarRareToast', 'PolestarReport', 'PolestarCopy']);
-const PASSES = [['game font', ''], ['Inter', 'Polestar.Set("ui.font", "inter")\n']];
+const WINDOWS = new Set(['SendaFHGuideFrame', 'SendaFHOptions', 'SendaFHPicker', 'SendaFHWelcome', 'SendaFHRouteChoice', 'SendaFHMenu', 'SendaFHRareToast', 'SendaFHReport', 'SendaFHCopy']);
+const PASSES = [['game font', ''], ['Inter', 'SendaFH.Set("ui.font", "inter")\n']];
 
 // The preview's fonts, every advance SLACK times wider.
 const fonts = (() => {
@@ -112,7 +113,7 @@ function auditPanels(label, panels) {
 	try {
 		panels.forEach((p, i) => {
 			for (const [font, prefix] of PASSES) {
-				const dump = P.dumpPanel({ ...p, script: prefix + p.script }, prelude);
+				const dump = P.dumpPanel({ ...p, before: localeSetup + (p.before || ""), script: prefix + p.script }, prelude);
 				for (const line of audit(dump, p.roots)) found.push(`${label} #${i + 1} (${font}): ${line}`);
 			}
 		});
@@ -126,9 +127,9 @@ const windowed = P.SCENES.filter((s) => s.panels.every((p) => p.roots.every((r) 
 
 test('the audit covers the hub, Options, the guide window and the welcome', () => {
 	const roots = new Set(windowed.flatMap((s) => s.panels.flatMap((p) => p.roots)));
-	for (const r of ['PolestarGuideFrame', 'PolestarOptions', 'PolestarPicker', 'PolestarWelcome']) assert.ok(roots.has(r), r);
+	for (const r of ['SendaFHGuideFrame', 'SendaFHOptions', 'SendaFHPicker', 'SendaFHWelcome']) assert.ok(roots.has(r), r);
 	const scripts = windowed.flatMap((s) => s.panels.map((p) => p.script)).join('\n');
-	for (const section of ['Polestar.Lookup.Show', 'Polestar.Dungeons.Open', 'Polestar.Rares.Show', 'Polestar.UI.ShowPicker', '"guidepacks"']) {
+	for (const section of ['SendaFH.Lookup.Show', 'SendaFH.Dungeons.Open', 'SendaFH.Rares.Show', 'SendaFH.UI.ShowPicker', '"guidepacks"']) {
 		assert.ok(scripts.includes(section), section);
 	}
 });
@@ -145,17 +146,17 @@ test('text fits: every Options page and tab', () => {
 	const recorder = P.SCENES.find((s) => s.file === 'options-more.svg').panels[0].before;
 	const pages = runAddon({
 		stubs: ['stub_ui.lua'],
-		before: recorder,
-		addons: [{ name: 'Polestar', files: P.MODULE_FILES }],
-		script: 'uistub.install()\nstub.login()\nemit(Polestar.UI.Options.Pages())',
+		before: localeSetup + recorder,
+		addons: [{ name: 'SendaFH', files: P.MODULE_FILES }],
+		script: 'uistub.install()\nstub.login()\nemit(SendaFH.UI.Options.Pages())',
 	}).emitted[0];
 	assert.ok(pages.length >= 8, `${pages.length} pages`);
 	const panels = [];
 	for (const p of pages) {
 		const tabs = Array.isArray(p.tabs) && p.tabs.length ? p.tabs : [null];
 		for (const t of tabs) {
-			const select = t ? `; Polestar.UI.Options.Select(${JSON.stringify(p.key)}, ${JSON.stringify(t)})` : '';
-			panels.push({ files: P.MODULE_FILES, before: recorder, roots: ['PolestarOptions'], name: `${p.key}${t ? ' > ' + t : ''}`, script: `Polestar.UI.ShowOptions(${JSON.stringify(p.key)})${select}` });
+			const select = t ? `; SendaFH.UI.Options.Select(${JSON.stringify(p.key)}, ${JSON.stringify(t)})` : '';
+			panels.push({ files: P.MODULE_FILES, before: localeSetup + recorder, roots: ['SendaFHOptions'], name: `${p.key}${t ? ' > ' + t : ''}`, script: `SendaFH.UI.ShowOptions(${JSON.stringify(p.key)})${select}` });
 		}
 	}
 	const found = [];

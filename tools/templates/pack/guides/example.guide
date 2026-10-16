@@ -1,8 +1,8 @@
 # An example to start from: a short walk from Goldshire to the Westfall
-# border that hands over to Polestar's Westfall guide. Lines starting with #
+# border that hands over to SendaFH's Westfall guide. Lines starting with #
 # are notes for you; players never see them. Replace it with your own route.
 # Every line the format has, with an example each: docs/GUIDE_CHEATSHEET.md
-# in Polestar's source.
+# in SendaFH's source.
 
 # The guide's id: your pack id, a slash, then a name of your own.
 guide {{id}}/example
@@ -34,7 +34,7 @@ step Into Westfall
 
 # The lines you will use most. Remove the first # to use one inside a step
 # (what follows the second # stays a note for you);
-# `polestar find <name>` prints the ids.
+# `sendafh find <name>` prints the ids.
 #
 #   accept 47                    # take a quest; giver and title come from the data
 #   turnin 47                    # hand it in

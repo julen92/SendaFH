@@ -1,3 +1,11 @@
+# SendaFH 0.5.0-beta.1 · 2026-10-16
+
+- Rebase on the released Polestar v0.2.5-test.1 tag and its official data packs.
+- Keep SendaFH branding, theme, slash aliases, Discord and saved-variable names.
+- Adopt native locale/name support; translate new guide presentation strings.
+- Preserve the native routing, quest, talent and gear fixes of the new release.
+- Translation remains partly AI-assisted; in-game validation is pending.
+
 # Changelog
 
 ## Unreleased
@@ -42,7 +50,7 @@
   back as soon as you finish the earlier part. Quests whose earlier part the
   guide still brings you to are unchanged, and the giver's window stays the
   final word (thanks Fitz).
-- Polestar's interface is in French, translated by Yendi (thanks Yendi).
+- SendaFH's interface is in French, translated by Yendi (thanks Yendi).
 - Reputation standings, item qualities, the Alliance and the Horde, the gear
   slots on the upgrade line, the Dungeon Journal and the race names on guides
   and the welcome read exactly as the game writes them, in every language
@@ -52,30 +60,22 @@
 - On a client in another language, the guide window names quests, NPCs,
   objects and items in that language, and the game's own quest title comes
   before the guide's English one: the client's names where it has them, else
-  Polestar's names for that language (from DingDB, by Yendi, thanks Yendi,
+  SendaFH's names for that language (from DingDB, by Yendi, thanks Yendi,
   and pfQuest). A name neither has stays English. The target button targets
   the translated name, quest objectives and object tooltips are matched by
   it, the quest database's names and tooltips use it, and Lookup finds a
   quest, NPC, item or zone by its translated name as well as by its English
   one. Each language's names are their own small addon,
-  `Polestar_Names_<locale>`, in the release zip; the game loads only the one
+  `SendaFH_Names_<locale>`, in the release zip; the game loads only the one
   of its language, and an English client none.
 - On a French, German, Spanish or any other non-English client, setting your
   home, discovering a flight path, hearthing and flying complete their steps:
   the guide named the place in English and the game answered in your language
   ("Darkshire" against "Sombre-Comté"), so these steps never checked off and
-  had to be skipped. Polestar now knows each inn, flight path and place by
+  had to be skipped. SendaFH now knows each inn, flight path and place by
   the game's own ID: binding at the innkeeper the step names, or being bound
   there already, completes the step, and the guide window names the place as
   your game does (thanks Yendi, #83).
-- Alliance Priests run Cenarion Aid, Of Coursers We Know and The Ichor of
-  Undeath (8254-8256) on the leveling route: High Priest Rohan gives the first
-  at the Ironforge stop before Azshara, and Ogtinc's two errands fit the
-  Azshara visit, the Ichor of Undeath from the Ruins of Eldarath the route
-  already clears. About half an hour faster to 60 for every Alliance Priest
-  start, with about 45 minutes less grinding. Blood of Morphaz stays in the
-  Class guide: its item drops inside the Sunken Temple (thanks XrayAlpha,
-  #119).
 
 ### For guide authors
 
@@ -92,7 +92,7 @@
   published on GitHub as a pre-release is not "the fix is out", and the next
   full release still tells every fix closed since the last full one
   (`tools/discord-bot/lib/notify.js`).
-- `node tools/polestar.js i18n` keeps the interface translations, adapted
+- `node tools/sendafh.js i18n` keeps the interface translations, adapted
   from Ding! by Yendi (@moust4ki): `status` lists the nine languages with
   their counts, status (reviewed or AI-made) and translators; `check` (run in
   CI) fails on a file Lua cannot load, a stale key or a broken format and
@@ -106,14 +106,14 @@
   them.
 - Tests fake an Italian client (`fakeLocale('itIT', ...)`): Forever has none,
   so no shipped language file replaces the fake strings.
-- `node tools/polestar.js i18n names` builds the names addons
-  `addon/Polestar_Names_<locale>` (committed) from DingDB, cloned into
+- `node tools/sendafh.js i18n names` builds the names addons
+  `addon/SendaFH_Names_<locale>` (committed) from DingDB, cloned into
   `data/sources/ding` and pinned to Ding v1.8.1's commit and each file's
   sha256 (a file that differs stops the build), then pfQuest's locale files
   for the names DingDB lacks, keeping only the quests, NPCs, objects and items
   the guides, the quest database and the Codex name. `--no-questie` leaves
   DingDB out. Each folder's `LICENSE-DATA.txt` records the sources, versions,
-  licences and counts, with Ding's `CREDITS.md` beside it. `Polestar.Names`
+  licences and counts, with Ding's `CREDITS.md` beside it. `SendaFH.Names`
   (`Core/Names.lua`) reads them; docs/ARCHITECTURE.md, "Names", and
   docs/TRANSLATING.md, "Game names".
 - `travel build` gives every inn in `Nav/TravelData.lua` its AreaTable area,
@@ -139,7 +139,7 @@
   gates: from the Barrens to Astranaar the route flew to Sun Rock Retreat
   and walked straight over the ridge into Ashenvale; it now walks through the
   Talondeep Path. The zone crossings are Carbonite's (GPL-3.0), shipped with
-  Polestar; until now only a local file had them, so released builds walked
+  SendaFH; until now only a local file had them, so released builds walked
   between zones in straight lines.
 - The quest item button offers only an item from the step's own quests: it
   took the first usable quest item in your bags, so Bethor's Potion from
@@ -180,7 +180,7 @@
   game offers at once, no longer passes the same NPC's guide quests as "not
   offered" when the reward took more than half a minute to read (Jorn
   Skyseer at Sergra Darkthorn in the Crossroads).
-- In Eastern Kingdoms and Kalimdor the arrow's walks run on Polestar's own,
+- In Eastern Kingdoms and Kalimdor the arrow's walks run on SendaFH's own,
   finer walking maps (made from the game's terrain, water and buildings, in
   Shortest Path Forever's map format, with Cillian Berragan's permission): out
   of an inn by its door rather than through the wall, down into the Undercity
@@ -274,8 +274,8 @@
   the hand-in guide. The same for the Excavation Site's Titan Relics: Earthen
   Echo and Prehistoric Prism follow the relic you bring out (thanks Arachnit)
 - Party sync: in a party, the guide shows the counts of party members who run
-  Polestar under each shared quest goal (Ana 5/8, Ben done), and on a quest
-  you took, who in the party lacks it, even without Polestar. Quest IDs and
+  SendaFH under each shared quest goal (Ana 5/8, Ben done), and on a quest
+  you took, who in the party lacks it, even without SendaFH. Quest IDs and
   counts only, through hidden party messages when a count changes, so it
   works across guides and client languages; nothing goes to chat. Two
   switches in Questing > Quests > Party, both off until you turn them on
@@ -341,10 +341,10 @@
   (41.5,17.7), not at the spot its Era map position falls on Forever's
   redrawn Eastern Plaguelands map.
 - Without the Codex, Lookup and Dungeons say which case it is: not installed
-  (get the Polestar zip from CurseForge or the GitHub Releases page, not
+  (get the SendaFH zip from CurseForge or the GitHub Releases page, not
   GitHub's "Source code" download) or turned off in the AddOns list.
-- At login, Polestar says in chat when its install is incomplete: the Codex
-  or the guides missing, or a Polestar folder left from another version
+- At login, SendaFH says in chat when its install is incomplete: the Codex
+  or the guides missing, or a SendaFH folder left from another version
   (copied over an old install, or unzipped one folder too deep), with how to
   reinstall cleanly.
 - Durotar: Cutting Teeth goes back to Gornek as soon as the boars are
@@ -468,7 +468,7 @@
   Boars on the road to Kharanos count toward Ragnar's ribs: the valley is
   never walked back to, about two minutes sooner to level 10 (thanks
   thmastin).
-- One key for the step (Options, Keybindings, AddOns, Polestar, "Step
+- One key for the step (Options, Keybindings, AddOns, SendaFH, "Step
   action: NPC, quest item, mob or Hearthstone") does the step's next action,
   in guide order, the route's own goals before optional ones: targets the
   NPC to accept from, turn in to or talk to, uses a use goal's quest item or
@@ -480,7 +480,7 @@
   Shift skips). Riding, weapon, pet and profession trainers are left alone
   (thanks CDVolvik).
 - Darnassus hunters are sent to Jeen'ra Nightrunner, not Ariyell Skyshadow
-  (a weapon merchant), and Polestar knows twenty more class trainers in the
+  (a weapon merchant), and SendaFH knows twenty more class trainers in the
   capitals and Mulgore (Ander Germaine, Grezz Ragefist, Sian'tsu, Hana
   Lighthoof...), so learning new spells works at every class trainer.
 - Quest rewards that are upgrades can go on by themselves once they reach
@@ -495,11 +495,11 @@
   one line, as players asked. A click still folds it for that step; Expand
   step tips (Options, Guide, Window, What it shows) off keeps them on one
   line (thanks CDVolvik).
-- `/polestar way 40 60` where the game gives no map position (an instance,
+- `/sendafh way 40 60` where the game gives no map position (an instance,
   another continent) says "No position here" instead of how to type the
   command (thanks meellm).
-- `/polestar way` takes decimal commas in both coordinates
-  (`/polestar way 45,5 30,2`) as well as decimal points, and `45,30` still
+- `/sendafh way` takes decimal commas in both coordinates
+  (`/sendafh way 45,5 30,2`) as well as decimal points, and `45,30` still
   reads as x and y. A decimal comma in only one (`45,5 30`, which could also
   be 45,5 with the label 30) and coordinates outside 0-100 show the usage
   line instead of setting a waypoint. So does `x,y` followed by a numeric
@@ -544,7 +544,7 @@
   0/8") is matched again. After a turn-in the quest counts as done until the
   log catches up (up to 10 seconds), so its follow-up opens at once instead
   of the quest flashing as available again (thanks meellm).
-- `/polestar guide <id>` takes the id in any case: `/polestar guide
+- `/sendafh guide <id>` takes the id in any case: `/sendafh guide
   Forever/Horde/02-The-Barrens` opens the Barrens guide (thanks meellm).
 - Talent plans for Paladins (Questing, Talents; `/pole talents`): Holy,
   Protection and Retribution leveling plans as an ordered list of picks with
@@ -553,10 +553,10 @@
   line in each talent's tooltip. Unspent points come from the game, so
   Talented (Adventure) and other early points count. It never spends a point
   for you (thanks jnickles85-bit).
-- Polestar in Spanish (Latin America): on an esMX client the whole interface
+- SendaFH in Spanish (Latin America): on an esMX client the whole interface
   is in Spanish, in the client's own terms (calabozo, banda, piedra de hogar,
   mercader, instructor) (thanks CDVolvik).
-- Polestar in German: on a deDE client the interface is in German, in the
+- SendaFH in German: on a deDE client the interface is in German, in the
   client's own words (Verbreitet, Selten, Rar for the item qualities,
   Alchemie, NSC, Dungeonkompendium); the report texts and "Complete" stay in
   English for now (thanks thecodingcortex).
@@ -564,9 +564,9 @@
   town gate and down into the mine instead of straight over the edge, thanks
   to Shortest Path Forever by Cillian Berragan
   (https://github.com/cjber/shortest-path-forever), whose router and walking
-  map of Zephras Isle he kindly let Polestar use; the walking maps of Eastern
-  Kingdoms and Kalimdor are Polestar's own, in his format. They come in the
-  new `Polestar_Nav` folder of the zip (install it with the others). Options,
+  map of Zephras Isle he kindly let SendaFH use; the walking maps of Eastern
+  Kingdoms and Kalimdor are SendaFH's own, in his format. They come in the
+  new `SendaFH_Nav` folder of the zip (install it with the others). Options,
   Arrow & routes, "Walk real paths" turns it off.
 - The route picks where to land by the real walk: the walks from the flight
   masters, docks, portals, inn and teleports near your target are measured on
@@ -577,27 +577,27 @@
   its own time, not only the one you are on; zone crossings, cave approaches
   and the walk on from a guide's "go to the mouth" step stay straight, as the
   zone data and the guide lay them out.
-- Works with Shortest Path Forever: with it installed, Polestar hands it the
+- Works with Shortest Path Forever: with it installed, SendaFH hands it the
   route. Each goal goes to it as a stop with the game's own mark (a quest's
   "!" or "?", a trainer, a flight master, a dungeon, a boat), a kill or
   collect area as a held area that guides you there and then stays quiet
   while you work it, and its arrow, route and journey take you there.
-  Polestar's own arrow, route lines, journey steps, travel button, transport
+  SendaFH's own arrow, route lines, journey steps, travel button, transport
   alerts, map clicks and `/way` step aside, so the two never guide at once,
-  and Polestar's walking maps are not loaded. Clearing or replacing the
+  and SendaFH's walking maps are not loaded. Clearing or replacing the
   journey sticks until the guide moves on; nothing is sent in combat (it goes
   when the fight ends) or for a corpse run, which Shortest Path Forever
-  guides itself. With its journeys switched off, Polestar guides as before.
+  guides itself. With its journeys switched off, SendaFH guides as before.
   Options, Arrow & routes, "Guide with Shortest Path Forever when it's
   installed" (on by default; shown only with it installed). While it guides,
-  Polestar's arrow, route and waypoint options are greyed out and say why,
-  and `/polestar arrow show`, `route` and `skipleg` say in one line how to
-  get Polestar's arrow back.
+  SendaFH's arrow, route and waypoint options are greyed out and say why,
+  and `/sendafh arrow show`, `route` and `skipleg` say in one line how to
+  get SendaFH's arrow back.
 - A walk is told step by step at the places it passes: "Walk to The Great
   Lift, Bottom" then "Take The Great Lift", through a zone's gate or into a
   cave by the zone data's or the guide's own words, each with its own time,
   the arrow saying each as you reach it, and at the bridges, gates, tunnels,
-  passes and cave and building mouths Polestar's walking maps of Eastern
+  passes and cave and building mouths SendaFH's walking maps of Eastern
   Kingdoms and Kalimdor name. A cave or chain the guide or the zone data
   already describes keeps its own words, and a goal right after a guide's
   "go to the mouth" step is still pointed at straight from the mouth, so the
@@ -620,7 +620,7 @@
 - When the route says to hearth or teleport, a button under the arrow casts
   it (bindable: "Use the route's Hearthstone or teleport"); it appears,
   moves and hides only out of combat. Right-click the arrow, or
-  `/polestar skipleg`, to skip a leg: "Skip this leg" on a Hearthstone,
+  `/sendafh skipleg`, to skip a leg: "Skip this leg" on a Hearthstone,
   teleport, flight, ride or portal plans the rest of the trip without it;
   "Mark this leg done" on a walk or a lift moves on to the next leg. As in
   Shortest Path Forever. Options, Arrow & routes, "Travel button".
@@ -647,16 +647,16 @@
   named after the icon. Click the same spot again to let it go. With a chat
   box open, Shift-click still links into chat. Options, Arrow & routes,
   "Shift-click a map to go there". After Shortest Path Forever.
-- Nearby services: `/polestar near repair` (or trainer, a profession such as
+- Nearby services: `/sendafh near repair` (or trainer, a profession such as
   `mining`, class, reagents, vendor, innkeeper, bank, auction, flight,
   stable) points the arrow at the quickest one to reach by the route, not
   just the nearest as the crow flies. The world map's and minimap's tracking
   menus list them under "Nearby services". After Shortest Path Forever.
 - Without TomTom installed, "Let other addons set waypoints" (off by
-  default) lets addons that set TomTom waypoints point Polestar's arrow, and
+  default) lets addons that set TomTom waypoints point SendaFH's arrow, and
   `/way [zone] x y [title]` works (when no other addon has it); addons that
   expect TomTom's own settings may not work with it on. With TomTom
-  installed, "Follow TomTom's arrow" (off by default) makes Polestar's arrow
+  installed, "Follow TomTom's arrow" (off by default) makes SendaFH's arrow
   go wherever TomTom's points. Options, Arrow & routes, Other waypoints.
   After Shortest Path Forever.
 - A point you picked before dying (a map click, `/way`, another addon's) comes
@@ -665,7 +665,7 @@
   each loop's period and stops from the transport model the servers use
   (accelerating, docking, the original servers' measured periods), so a
   route weighs the real wait and ride. Ride a boat, a zeppelin or the tram
-  and Polestar times it from where you are along the way ("Timed the Booty
+  and SendaFH times it from where you are along the way ("Timed the Booty
   Bay - Ratchet from your ride"); from then on, for six hours, the arrow says
   "Next boat in 1:20" or "Boat docked, leaves in 0:40", and the route takes
   the boat you can actually catch. Untimed, it says "Next boat in about
@@ -702,7 +702,7 @@
   whose title is still Y takes Forever's name (its `source` gains
   `wowhead:title`). It also reads Wowhead Forever's class quest pages, so
   Forever's XP and level changes reach class quests that no zone list shows.
-- Goals carry `group` (format 2 of the pack format; Polestar 0.2.4 reads it,
+- Goals carry `group` (format 2 of the pack format; SendaFH 0.2.4 reads it,
   older versions show such a pack as needing 0.2.4): the compiler derives it
   from elite kills and elite-only drops, from the solo filter's dungeon and
   raid quests and from instance maps, and the new `group [N]` modifier
@@ -726,7 +726,7 @@
   drafts from chosen recordings, `--reverse` counts ways out as ways in
   (thanks CDVolvik).
 - Every goal of a quest that needs a profession (quests.json `skill` and
-  `skillLevel`) carries `profLine`, `profName` and `profRank`, and Polestar
+  `skillLevel`) carries `profLine`, `profName` and `profRank`, and SendaFH
   hides it from characters without that profession and rank (older
   versions ignore the fields). In a Leveling guide lint warns on such a goal
   unless it is `optional` or the guide trains the profession (and levels it
@@ -744,12 +744,12 @@
   write `quest Q` and the index comes from the target). Legging It and Call
   of Fire list their objectives in Wowhead Forever's order in the reference
   data now, so their steps raise no false alarm (thanks CDVolvik).
-- `node tools/polestar.js planner` opens the route planner in the browser:
+- `node tools/sendafh.js planner` opens the route planner in the browser:
   pick a guide and a character and the route plays on the game's own map
   (the minimap terrain of every continent, `planner art` fetches it once),
   step by step or as the whole 1-60 route, with each step's time split into
   travel, combat, talking and waiting, the level, XP, quest log and items, the
-  spawn areas and the path walked, in Polestar's own look with the game's
+  spawn areas and the path walked, in SendaFH's own look with the game's
   icons (class icons for class trainers, item icons for items, the quest
   markers). Edit mode drags waypoints, adds a `goto` with a click, bends a
   travel line into a new labelled waypoint ("Cross the bridge") and edits any
@@ -773,7 +773,7 @@
   prints how many goals got one. The heights come from CMaNGOS classic-db
   (GPL-3.0, used as facts), which `data build` now writes as
   `data/forever/spawnz.json`; the pack's LICENSE-DATA.txt names it. Packs stay
-  format 2: an older Polestar ignores `z`.
+  format 2: an older SendaFH ignores `z`.
 
 ### For contributors
 
@@ -784,28 +784,28 @@
   timing a ride on a raised track (a zeppelin at 120 yd). With no height,
   Walk starts from the ground under the player and Transit matches the ride
   on the ground plane.
-- `node tools/polestar.js travel import --carbonite <ZoneConnections.lua>
+- `node tools/sendafh.js travel import --carbonite <ZoneConnections.lua>
   --source <text>` writes the shipped zone crossings,
   `tools/lib/travel/crossings.json`, from Carbonite's Classic Era zone
   connections (54 walks between zones, 30 yd arrival radius); `travel build`
   puts them into TravelData.lua as both continents' full crossing data
   (`--shipped none` leaves them out). Zones only Forever has are `wild`, and a
   zone's rectangle is Forever's where it redrew the map. The local crossings
-  file still builds Polestar_Travel, which adds to them.
+  file still builds SendaFH_Travel, which adds to them.
 - A Feature request issue form beside Bug report and Wrong step, tagged
   `enhancement`, with a field for the Discord thread an idea came from
   (thanks CDVolvik).
-- `talents build` writes `addon/Polestar/Talents/Builds.lua` from the plans
+- `talents build` writes `addon/SendaFH/Talents/Builds.lua` from the plans
   in `talents/forever/`, and `talents check` replays every pick (rows,
   prerequisites, ranks) against the Forever trait tables from wago.tools
   (thanks jnickles85-bit).
-- `node tools/polestar.js nav build` builds a navigation grid from the
+- `node tools/sendafh.js nav build` builds a navigation grid from the
   Forever client's own terrain, water and building, cave and doodad collision
   (fetched from wago.tools like the planner's map art; local only, about
   750 MB): where a character can walk, which slopes it can climb, which drops
   it survives, where it swims and which lifts it can ride. `nav path` prints
   the route between two map points.
-- `node tools/polestar.js nav aids` generates the arrow's zone crossings,
+- `node tools/sendafh.js nav aids` generates the arrow's zone crossings,
   open borders and cave, building and climb approach chains from the
   navigation grid (`data/local/nav/aids.json`, the crossings file format;
   local only, never shipped) and, with `--report`, measures how many guide
@@ -813,8 +813,8 @@
   and with them. `nav pack` names the walk's caves, building mouths, passes,
   bridges and tunnels from them (`Nav/Chokepoints.lua`), and the arrow's walks
   inside a zone follow the engine's paths. Some cities' gates are not yet found.
-- `addon/Polestar_Nav`'s maps of Eastern Kingdoms and Kalimdor are
-  Polestar's: `node tools/polestar.js nav pack` writes the
+- `addon/SendaFH_Nav`'s maps of Eastern Kingdoms and Kalimdor are
+  SendaFH's: `node tools/sendafh.js nav pack` writes the
   navigation grid in his walking-map format (`tools/lib/nav/pack.js`, a port
   of his `gen_nav.py` and `pack_nav.py`: 128 cells a tile, a step between
   cells open only where one of our links crosses it, floors for stacked
@@ -826,7 +826,7 @@
   (`tools/lib/nav/chokepoints.js`) and `PACK.json` (grid build, cells, date,
   sizes, sha256; `nav check` and `nav pack --check` hold the folder to it);
   `nav vendor` now takes only his router and the maps we do not pack
-  (Zephras Isle), never removes Polestar's packed maps, and writes `Nav.xml`
+  (Zephras Isle), never removes SendaFH's packed maps, and writes `Nav.xml`
   from both manifests. `API.lua` raises the engine's ceilings to
   `Path.cacheKB` 48 MB and `Path.graphKB` 6 MB for the finer maps. The grid
   no longer swims fatigue water (MH2O's deep quads; grid tile format 3:
@@ -849,7 +849,7 @@
   and grow under 15x from 2,500 names, each the median of several batches,
   so a per-keystroke index rebuild or a quadratic search still fails it
   (thanks CDVolvik).
-- `tests/recorder-perf.test.js` holds the Recorder to Polestar's CPU budgets
+- `tests/recorder-perf.test.js` holds the Recorder to SendaFH's CPU budgets
   while it records, without reference data so CI runs it: a walking frame
   under 1 ms, a burst of questing events with a full quest log and a burst
   of finds (20 rares, kills and loot windows in one frame) under 4 ms, each
@@ -900,20 +900,20 @@
   `auditReport` compares them with the Attune addon's for the local
   `data/local/attunements-audit.md` (thanks Shockp).
 - `preview` renders the Attunement tab (`docs/preview/dungeons-attune.svg`).
-- Translations: `/polestar help` prints every line in the client's language,
+- Translations: `/sendafh help` prints every line in the client's language,
   the show, hide, guides, options and debug commands' too: Init.lua, which
   loads before the locale file, registered them in English; they register
   in Core/Commands.lua now. `tests/helpers/locale.js` fakes a translation in
   the addon's tests.
 - Translations: a word with two meanings has a key per meaning
-  (`Polestar.LC`): the gear slots on the tooltip line are `"slot: Back"`,
+  (`SendaFH.LC`): the gear slots on the tooltip line are `"slot: Back"`,
   `"slot: Chest"` and so on, and a dungeon boss that is a chest is
   `"boss: Chest"`, so they no longer share "Back" with the welcome's button
   or "Chest" with each other.
 - Translations: the options pages keep English keys whatever their titles
-  read, so `/polestar options quests`, `gear`, `lookup` and the others and
-  `/polestar packs` open the right page on a translated client instead of
-  the first one. `Polestar.RegisterOptions` takes an optional `key` for a
+  read, so `/sendafh options quests`, `gear`, `lookup` and the others and
+  `/sendafh packs` open the right page on a translated client instead of
+  the first one. `SendaFH.RegisterOptions` takes an optional `key` for a
   page's stable key.
 - Translations: the travel route's boat, zeppelin and tram captions ("Take
   the tram to %s") are written as `L["..."]` keys in Nav/Travel.lua like the
@@ -925,7 +925,7 @@
   and statuses, the guide menu's tabs, the group lines, source ranks, the
   welcome's feature columns, the step details ("from %s", "at %s"), the
   hand-in notes, the travel map's boat tooltips, the rare alert sounds and
-  `/polestar gear`'s spec source. The item qualities in Lookup are
+  `/sendafh gear`'s spec source. The item qualities in Lookup are
   `"quality: Rare"` and so on, apart from the rare mobs. Nothing changes in
   English.
 - The docs say what the code does: ARCHITECTURE (startup, refused guides,
@@ -954,11 +954,11 @@
   pipeline (`art/`: a wago.tools CASC file cache, BLP2 and BC1 decoding, a BC1
   encoder, the minimap pyramid and the unfogged zone art), each with tests.
 - `Nav/Handoff.lua` hands the target to Shortest Path Forever through its
-  public `ShortestPathForever.API` (owner "Polestar"; `NavigateRoute` with one
+  public `ShortestPathForever.API` (owner "SendaFH"; `NavigateRoute` with one
   stop, `Cancel`, `Ended`, `CurrentStop`, `Subscribe` when its `minor` has
   it, else polled). `Nav.HandedOff()` is the one predicate the arrow, trail,
   travel planner (so route lines, journey steps, the travel button), alerts,
-  `Nav/Walk.lua` (no `Polestar_Nav` load, no search), map clicks, the TomTom
+  `Nav/Walk.lua` (no `SendaFH_Nav` load, no search), map clicks, the TomTom
   stand-in, `/way` and `Nav/Bridges.lua` check; `Nav.Reapply()` re-runs them
   when it flips. `Nav.SetTarget` takes an optional sixth `stop` kind
   (Dungeons, Nearby and the trainer banner pass it; `Nav.GetTravelData()`
@@ -970,7 +970,7 @@
   Shortest Path Forever's `UI/Arrow.lua` cast prompt, `Journey.lua`
   `SkipJourneyStep`, `UI/Alert.lua` and `Transport/Taxi.lua`; tested by
   `tests/nav-prompts.test.js` with secure frames enforced in combat.
-- `Nav/Journey.lua` (map-click planning, `Polestar.Nav.API` for other
+- `Nav/Journey.lua` (map-click planning, `SendaFH.Nav.API` for other
   addons: `Estimate`, `Navigate`, `Cancel`, `Active`; the TomTom stand-in,
   following TomTom's arrow and `/way`) and `Nav/Nearby.lua` (nearby
   services) adapt Shortest Path Forever's `Journey/JourneyInput.lua`,
@@ -980,18 +980,18 @@
   `reagentVendors` to `QoL/Data.lua`. `tests/syntax.test.js` lets only
   `Nav/Journey.lua` write the `TomTom` global. Tested by
   `tests/nav-journey.test.js` (NAV_QA rows 7, 8, 9, C11, C13, C14).
-- `addon/Polestar_Nav` vendors Shortest Path Forever's router
+- `addon/SendaFH_Nav` vendors Shortest Path Forever's router
   (`Routing/PathGrid.lua`, `Path.lua`, `PathJobs.lua`) and his walking map of
   Zephras Isle (`Nav/Nav2991*.lua`) at v1.16.0 (b1ad5bd), GPL-3.0-or-later
   with Cillian Berragan's copyright (`LICENSE`, `CREDITS.md`). The only
   changes are mechanical: the data global `ShortestPathForeverPathData`
-  becomes `PolestarPathData`, each file names its upstream file and commit.
-  `API.lua` hands the engine to Polestar as `Polestar_NavEngine` (upstream's
+  becomes `SendaFHPathData`, each file names its upstream file and commit.
+  `API.lua` hands the engine to SendaFH as `SendaFH_NavEngine` (upstream's
   `Find`, `FindCost`, `FindMany`, `Cancel`, `Busy`, plus `Available(map)`).
-  It always reads its own `PolestarPathData`, never an installed Shortest
+  It always reads its own `SendaFHPathData`, never an installed Shortest
   Path Forever's tables: his engine evicts decoded entries from them while
   ours may be searching. With both installed each holds its maps.
-- `node tools/polestar.js nav vendor <checkout>` redoes the copy from a newer
+- `node tools/sendafh.js nav vendor <checkout>` redoes the copy from a newer
   upstream commit (only `Nav<name>.lua` map files; each header carries his
   copyright and the dated notice GPLv3 section 5a asks for) and writes
   `UPSTREAM.json` (repo, commit, version, vendored date, every file's
@@ -1007,16 +1007,16 @@
   client without it), never in combat; `Dungeons.ShowOnMap` uses them, and
   `tests/compat.test.js` rejects any other addon code that opens or moves the
   world map itself (NAV_QA C3).
-- `pack` and `install` ship `Polestar_Nav` with Polestar and Polestar_Guides,
-  and Polestar checks its version at login like the data packs'.
-- `Nav/Walk.lua` follows `Polestar_NavEngine`'s paths: the walk the arrow is
+- `pack` and `install` ship `SendaFH_Nav` with SendaFH and SendaFH_Guides,
+  and SendaFH checks its version at login like the data packs'.
+- `Nav/Walk.lua` follows `SendaFH_NavEngine`'s paths: the walk the arrow is
   on is searched first (`Path.Find`, cancelled on a new goal, asked again
   25 yd off the path, never in combat), hand-made walks (crossings, chains,
   a goal after a guide `goto`) stay straight, and every failure falls back
   to the straight arrow; it splits that walk at the lifts `Nav/Transit.lua`
   knows (crossings, approach chains and guide gotos are legs already; gates,
-  bridges, caves, passes and lift landings come from Polestar_Nav's
-  `PolestarNavChokepoints`) (`Travel.SplitWalk`: pieces with `step`,
+  bridges, caves, passes and lift landings come from SendaFH_Nav's
+  `SendaFHNavChokepoints`) (`Travel.SplitWalk`: pieces with `step`,
   `choke`, lift rides of kind `lift`) and publishes
   `Nav.GetRouteGeometry()`. `Travel.lua` plans
   timetabled waits (from when the player reaches the dock), class
@@ -1062,7 +1062,7 @@
 - New glyphs `icon-gate`, `icon-bridge`, `icon-cave`, `icon-lift` and
   `icon-pass` (`tools/media/ui.js`) mark chokepoints on the route's stops
   (a Travel leg's `choke = { kind, name }`).
-- `Nav/Transit.lua` (`Polestar.Transit`: `NextDeparture`, `NextArrival`,
+- `Nav/Transit.lua` (`SendaFH.Transit`: `NextDeparture`, `NextArrival`,
   `Caption`, `Riding`, `Lifts`, `LiftNear`, `Teleports`; `NAV_TRANSIT`)
   ports Shortest Path Forever's `Transport/Model.lua`, `Timetable.lua`,
   `Observer.lua`, `Sync.lua` and `Teleports.lua`; docs/ARCHITECTURE.md,
@@ -1108,14 +1108,14 @@
 
 ### For players
 
-- The release now includes the Codex (the `Polestar_Codex` folder, part of
-  Polestar), so Lookup, Dungeons and Rares work: search items, mounts, pets,
+- The release now includes the Codex (the `SendaFH_Codex` folder, part of
+  SendaFH), so Lookup, Dungeons and Rares work: search items, mounts, pets,
   recipes, NPCs and quests and see where to get them; every dungeon and raid
   with its levels, entrance, bosses and their loot, and its quests; rares and
   treasures with their spawns and drops. It is built from the game's own data
-  tables, the quest and creature databases Polestar already uses, and our
+  tables, the quest and creature databases SendaFH already uses, and our
   recordings. If it is missing or disabled, Lookup, Dungeons and Rares say
-  so: reinstall Polestar or enable it in the AddOns list, then /reload.
+  so: reinstall SendaFH or enable it in the AddOns list, then /reload.
 - The Codex knows more: the battleground war mounts and tabards show their
   PvP rank and reputation, the Orange Murloc Egg and Green Helper Box are
   companions, Molten Core and the other raids list their bosses' loot, more
@@ -1142,13 +1142,13 @@
   it is on: rares you see (on nameplates, as target or mouseover, or on the
   minimap), treasures, what each corpse or chest drops and how often, the
   dungeons you enter and where, and boss encounters, plus the rewards quest
-  windows offer. To share a recording, send the `Polestar_Recorder.lua` file
+  windows offer. To share a recording, send the `SendaFH_Recorder.lua` file
   from your SavedVariables folder (CONTRIBUTING.md says where); it is imported
   without your character's name or realm.
 
 ### For guide authors
 
-- `codex build` uses only inputs Polestar may redistribute: the dungeons and
+- `codex build` uses only inputs SendaFH may redistribute: the dungeons and
   raids (levels, entrances, bosses) come from the Forever client's tables
   (`Map`, `DungeonEncounter`, `LFGDungeons`, `MapDifficulty`,
   `ContentTuning`), boss loot from the drops in `items.json`, mounts and
@@ -1169,7 +1169,7 @@
 - `data build` keeps the droppers of pfQuest's reference loot tables (raid
   and boss loot) at an unknown rate instead of dropping them: Molten Core's
   tier pieces now name their bosses.
-- A skill for coding agents, `skills/polestar-guide-pack/`: the workflow from
+- A skill for coding agents, `skills/sendafh-guide-pack/`: the workflow from
   `new` to `pack` (look up every id with `find`, then lint and playtest until
   both pass) and the guide format on one page. `new` copies it into the pack's
   `.agents/skills/` and `.claude/skills/`, and the pack's AGENTS.md points to
@@ -1227,28 +1227,28 @@
   guides in a separate addon, supported by its author. Its link opens
   docs/GUIDE_PACKS.md, a new page on packs for players and for authors.
 - Search ranks an item first as covered by a guide only when a guide Lookup
-  would open for it collects it: one of Polestar's own, or one from the pack
+  would open for it collects it: one of SendaFH's own, or one from the pack
   chosen under Suggest guides from.
-- Polestar is open source: the code, the guides and the tools that build
+- SendaFH is open source: the code, the guides and the tools that build
   them are on GitHub under the GPL-3.0.
 - Report a problem from the game: the bug in the guide window, beside Skip,
-  opens a report on the step on screen. Say what went wrong and Polestar
+  opens a report on the step on screen. Say what went wrong and SendaFH
   writes the rest (the step and each goal's state and position, where you
   stand, your race, class and level, the versions and any errors it caught),
-  sized to fit one Discord message, for you to copy and paste on the Polestar
+  sized to fit one Discord message, for you to copy and paste on the SendaFH
   Discord (the game can't open links: "Get the invite" gives the invite once
-  if you haven't joined yet). The guide window's menu and `/polestar report`
+  if you haven't joined yet). The guide window's menu and `/sendafh report`
   open it too.
-- The Polestar Discord is one click away: Discord's mark at the foot of the
-  hub's and the settings' sidebars, and `/polestar discord`, give its invite
+- The SendaFH Discord is one click away: Discord's mark at the foot of the
+  hub's and the settings' sidebars, and `/sendafh discord`, give its invite
   to copy.
 
 ### For guide authors
 
 - A pack reads as a pack in the game's AddOns list: its TOC title is
-  "Polestar Pack: <title>", it sits under Polestar's entry next to
-  Polestar's own addons, and without `notes` in `pack.json` its line is
-  "Guide pack for Polestar by <author>". Polestar's menus show the title
+  "SendaFH Pack: <title>", it sits under SendaFH's entry next to
+  SendaFH's own addons, and without `notes` in `pack.json` its line is
+  "Guide pack for SendaFH by <author>". SendaFH's menus show the title
   as written.
 - docs/GUIDE_PACKS.md: what a pack is, the steps from `new` to publishing,
   what the tools require and what we ask of authors.
@@ -1287,17 +1287,17 @@
 - `preview` draws a multi-line edit box's text wrapped from the top, and the
   report window and the Discord invite are scenes of their own, held to the
   text-fit audit. THIRD_PARTY.md credits Discord's mark, the one piece of
-  art Polestar ships that it did not draw.
+  art SendaFH ships that it did not draw.
 
 ## 0.2.0 (2026-10-14)
 
 ### For players
 
-- Guide packs: guides written by other players load beside Polestar's own.
-  A Guide packs page in Options (`/polestar packs`) shows each pack, turns it
+- Guide packs: guides written by other players load beside SendaFH's own.
+  A Guide packs page in Options (`/sendafh packs`) shows each pack, turns it
   on or off and reports its problems.
 - A centred welcome greets each new character by name, with the guide
-  Polestar suggests; its Set up page appears only on the account's first
+  SendaFH suggests; its Set up page appears only on the account's first
   character.
 - The leveling guides of both factions are reworked: quests that block a solo
   player are dropped or made optional, rare drops are optional, flight paths
@@ -1342,7 +1342,7 @@
   Inter, and the hub's search placeholder picks the first of its wordings
   that fits the box.
 - Beta wording everywhere, and British spelling in the interface.
-- The Recorder's command is `/psrec`, replacing `/lsrec`; `/polestarrec`
+- The Recorder's command is `/psrec`, replacing `/lsrec`; `/sendafhrec`
   still works.
 - The README starts with a quick start for players, a download button and
   screenshots from the game.

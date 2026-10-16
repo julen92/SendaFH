@@ -7,7 +7,7 @@ const { commandPack, packArgument } = require('../lib/pack/locate');
 const { playtest, resultLines, CLASSES } = require('../lib/playtest');
 const { findLua } = require('../lib/lua');
 
-const usage = `usage: node tools/polestar.js playtest [<dir>] [options]
+const usage = `usage: node tools/sendafh.js playtest [<dir>] [options]
 
 Plays a guide pack's guides to the end in the real addon against a simulated
 world (needs Lua 5.1; \`doctor\` checks): each guide once per class it
@@ -62,7 +62,7 @@ async function run(argv) {
 	try {
 		findLua();
 	} catch (e) {
-		console.error(`playtest failed: ${e.message} Run \`polestar doctor\` for the install steps.`);
+		console.error(`playtest failed: ${e.message} Run \`sendafh doctor\` for the install steps.`);
 		return 1;
 	}
 	let stuck = 0;

@@ -334,7 +334,7 @@ function politeClient({ fetchImpl = globalThis.fetch, delayMs = DELAY_MS, retryP
 			last = Date.now();
 			client.requests++;
 			try {
-				const r = await fetchImpl(url, { headers: { 'user-agent': 'Mozilla/5.0 (polestar-codex-build)' }, redirect: 'follow' });
+				const r = await fetchImpl(url, { headers: { 'user-agent': 'Mozilla/5.0 (sendafh-codex-build)' }, redirect: 'follow' });
 				if (r.status === 403 || r.status === 429) {
 					error = `HTTP ${r.status}`;
 					log(`wowhead: ${url}: ${error}; pausing ${(retryPauseMs * (attempt + 1)) / 1000} s`);

@@ -1,7 +1,7 @@
 'use strict';
 // `itemdb build`: Blizzard Classic Era item tables (wago.tools) -> the
-// load-on-demand data addon addon/Polestar_ItemDB (Items.lua + TOC) that
-// Polestar.Gear scores items from. Same inputs give byte-identical output.
+// load-on-demand data addon addon/SendaFH_ItemDB (Items.lua + TOC) that
+// SendaFH.Gear scores items from. Same inputs give byte-identical output.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -11,7 +11,7 @@ const { extractItems, encode } = require('./stats');
 
 const { ROOT, SOURCES } = require('../paths');
 const TABLES = ['ItemSparse', 'Item', 'ItemEffect', 'SpellEffect'];
-const ADDON = 'Polestar_ItemDB';
+const ADDON = 'SendaFH_ItemDB';
 const SCHEMA = 1;
 
 function luaStr(s) {
@@ -28,7 +28,7 @@ function emitLua(items, build) {
 		'-- Entry: "<inventoryType> <itemLevel> <requiredLevel> <quality> <classID> <subclassID>',
 		'-- [<stat><n> ...] [dmin<n> dmax<n> speed<ms>] [cls<classMask>] [uniq1]"; mpr = mp5, hpr = hp5.',
 		'',
-		'local DB = Polestar and Polestar.ItemDB',
+		'local DB = SendaFH and SendaFH.ItemDB',
 		'if not (DB and DB.Register) then return end',
 		'',
 		`DB.Register({ schema = ${SCHEMA}, build = ${luaStr(build)}, count = ${items.length} }, {`,
@@ -43,14 +43,14 @@ function emitLua(items, build) {
 function emitToc(version, files = ['Items.lua']) {
 	return [
 		'## Interface: 16001',
-		'## Title: Polestar Item Data',
-		'## Notes: Item stats for Polestar\'s gear advice. Loaded on demand.',
-		'## Author: Polestar',
+		'## Title: SendaFH Item Data',
+		'## Notes: Item stats for SendaFH\'s gear advice. Loaded on demand.',
+		'## Author: SendaFH',
 		'## X-License: GPL-3.0-only',
 		`## Version: ${version}`,
 		'## Category: Quests',
 		'## LoadOnDemand: 1',
-		'## Dependencies: Polestar',
+		'## Dependencies: SendaFH',
 		'',
 		...files,
 		'',

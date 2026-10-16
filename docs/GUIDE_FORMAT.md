@@ -1,11 +1,11 @@
-# Polestar guide format (v1)
+# SendaFH guide format (v1)
 
 Every line of the format on one page, with an example each:
 [GUIDE_CHEATSHEET.md](GUIDE_CHEATSHEET.md). This page has the full rules.
 
-Guides are written as `.guide` text files in a guide pack (Polestar's own:
+Guides are written as `.guide` text files in a guide pack (SendaFH's own:
 `guides/`; a community pack: any folder holding a `pack.json`, see
-[PACKS.md](PACKS.md)) and compiled to Lua by `node tools/polestar.js compile`.
+[PACKS.md](PACKS.md)) and compiled to Lua by `node tools/sendafh.js compile`.
 The compiler fills in names, titles and coordinates from the reference data in
 `data/forever/`, so a line can be as short as `accept 783`. Anything you write
 explicitly wins over the data. Without the reference data the compiler stops
@@ -58,7 +58,7 @@ Every line before the first `step`.
 
 | Key | Required | Value |
 |---|---|---|
-| `guide` | yes, first line | id: `[a-z0-9_-]+` parts joined by single `/` (none leading or trailing), unique across all guides; it starts with the pack's id and `/` (`joe-routes/elwynn`; Polestar's own guides: `forever/`) |
+| `guide` | yes, first line | id: `[a-z0-9_-]+` parts joined by single `/` (none leading or trailing), unique across all guides; it starts with the pack's id and `/` (`joe-routes/elwynn`; SendaFH's own guides: `forever/`) |
 | `title` | yes | rest of line |
 | `levels` | yes | `<min>-<max>` |
 | `zone` | yes | default zone: map name from `data/forever/zones.json`, or `map <uiMapID>` |
@@ -130,9 +130,9 @@ A step must contain at least one goal.
 | `talk` | `<npcId>` | |
 | `interact` | `<objectId>` | Click a game object. |
 | `use` | `<itemId> ["Item name"]` | |
-| `sethome` | `"Location"` or `nearest` | Inn location as the game names it (the bind location it reports), e.g. `"Goldshire"`. `sethome nearest` binds at the nearest own-faction inn when the step comes up. Lint warns about a location no inn has (`polestar find --kind inn`). Completes on every client language: binding at the inn's innkeeper, or a bind location the client names as the inn's area (see "Places by ID"). |
+| `sethome` | `"Location"` or `nearest` | Inn location as the game names it (the bind location it reports), e.g. `"Goldshire"`. `sethome nearest` binds at the nearest own-faction inn when the step comes up. Lint warns about a location no inn has (`sendafh find --kind inn`). Completes on every client language: binding at the inn's innkeeper, or a bind location the client names as the inn's area (see "Places by ID"). |
 | `hearth` | `"Location"` | Done when the zone or subzone where you land has that name: an inn's location or the zone it is in, in the client's language when the compiler finds its area ("Places by ID"). Lint warns about any other name. |
-| `getfp` | `"Location"` | Discover a flight path: the flight point's name (`"Stormwind, Elwynn"`) or its part before the comma (`"Stormwind"`). The compiler adds its taxi node, so it completes on every client language ("Places by ID"). Lint warns about a name no flight point has (`polestar find --kind flight`). |
+| `getfp` | `"Location"` | Discover a flight path: the flight point's name (`"Stormwind, Elwynn"`) or its part before the comma (`"Stormwind"`). The compiler adds its taxi node, so it completes on every client language ("Places by ID"). Lint warns about a name no flight point has (`sendafh find --kind flight`). |
 | `fly` | `"Location"` | Take a flight: the flight point's town (`"Stormwind"`), as the flight map picks the node by it. Done when the zone or subzone where you land has that name (in the client's language when the compiler finds its area, "Places by ID"); where the landing area is named differently (`"Stormwind City"`), the goal checks off only through a later goal of its step. Lint warns about a name that is no flight point's town, inn location or zone they are in. |
 | `train` | `[npcId]`, `<Profession> [Rank]`, or `class` | `train First Aid` / `train Mining Expert`: the nearest own-faction trainer of that profession and rank (`Apprentice`, `Journeyman`, `Expert`, `Artisan`; ranks taught by a book or quest point at its vendor or quest giver). Without a rank: the highest rank whose minimum skill (0/50/125/225) the last earlier `skill` (or `craft … until`) target for that profession in the guide reaches, Apprentice when there is none, and always above a rank the guide already trained. `train class`: the nearest trainer of the player's class. Resolved at runtime from the player's faction and position. |
 | `buy` | `<itemId> ["Item name"]` | Use `xN` for quantity. Add `nearest` to send the player to the closest own-faction vendor selling it. |
@@ -153,7 +153,7 @@ or class where it matters) and picks the cheapest by travel time from where the
 player stands, re-deciding on zone changes. Explicit npc ids stay fixed. Profession
 guides should use these forms instead of per-race branches.
 Sources: profession trainers from `professions.json`; class trainers from
-`trainers.json` (`node tools/polestar.js trainers build`: `train <npcId> only <Class>`
+`trainers.json` (`node tools/sendafh.js trainers build`: `train <npcId> only <Class>`
 goals in `guides/`, recorded trainer visits, and a curated list verified against
 `npcs.json`; without the file, the curated list); innkeepers from the `innkeeper`
 and `vendor nearest` from the `repair` role in `npcs.json`; `buy … nearest` from the
@@ -171,7 +171,7 @@ Modifiers, in any order after the positional arguments:
 | `@x,y` or `@ x,y` | Coordinates (0–100) in the current zone. |
 | `map <uiMapID>` | Zone for this goal's `@` coordinates only. |
 | `npc <id>` / `object <id>` / `item <id>` | Explicit entity (e.g. which quest giver). |
-| `quest <id>` / `quest <id>.<objective>` | Quest objective link (1-based objective, numbered in the order the game's quest log lists them; `polestar find <quest id>` prints them). |
+| `quest <id>` / `quest <id>.<objective>` | Quest objective link (1-based objective, numbered in the order the game's quest log lists them; `sendafh find <quest id>` prints them). |
 | `x<N>` | Count. |
 | `"text"` | Display text override (for `goto`: the label). A quoted token directly after the entity id of `kill`, `talk`, `interact`, `train` or `vendor` (like `collect`/`use`/`buy`) names that entity instead, for new Forever content missing from the data. |
 | `r <yards>` | Arrival radius (`goto`, default 8). |
@@ -300,7 +300,7 @@ no route or one ending more than 30 yards above or below it.
 **Places by ID.** The game names places in the player's language
 ("Sombre-Comté" on a French client for "Darkshire") and guides name them in
 English, so the compiler gives a goal that names a place that place's ID, and
-Polestar compares IDs, or names the game gives in the same language:
+SendaFH compares IDs, or names the game gives in the same language:
 
 - `area`: on `sethome`, `hearth`, `fly` and `getfp` the area their location
   names, on `goto` the one its label names, from the client's AreaTable (the
@@ -445,8 +445,8 @@ Warnings:
 - a `|` in text the player sees (`title`, `folder`, `pitch`, `pro`, `con`,
   `author`, step titles and tips, goal texts and notes, quoted names): it
   prints literally in game
-- another pack's Era frame for a map Polestar's guides also use, with other
-  bounds: in game Polestar's wins, so coordinates on that map may be off
+- another pack's Era frame for a map SendaFH's guides also use, with other
+  bounds: in game SendaFH's wins, so coordinates on that map may be off
 - `lint` only, with a simulator world cached in `data/sim` (or `--sim <dir>`): a
   non-`optional` quest goal in a `Leveling` guide on a quest the solo filter
   excludes (dungeon, raid, pvp, rare drop, reputation, repeatable or profession;
@@ -458,7 +458,7 @@ saying how to fix them.
 
 ## Output
 
-`compile` writes the pack's addon folder (Polestar's: `addon/Polestar_Guides/`;
+`compile` writes the pack's addon folder (SendaFH's: `addon/SendaFH_Guides/`;
 another pack's: `dist/<folder>/`): the generated TOC, `Pack.lua`,
 `MapFrames.lua` (Era bounds for referenced maps), `Guides.lua` (one
 `RegisterGuide` per guide, each in its own function) and `LICENSE-DATA.txt`,
@@ -469,7 +469,7 @@ same inputs give byte-identical files.
 ## Cookbook
 
 Worked examples, from guides that lint clean and play to the end. Every id
-here was looked up with `polestar find`; look up yours the same way.
+here was looked up with `sendafh find`; look up yours the same way.
 
 ### Quests: `accept`, `complete`, `collect`, `turnin`
 
@@ -504,7 +504,7 @@ quest with nothing more specific to track.
 A `kill` with `quest Q.O` counts from the quest log; without it the player
 ticks it ("Patterns" below). Kill, collect and interact goals get spawn areas
 from the data, so the arrow leads to the nearest camp.
-`polestar find <quest id>` lists a quest's objectives as
+`sendafh find <quest id>` lists a quest's objectives as
 `7.1 = kill Kobold Vermin x10`: the `7.1` is the `quest 7.1` to write.
 
 ### Places: `goto`, `explore`
@@ -516,7 +516,7 @@ from the data, so the arrow leads to the nearest camp.
 ```
 
 Typed coordinates are in the Era map frame unless the guide says `coords
-live` or the goal says `live`. In game, `/polestar where` gives your own
+live` or the goal says `live`. In game, `/sendafh where` gives your own
 position as `zone map <id>` and `goto <x>,<y> live`, ready to paste, and the
 `@x,y live` form for any other goal.
 
@@ -546,8 +546,8 @@ its entrance), and gotos in steps with `fly` or `hearth`.
   fly "Crossroads"
 ```
 
-Locations are written as the game names them; `polestar find --kind inn` and
-`polestar find --kind flight` list the names (every inn and flight point,
+Locations are written as the game names them; `sendafh find --kind inn` and
+`sendafh find --kind flight` list the names (every inn and flight point,
 with coordinates). `sethome nearest` binds at the nearest inn of the
 player's faction instead.
 
@@ -638,13 +638,13 @@ the way. An elite in a Leveling guide belongs here, with the tip
 
 ### Handing over to our guides
 
-A pack's guide may end by handing over to any of Polestar's guides. Pick one
-its characters can follow: `polestar find --kind guide <zone>` prints each
+A pack's guide may end by handing over to any of SendaFH's guides. Pick one
+its characters can follow: `sendafh find --kind guide <zone>` prints each
 guide's level range and who it is for, and `--race`/`--class` keep only the
 ones such a character can follow:
 
 ```sh
-polestar find --kind guide westfall --race Human
+sendafh find --kind guide westfall --race Human
 #   next forever/alliance/02-westfall  # Westfall (12-17), Alliance
 #   # its next: forever/alliance/03-darkshore
 #   next forever/collectibles/pets/chicken-egg  # Chicken Egg (1-60), Alliance
@@ -659,7 +659,7 @@ guide near the level yours ends at, and put its id in `next`:
 next forever/alliance/02-westfall
 ```
 
-Lint and playtest load Polestar's guides beside yours, so the handover is
+Lint and playtest load SendaFH's guides beside yours, so the handover is
 checked and played: a hand-over that does not land on our guide with
 something to do, or lands on one that does not apply to the character
 (`no Human can follow it`), is reported as stuck at the hand-over. Turn-ins
@@ -711,7 +711,7 @@ step Ready for Westfall
   level 12
 ```
 
-**A bare `kill <npc>`** (no `quest`) is a check-off: Polestar does not count
+**A bare `kill <npc>`** (no `quest`) is a check-off: SendaFH does not count
 the kills, so the player ticks the goal in the guide window, and until they
 do it holds the step, unless it is `optional`. Tie a kill that serves a quest
 to the objective with `quest Q.O` so the quest log counts it.

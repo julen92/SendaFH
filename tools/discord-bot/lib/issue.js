@@ -8,8 +8,8 @@
 // inert first: Discord's mention syntax becomes names, and nothing in it can
 // mention a GitHub user, link another issue, write HTML or forge the marker.
 
-const MARKER = /<!-- polestar-bot (\{[^\n]*?\}) -->/;
-const FOLLOWUP_MARK = '<!-- polestar-bot:followup -->';
+const MARKER = /<!-- sendafh-bot (\{[^\n]*?\}) -->/;
+const FOLLOWUP_MARK = '<!-- sendafh-bot:followup -->';
 
 const COLORS = {
 	discord: '5865F2',
@@ -33,7 +33,7 @@ const LABEL_INFO = {
 // The info for a label the bot may create: known ones, then by prefix.
 function labelInfo(name) {
 	if (LABEL_INFO[name]) return LABEL_INFO[name];
-	if (/^v\d/.test(name)) return { color: COLORS.version, description: 'Polestar version the report came from' };
+	if (/^v\d/.test(name)) return { color: COLORS.version, description: 'SendaFH version the report came from' };
 	if (name.startsWith('guide:')) return { color: COLORS.guide, description: 'Guide the report came from' };
 	if (name.startsWith('locale:')) return { color: COLORS.locale, description: 'Game locale of the report' };
 	if (name.startsWith('released:')) return { color: COLORS.released, description: 'The fix shipped in this release' };
@@ -79,7 +79,7 @@ function fence(text, lang = 'text') {
 }
 
 function marker(data) {
-	return `<!-- polestar-bot ${JSON.stringify(data)} -->`;
+	return `<!-- sendafh-bot ${JSON.stringify(data)} -->`;
 }
 
 // The marker's data from an issue body, or null.
@@ -129,7 +129,7 @@ function labelsFor(report, forumTags = []) {
 
 function summaryTable(d) {
 	const rows = [];
-	rows.push(['Polestar', [d.version, d.stage].filter(Boolean).join(' ')]);
+	rows.push(['SendaFH', [d.version, d.stage].filter(Boolean).join(' ')]);
 	if (d.client) rows.push(['Client', `${d.client} (${d.build}) · ${d.locale}`]);
 	if (d.character) rows.push(['Character', d.character]);
 	if (d.guideId) {

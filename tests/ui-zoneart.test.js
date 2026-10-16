@@ -1,5 +1,5 @@
 'use strict';
-// UI.ZoneArt (addon/Polestar/UI/ZoneArt.lua) against the real Core + Theme + UI
+// UI.ZoneArt (addon/SendaFH/UI/ZoneArt.lua) against the real Core + Theme + UI
 // manifests: the framing (the place lands in the clear stretch of the band,
 // never past the painting's edges), only what the band shows is drawn, and
 // the overlays (UI/ZoneArtOverlays.lua, or the client's explored ones when the
@@ -26,7 +26,7 @@ C_Map.GetMapArtLayerTextures = function() local t = {}; for i = 1, 12 do t[i] = 
 C_Map.GetMapArtID = function(id) return id == 7001 and 9001 or 9999 end
 EXPLORED = {}
 C_MapExplorationInfo = { GetExploredMapTextures = function(id) return EXPLORED end }
-ZA = Polestar.UI.ZoneArt
+ZA = SendaFH.UI.ZoneArt
 ZA.RegisterOverlays("test", { [9001] = { 256, 256,
 	{ 300, 200, 600, 100, 501, 502 },
 	{ 100, 300, 50, 300, 503, 504 },
@@ -54,7 +54,7 @@ end
 function run(script) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()\nstub.login()\n${SETUP}\n${script}`,
 	}).emitted;
 }
@@ -188,9 +188,9 @@ test('no art for the map: the night band, nothing of the painting left showing',
 test('the generated overlay table registers every Forever zone map art, Durotar among them', () => {
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()\nstub.login()
-			local ZA = Polestar.UI.ZoneArt
+			local ZA = SendaFH.UI.ZoneArt
 			local arts, n = 0, 0
 			for _, list in pairs(ZA.overlays) do arts = arts + 1; n = n + #list - 2 end
 			local d = ZA.overlays[2169]

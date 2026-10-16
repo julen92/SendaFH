@@ -1,9 +1,9 @@
 'use strict';
-// Reporting a problem (addon/Polestar/UI/Report.lua): the guide window's bug
-// button, its menu entry and /polestar report open a window that sets the
+// Reporting a problem (addon/SendaFH/UI/Report.lua): the guide window's bug
+// button, its menu entry and /sendafh report open a window that sets the
 // player's words above the details a fix needs, as one report to copy for
-// the Polestar Discord; the sidebars of the hub and the settings, and
-// /polestar discord, give the invite with Discord's mark. Against the real
+// the SendaFH Discord; the sidebars of the hub and the settings, and
+// /sendafh discord, give the invite with Discord's mark. Against the real
 // Core, Theme and UI and the fakes of tests/lua/stub_ui.lua.
 
 const { test } = require('node:test');
@@ -11,14 +11,14 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
 const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
-const INVITE = 'https://discord.gg/vMbee6F2e9';
+const INVITE = 'https://discord.gg/qkW5Y8yzk6';
 
 function run(script, before = '') {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before,
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `uistub.install()\nstub.login()\nlocal GF, UI = Polestar.UI.GuideFrame, Polestar.UI\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `uistub.install()\nstub.login()\nlocal GF, UI = SendaFH.UI.GuideFrame, SendaFH.UI\n${script}`,
 	}).emitted;
 }
 
@@ -26,13 +26,13 @@ const lineWith = (text, needle) => text.split('\n').find((l) => l.includes(needl
 
 test('the bug in the navigator reports the step on screen: the player\'s words, then the guide, the step, each goal\'s state, ids and position, the arrow and the versions', () => {
 	const [out] = run(`
-		Polestar.Engine.SetGuide(nil)
+		SendaFH.Engine.SetGuide(nil)
 		local noGuide = GF.parts.nav.Report:IsShown()
 		uistub.setGuide(uistub.elwynn, 3)
 		local nav = GF.parts.nav
 		local shown = nav.Report:IsShown()
 		nav.Report:Click()
-		local F = PolestarReport
+		local F = SendaFHReport
 		local opened = { shown = F:IsShown(), typing = stub.focus == F.Desc, context = F.Context:GetText() }
 		F.Desc:SetText("The vermin were all by the tents.")
 		stub.RunScript(F.Desc, "OnTextChanged", true)
@@ -44,7 +44,7 @@ test('the bug in the navigator reports the step on screen: the player\'s words, 
 		for _, b in ipairs({ F:GetChildren() }) do if b.psText and b:IsShown() then reportCopies = reportCopies + 1 end end
 		F.Invite:Click()
 		emit({ noGuide = noGuide, shown = shown, opened = opened, text = text, selected = selected, copies = reportCopies,
-			invite = { shown = PolestarCopy:IsShown(), text = PolestarCopy.Box:GetText(), focus = stub.focus == PolestarCopy.Box }, boxH = boxH })`);
+			invite = { shown = SendaFHCopy:IsShown(), text = SendaFHCopy.Box:GetText(), focus = stub.focus == SendaFHCopy.Box }, boxH = boxH })`);
 	assert.equal(out.noGuide, false, 'no guide, no step to report: the bug is not there');
 	assert.equal(out.shown, true);
 	assert.deepEqual(out.opened, { shown: true, typing: true, context: 'Step 3 of 8  \u00b7  Kobold Camp  \u00b7  Elwynn Forest' });
@@ -65,7 +65,7 @@ test('the bug in the navigator reports the step on screen: the player\'s words, 
 	const who = lineWith(out.text, 'Human Warrior');
 	assert.ok(who.includes('level 4') && who.includes('Alliance'), who);
 	const versions = lineWith(out.text, 'client ');
-	assert.ok(versions.startsWith('Polestar ') && versions.includes('client 1.60.1 (70338)') && versions.endsWith('enUS'), versions);
+	assert.ok(versions.startsWith('SendaFH ') && versions.includes('client 1.60.1 (70338)') && versions.endsWith('enUS'), versions);
 	assert.ok(lines.includes('Errors: none'), out.text);
 	assert.equal(out.selected, true, 'Select report puts the report in focus, selected for Ctrl+C');
 	assert.equal(out.copies, 1, 'one thing to copy in the window: the report (a member needs no invite)');
@@ -83,10 +83,10 @@ test('at its longest the report still fits one Discord message', () => {
 		end
 		local id = "test/" .. string.rep("long-", 20)
 		uistub.guides[id] = { id = id, pack = "guides", title = long, faction = "Alliance", minLevel = 1, maxLevel = 60, steps = { { title = long, goals = goals } } }
-		for i = 1, 6 do Polestar.NoteError("Interface/AddOns/Polestar/UI/" .. string.rep("Long", 12) .. i .. ".lua:1: " .. long) end
+		for i = 1, 6 do SendaFH.NoteError("Interface/AddOns/SendaFH/UI/" .. string.rep("Long", 12) .. i .. ".lua:1: " .. long) end
 		uistub.setGuide(id, 1)
 		UI.ShowReport()
-		local F = PolestarReport
+		local F = SendaFHReport
 		F.Desc:SetText(string.rep("w", UI.Report.DESC_MAX))
 		stub.RunScript(F.Desc, "OnTextChanged", true)
 		emit({ text = F.Box:GetText() })`);
@@ -97,27 +97,27 @@ test('at its longest the report still fits one Discord message', () => {
 	assert.equal((out.text.match(/^ {2}1x /gm) || []).length, 3, 'the newest three errors');
 });
 
-test('errors Polestar caught come with the report, counted, by their path from the AddOns folder; !BugGrabber adds the session\'s errors in Polestar\'s files', () => {
+test('errors SendaFH caught come with the report, counted, by their path from the AddOns folder; !BugGrabber adds the session\'s errors in SendaFH\'s files', () => {
 	const [out] = run(`
-		Polestar.On("TEST_FAIL", function() error("Interface/AddOns/Polestar/UI/GuideFrame.lua:12: attempt to index a nil value", 0) end)
-		pcall(Polestar.Fire, "TEST_FAIL")
-		pcall(Polestar.Fire, "TEST_FAIL")
+		SendaFH.On("TEST_FAIL", function() error("Interface/AddOns/SendaFH/UI/GuideFrame.lua:12: attempt to index a nil value", 0) end)
+		pcall(SendaFH.Fire, "TEST_FAIL")
+		pcall(SendaFH.Fire, "TEST_FAIL")
 		BugGrabber = {
 			GetSessionId = function() return 7 end,
 			GetDB = function() return {
-				{ message = "Interface/AddOns/Polestar/Nav/Arrow.lua:40: bad argument", counter = 3, session = 7 },
+				{ message = "Interface/AddOns/SendaFH/Nav/Arrow.lua:40: bad argument", counter = 3, session = 7 },
 				{ message = "Interface/AddOns/OtherAddon/Main.lua:1: not ours", counter = 1, session = 7 },
-				{ message = "Interface/AddOns/Polestar/Old.lua:1: an earlier session", counter = 1, session = 6 },
-				{ message = "Interface/AddOns/Polestar/UI/GuideFrame.lua:12: attempt to index a nil value", counter = 2, session = 7 },
+				{ message = "Interface/AddOns/SendaFH/Old.lua:1: an earlier session", counter = 1, session = 6 },
+				{ message = "Interface/AddOns/SendaFH/UI/GuideFrame.lua:12: attempt to index a nil value", counter = 2, session = 7 },
 			} end,
 		}
 		uistub.setGuide(uistub.elwynn, 3)
 		UI.ShowReport()
-		emit({ text = PolestarReport.Box:GetText() })`);
+		emit({ text = SendaFHReport.Box:GetText() })`);
 	const errors = out.text.split('\n').filter((l) => l.startsWith('  '));
 	assert.deepEqual(errors, [
-		'  2x Polestar/UI/GuideFrame.lua:12: attempt to index a nil value',
-		'  3x Polestar/Nav/Arrow.lua:40: bad argument',
+		'  2x SendaFH/UI/GuideFrame.lua:12: attempt to index a nil value',
+		'  3x SendaFH/Nav/Arrow.lua:40: bad argument',
 	]);
 });
 
@@ -125,7 +125,7 @@ test('what the player typed stays while it is the same step; a report on another
 	const [out] = run(`
 		uistub.setGuide(uistub.elwynn, 3)
 		UI.ShowReport()
-		local F = PolestarReport
+		local F = SendaFHReport
 		F.Desc:SetText("Half typed")
 		stub.RunScript(F.Desc, "OnTextChanged", true)
 		F:Hide()
@@ -139,23 +139,23 @@ test('what the player typed stays while it is the same step; a report on another
 	assert.deepEqual(out.other, { text: '', placeholder: true, report: '**What went wrong:** (not described)' });
 });
 
-test('the guide window\'s menu and /polestar report open it too; Escape closes it', () => {
+test('the guide window\'s menu and /sendafh report open it too; Escape closes it', () => {
 	const [out] = run(`
 		uistub.setGuide(uistub.elwynn, 3)
 		GF.menuButton:Click()
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Report a problem" then r:Click() end end
-		local fromMenu = PolestarReport:IsShown()
-		PolestarReport:Hide()
-		SlashCmdList.POLESTAR("report")
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Report a problem" then r:Click() end end
+		local fromMenu = SendaFHReport:IsShown()
+		SendaFHReport:Hide()
+		SlashCmdList.SENDAFH("report")
 		local special = false
-		for _, name in ipairs(UISpecialFrames) do if name == "PolestarReport" then special = true end end
-		emit({ fromMenu = fromMenu, fromCommand = PolestarReport:IsShown(), special = special })`);
+		for _, name in ipairs(UISpecialFrames) do if name == "SendaFHReport" then special = true end end
+		emit({ fromMenu = fromMenu, fromCommand = SendaFHReport:IsShown(), special = special })`);
 	assert.deepEqual(out, { fromMenu: true, fromCommand: true, special: true });
 });
 
-test('the hub and the settings carry the Polestar Discord at the foot of the sidebar: Discord\'s mark in its own colour, the invite selected on a click', () => {
+test('the hub and the settings carry the SendaFH Discord at the foot of the sidebar: Discord\'s mark in its own colour, the invite selected on a click', () => {
 	const [out] = run(`
-		local T = Polestar.Theme
+		local T = SendaFH.Theme
 		local function mark(f)
 			local b = f.Discord
 			stub.RunScript(b, "OnEnter")
@@ -164,23 +164,23 @@ test('the hub and the settings carry the Polestar Discord at the foot of the sid
 			return { texture = b.Icon:GetTexture():match("([%w-]+)$"), color = { r, g, bl }, shown = b:IsShown() }
 		end
 		local function invite()
-			return { shown = PolestarCopy:IsShown(), text = PolestarCopy.Box:GetText(), focus = stub.focus == PolestarCopy.Box,
-				icon = PolestarCopy.Icon:IsShown() and PolestarCopy.Icon:GetTexture():match("([%w-]+)$") or false }
+			return { shown = SendaFHCopy:IsShown(), text = SendaFHCopy.Box:GetText(), focus = stub.focus == SendaFHCopy.Box,
+				icon = SendaFHCopy.Icon:IsShown() and SendaFHCopy.Icon:GetTexture():match("([%w-]+)$") or false }
 		end
 		UI.ShowPicker()
-		local hub = mark(PolestarPicker)
-		PolestarPicker.Discord:Click()
+		local hub = mark(SendaFHPicker)
+		SendaFHPicker.Discord:Click()
 		local fromHub = invite()
-		PolestarCopy:Hide()
+		SendaFHCopy:Hide()
 		UI.ShowOptions()
-		local settings = mark(PolestarOptions)
-		PolestarCopy:Hide()
-		SlashCmdList.POLESTAR("discord")
+		local settings = mark(SendaFHOptions)
+		SendaFHCopy:Hide()
+		SlashCmdList.SENDAFH("discord")
 		local fromCommand = invite()
 		UI.ShowCopy("Your position", "zone map 1429")
 		local r, g, b = T.Color("discord")
 		emit({ hub = hub, settings = settings, fromHub = fromHub, fromCommand = fromCommand, discord = { r, g, b },
-			after = { icon = PolestarCopy.Icon:IsShown(), text = PolestarCopy.Box:GetText() } })`);
+			after = { icon = SendaFHCopy.Icon:IsShown(), text = SendaFHCopy.Box:GetText() } })`);
 	const mark = { texture: 'discord', color: out.discord, shown: true };
 	assert.deepEqual(out.hub, mark, 'the mark keeps Discord\'s colour, under the cursor too');
 	assert.deepEqual(out.settings, mark);

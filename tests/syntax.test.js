@@ -10,9 +10,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { tocEntries, xmlFiles, ADDONS, ROOT } = require('./helpers/lua');
 
-const ALLOWED_GLOBAL = /^(Polestar|PolestarDB|PolestarCharDB|PolestarRecorderDB|Polestar_NavEngine|PolestarPathData|PolestarNavChokepoints|SLASH_POLESTAR\d+|SLASH_POLESTARREC\d+|SLASH_POLESTARWAY\d+|BINDING_HEADER_POLESTAR|BINDING_NAME_POLESTAR_\w+)$/;
+const ALLOWED_GLOBAL = /^(SendaFH|SendaFHDB|SendaFHCharDB|SendaFHRecorderDB|SendaFH_NavEngine|SendaFHPathData|SendaFHNavChokepoints|SLASH_SENDAFH\d+|SLASH_SENDAFHREC\d+|SLASH_SENDAFHWAY\d+|BINDING_HEADER_SENDAFH|BINDING_NAME_SENDAFH_\w+)$/;
 // Globals one file may write: the TomTom stand-in owns `TomTom` while TomTom is not installed.
-const FILE_GLOBALS = { 'addon/Polestar/Nav/Journey.lua': new Set(['TomTom']) };
+const FILE_GLOBALS = { 'addon/SendaFH/Nav/Journey.lua': new Set(['TomTom']) };
 
 function luac() {
 	for (const bin of [process.env.LUAC, 'luac5.1', 'luac'].filter(Boolean)) {

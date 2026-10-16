@@ -1,4 +1,4 @@
--- A fake world for Nav tests: Polestar.Compat and Polestar.Engine fakes
+-- A fake world for Nav tests: SendaFH.Compat and SendaFH.Engine fakes
 -- (installed just before ADDON_LOADED, after the addon files have run), a
 -- MapCanvas-shaped WorldMapFrame, C_Minimap/C_Map/C_SuperTrack and an
 -- optional TomTom.
@@ -123,7 +123,7 @@ end
 --   an inn, "Testshire Inn", innkeeper 900 at (-500, -700)
 function nav.useTravelWorld(flightYards)
 	flightYards = flightYards or 1700
-	Polestar.Nav.RegisterTravelData({
+	SendaFH.Nav.RegisterTravelData({
 		build = "test",
 		taxi = {
 			{ 1, 0, 0, 790, 9000, 10.5, 50, 1, "West Hold, Testshire" },
@@ -151,23 +151,23 @@ function Engine.GetStepView(i) return nav.engine.views[i] end
 
 function nav.setWaypoint(wp)
 	nav.engine.waypoint = wp
-	Polestar.Fire("WAYPOINT_CHANGED", wp)
+	SendaFH.Fire("WAYPOINT_CHANGED", wp)
 end
 
 function nav.changeStep(i, wp)
 	nav.engine.step = i
 	nav.engine.waypoint = wp
-	Polestar.Fire("STEP_CHANGED", i)
-	Polestar.Fire("WAYPOINT_CHANGED", wp)
+	SendaFH.Fire("STEP_CHANGED", i)
+	SendaFH.Fire("WAYPOINT_CHANGED", wp)
 end
 
 local addonLoaded = stub.addonLoaded
 function stub.addonLoaded(name)
-	if name == "Polestar" and Polestar then
-		Polestar.Compat = Polestar.Compat or Compat
-		Polestar.Engine = Polestar.Engine or Engine
-		if not Polestar.RegisterMapFrames then
-			function Polestar.RegisterMapFrames(t)
+	if name == "SendaFH" and SendaFH then
+		SendaFH.Compat = SendaFH.Compat or Compat
+		SendaFH.Engine = SendaFH.Engine or Engine
+		if not SendaFH.RegisterMapFrames then
+			function SendaFH.RegisterMapFrames(t)
 				for id, b in pairs(t.era or {}) do nav.era[id] = b end
 			end
 		end
@@ -274,11 +274,11 @@ function map.RemoveAllPinsByTemplate(self, template)
 end
 function map.UnregisterPin() end
 
--- Active world map pins of a template (default: Polestar.Pins), sorted by
+-- Active world map pins of a template (default: SendaFH.Pins), sorted by
 -- size (largest first), then layer, then position.
 function nav.pins(template)
 	local out = {}
-	local pool = map.pinPools[template or "PolestarPinsTemplate"]
+	local pool = map.pinPools[template or "SendaFHPinsTemplate"]
 	if not pool then return out end
 	for pin in pool:EnumerateActive() do out[#out + 1] = pin end
 	table.sort(out, function(a, b)

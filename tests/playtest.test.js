@@ -1,5 +1,5 @@
 'use strict';
-// polestar playtest: a pack's guides played to the end for every class they
+// sendafh playtest: a pack's guides played to the end for every class they
 // branch on plus one they never name, with our guides loaded beside them.
 //
 // Needs data/forever and Lua 5.1; skips without them.
@@ -7,7 +7,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { quiet, polestar } = require('./helpers/cli');
+const { quiet, sendafh } = require('./helpers/cli');
 const { tmpdir } = require('./helpers/tmp');
 const { needs } = require('./helpers/data');
 const { findLua } = require('../tools/lib/lua');
@@ -72,7 +72,7 @@ test('a hand-over to one of ours that does not land is stuck at the hand-over; e
 	const { result, out } = await quiet(() => cmd.run(['--pack', path.join(PACKS, 'plays')]));
 	assert.equal(result, 1, out);
 	assert.deepEqual(lines(out).filter((l) => l.startsWith('stuck ')), [
-		'stuck plays/done-on-arrival (Human Warrior) at hand-over to forever/alliance/human/01-elwynn-forest: Polestar did not open it (plays/done-on-arrival stayed open)',
+		'stuck plays/done-on-arrival (Human Warrior) at hand-over to forever/alliance/human/01-elwynn-forest: SendaFH did not open it (plays/done-on-arrival stayed open)',
 	]);
 	assert.match(out, /playtest failed: 2 guides, 3 plays: 1 stuck, 0 failed/);
 });
@@ -127,7 +127,7 @@ test('missing reference data is an error naming data build, not a stuck or empty
 	const empty = tmpdir();
 	const r = await quiet(() => cmd.run(['--pack', path.join(PACKS, 'plays'), '--data', empty, '--context-data', empty]));
 	assert.equal(r.result, 1, r.out);
-	assert.match(r.out, /error: reference data missing quests\.json.*: run node tools\/polestar\.js data build/);
+	assert.match(r.out, /error: reference data missing quests\.json.*: run node tools\/sendafh\.js data build/);
 	assert.match(r.out, /playtest failed: no reference data to play against/);
 	assert.doesNotMatch(r.out, /`lint`/);
 	assert.doesNotMatch(r.out, /^(ok|stuck) /m);
@@ -135,9 +135,9 @@ test('missing reference data is an error naming data build, not a stuck or empty
 
 test('without Lua 5.1 playtest says so and points to doctor, without a stack trace; exit 1', () => {
 	const bin = tmpdir();
-	const r = polestar(['playtest', path.join(PACKS, 'plays')], { env: { PATH: bin, LUA: path.join(bin, 'no-lua') } });
+	const r = sendafh(['playtest', path.join(PACKS, 'plays')], { env: { PATH: bin, LUA: path.join(bin, 'no-lua') } });
 	assert.equal(r.status, 1, r.stderr);
-	assert.match(r.stderr, /playtest failed: No Lua 5\.1 interpreter found .* Run `polestar doctor` for the install steps\./);
+	assert.match(r.stderr, /playtest failed: No Lua 5\.1 interpreter found .* Run `sendafh doctor` for the install steps\./);
 	assert.doesNotMatch(r.stderr, /\n\s+at /, 'no stack trace');
 });
 

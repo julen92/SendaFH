@@ -42,7 +42,7 @@ function parseVendorStock(text) {
 }
 
 function readJson(file) {
-	if (!fs.existsSync(file)) throw new Error(`${path.relative(process.cwd(), file)} missing (node tools/polestar.js data build)`);
+	if (!fs.existsSync(file)) throw new Error(`${path.relative(process.cwd(), file)} missing (node tools/sendafh.js data build)`);
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 

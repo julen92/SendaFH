@@ -527,7 +527,7 @@ test('convergence rule: no improvement over the last share of evaluations', () =
 });
 
 test('workers give the same result as one thread for a seed', async () => {
-	const root = tmpdir('polestar-sim-');
+	const root = tmpdir('sendafh-sim-');
 	const dirs = syn.writeDataDir(root);
 	const base = { ...dirs, offline: true, extraStarts: syn.START, faction: 'Horde', race: 'Orc', paths: 3000, seed: 9, jobsPerRound: 6, constructions: 2, anneal: 150, benchMs: 0, write: false, bandWidth: 2 };
 	const one = await sim.runCharacter({ ...base, workers: 1 });

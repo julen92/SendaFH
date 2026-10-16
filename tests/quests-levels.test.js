@@ -4,7 +4,7 @@
 // against fakes of the camelot UI (tests/lua/stub_questlog.lua). Added once,
 // never on top of a level the client drew, never when the level is unknown,
 // never when it would wrap an already laid-out title; qol.questLevels off
-// puts back exactly the text Polestar changed.
+// puts back exactly the text SendaFH changed.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -22,7 +22,7 @@ ql.quests[40] = { title = "Abcdefghijklmnopqrstuvwxyzabc", level = 30 } -- fills
 ql.quests[61] = { title = "Old Lore" } -- only the quest database knows its level
 ql.log = { 7, 18, 33 }
 ${setup}`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 local ql, sq = stub.questlog, stub.quests
 local function texts(buttons)
@@ -109,7 +109,7 @@ emit(buttons[1]:GetText())`);
 
 test('greeting titles get the level on show and on a direct refresh, from the quest database when the client has none', () => {
 	const [shown, direct, heights] = run(`
-local Q = Polestar.QuestDB
+local Q = SendaFH.QuestDB
 Q._data.meta = {}
 Q._data.quests[61] = { [Q.F.LEVEL] = 7 }
 emit(texts(ql.greeting({ 18 }, { 7, 61, 33 })))
@@ -151,15 +151,15 @@ ql.updateTracker(7)
 gossip = ql.gossip({ { 7, level = 12 } })
 greet = ql.greeting({}, { 18 })
 ql.detail(7, true)
-Polestar.Set("qol.questLevels", false)
+SendaFH.Set("qol.questLevels", false)
 emit(all())
 ql.updateLog()
 ql.updateTracker(7)
 emit({ logTexts(), ql.trackerText(7) })
-Polestar.Set("qol.questLevels", true)
+SendaFH.Set("qol.questLevels", true)
 emit(all())
-Polestar.Set("qol.questLevels", false)
-Polestar.ResetSettings("qol")
+SendaFH.Set("qol.questLevels", false)
+SendaFH.ResetSettings("qol")
 emit(all())`);
 	const plain = [
 		['Kobold Camp Cleanup', 'Gathering Wood', 'Mystery Errand'],
@@ -185,7 +185,7 @@ test('turning it off leaves a level the client drew itself', () => {
 	const [log] = run(
 		`
 ql.updateLog()
-Polestar.Set("qol.questLevels", false)
+SendaFH.Set("qol.questLevels", false)
 emit(logTexts())`,
 		{ setup: 'ql.native = true' },
 	);
@@ -201,7 +201,7 @@ emit(texts(ql.gossip({ { 33, level = 99 }, { 4242, level = 3 } })))`);
 	assert.deepEqual(list, ['|cff000000Mystery Errand|r', '|cff000000Hidden|r']);
 });
 
-test('a tracker that loads after Polestar is hooked on its ADDON_LOADED', () => {
+test('a tracker that loads after SendaFH is hooked on its ADDON_LOADED', () => {
 	const [before, after] = run(
 		`
 emit(QuestObjectiveTracker == nil)

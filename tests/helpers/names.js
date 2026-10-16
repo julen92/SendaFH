@@ -1,7 +1,7 @@
 'use strict';
-// A names addon (Polestar_Names_<locale>, tools/lib/i18n/names.js) built
+// A names addon (SendaFH_Names_<locale>, tools/lib/i18n/names.js) built
 // from a few names, for the addon's tests: the stubbed client loads it when
-// Polestar asks (C_AddOns.LoadAddOn), the way the game loads a
+// SendaFH asks (C_AddOns.LoadAddOn), the way the game loads a
 // load-on-demand addon, and counts every names pack it is asked for in
 // __namesLoads.
 //
@@ -23,7 +23,7 @@ function namesPack(locale, names) {
 	}
 	const files = emitNamesAddon(locale, built, { version: '0.0.0-test', iface: '16001', sources: { ding: null, pf: { dir: null, revision: null } } });
 	const name = `${ADDON_PREFIX}${locale}`;
-	const dir = path.join(tmpdir('polestar-names-'), name);
+	const dir = path.join(tmpdir('sendafh-names-'), name);
 	fs.mkdirSync(dir);
 	for (const [f, text] of Object.entries(files)) fs.writeFileSync(path.join(dir, f), text);
 	const stubLua = `__namesLoads = 0

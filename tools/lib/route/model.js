@@ -35,7 +35,7 @@ function loadData(dir) {
 	for (const name of FILES) {
 		const file = path.join(dir, `${name}.json`);
 		if (!fs.existsSync(file)) {
-			if (name === 'quests' || name === 'npcs') throw new Error(`${file} not found (run \`node tools/polestar.js data build\` or pass --data)`);
+			if (name === 'quests' || name === 'npcs') throw new Error(`${file} not found (run \`node tools/sendafh.js data build\` or pass --data)`);
 			out[name] = {};
 			continue;
 		}

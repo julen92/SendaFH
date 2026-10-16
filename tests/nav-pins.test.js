@@ -1,5 +1,5 @@
 'use strict';
-// Polestar.Pins (addon/Polestar/Nav/Pins.lua): the shared map/minimap pin
+// SendaFH.Pins (addon/SendaFH/Nav/Pins.lua): the shared map/minimap pin
 // service. Real Core/Init.lua + Nav/Nav.xml against tests/lua/stub_nav.lua
 // (map 9000: 20 yd per map percent, origin at its centre; map 9001 on continent 1).
 
@@ -7,10 +7,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
 const PRELUDE = `
-local Pins = Polestar.Pins
+local Pins = SendaFH.Pins
 local nav = stub.nav
 local function at(wx, wy, extra)
 	local m, x, y = nav.mapPoint(wx, wy)
@@ -166,7 +166,7 @@ test('edge clamping is per layer: an edge layer pins far targets to the rim, oth
 
 test('the world map redraws for the map being viewed, converting world, Era-frame and other-map pins', () => {
 	const [out] = run(`
-		Polestar.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
+		SendaFH.RegisterMapFrames({ era = { [9000] = { c = 0, top = 1030, bottom = -970, left = 960, right = -1040 } } })
 		local clicked
 		Pins.SetLayer("maps.taxi", {
 			{ map = 9000, x = 25, y = 75, tooltip = function(tip) tip:SetText("Flight master"); tip:AddLine("known", 1, 1, 1) end,
@@ -215,7 +215,7 @@ test('a pin\'s area draws a disc of its radius in yards under the world map pins
 		})
 		nav.showWorldMap(9000)
 		local r = { pins = #nav.pins() }
-		local areas = nav.pins("PolestarPinsAreaTemplate")
+		local areas = nav.pins("SendaFHPinsAreaTemplate")
 		r.areas = #areas
 		local a = areas[1]
 		r.size = { a.width, a.height }
@@ -225,7 +225,7 @@ test('a pin\'s area draws a disc of its radius in yards under the world map pins
 		local _, _, _, alpha = a.tex:GetVertexColor()
 		r.alpha = alpha
 		Pins.SetLayer("quests.objectives", { { map = 9000, x = 40, y = 40 } })
-		r.cleared = #nav.pins("PolestarPinsAreaTemplate")
+		r.cleared = #nav.pins("SendaFHPinsAreaTemplate")
 		emit(r)`);
 	assert.equal(out.pins, 2);
 	assert.equal(out.areas, 1);
@@ -270,7 +270,7 @@ test('a layer with minimapAreas draws its areas on the minimap too, cut at the r
 		r.squareMask = { mask.texture, math.floor(mask.width + 0.5) }
 		GetMinimapShape = nil
 		nav.showWorldMap(9000)
-		r.world = { #nav.pins("PolestarPinsAreaTemplate"), #nav.pins() }
+		r.world = { #nav.pins("SendaFHPinsAreaTemplate"), #nav.pins() }
 		Pins.ClearLayer("spawns")
 		stub.advance(0.3)
 		r.cleared = #Pins.GetMinimapAreas("spawns")
@@ -279,7 +279,7 @@ test('a layer with minimapAreas draws its areas on the minimap too, cut at the r
 	assert.equal(out.pins, 0, 'areaOnly: no pin frame');
 	assert.deepEqual(out.quests, [1, 0], 'a layer without minimapAreas keeps its areas on the world map');
 	assert.ok(out.alpha > 0 && out.alpha < 0.5, 'a faint disc');
-	assert.deepEqual(out.mask, ['Interface\\AddOns\\Polestar\\Media\\Nav\\pin-fill', 213], "masked to the round minimap: pin-fill's disc over its width");
+	assert.deepEqual(out.mask, ['Interface\\AddOns\\SendaFH\\Media\\Nav\\pin-fill', 213], "masked to the round minimap: pin-fill's disc over its width");
 	assert.deepEqual(out.moved[0], [0, 0, 42, true], 'the disc follows the player');
 	assert.equal(out.square, 3, "a square minimap's corners reach further");
 	assert.deepEqual(out.squareMask, ['Interface\\Buttons\\WHITE8X8', 140]);
@@ -353,7 +353,7 @@ test('a hull is a region cut from pieces that tile it exactly, with a rim kept t
 		}, { minimapAreas = true })
 		nav.showWorldMap(9000)
 		local r = {}
-		local hulls = nav.pins("PolestarPinsHullTemplate")
+		local hulls = nav.pins("SendaFHPinsHullTemplate")
 		local pin = hulls[1]
 		r.world = { #hulls, #nav.pins(), pin.pinFrameLevelType, pin:IsMouseEnabled() and true or false,
 			pin.normalizedX, pin.normalizedY, pin.width, pin.height, pin.used }
@@ -374,7 +374,7 @@ test('a hull is a region cut from pieces that tile it exactly, with a rim kept t
 		r.stats = Pins.AreaStats()
 		Pins.ClearLayer("spawns")
 		stub.advance(0.3)
-		r.cleared = { #nav.pins("PolestarPinsHullTemplate"), #Pins.GetMinimapHulls("spawns"), rec.texs[1]:IsShown() }
+		r.cleared = { #nav.pins("SendaFHPinsHullTemplate"), #Pins.GetMinimapHulls("spawns"), rec.texs[1]:IsShown() }
 		emit(r)`);
 	const [count, plain, level, mouse, x, y, w, h, used] = out.world;
 	assert.deepEqual([count, plain, level, mouse], [1, 0, 'PIN_FRAME_LEVEL_QUEST_BLOB', false], 'one region under every pin, no pin, no mouse');
@@ -420,7 +420,7 @@ test('world map redraws hand every pin frame back the pin it showed, and no hull
 			pins[#pins + 1] = { c = 0, wx = cx, wy = cy, hull = hull, area = 40, priority = k % 3 }
 		end
 		Pins.SetLayer("spawns", pins)
-		local templates = { "PolestarPinsTemplate", "PolestarPinsHullTemplate", "PolestarPinsAreaTemplate" }
+		local templates = { "SendaFHPinsTemplate", "SendaFHPinsHullTemplate", "SendaFHPinsAreaTemplate" }
 		local function owners()
 			local r, n = {}, 0
 			for _, t in ipairs(templates) do

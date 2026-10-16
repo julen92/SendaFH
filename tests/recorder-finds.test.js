@@ -1,5 +1,5 @@
 'use strict';
-// The recorder's finds (addon/Polestar_Recorder/Finds.lua): rare and
+// The recorder's finds (addon/SendaFH_Recorder/Finds.lua): rare and
 // treasure sightings, kills and loot windows per source, instance entrances
 // and encounters, and the quest frames' rewards, against
 // tests/lua/stub_recorder.lua.
@@ -8,10 +8,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const REC = 'Polestar_Recorder';
+const REC = 'SendaFH_Recorder';
 
 const PRELUDE = `
-local function S() return PolestarRecorderDB.sessions[PolestarRecorderDB.current] end
+local function S() return SendaFHRecorderDB.sessions[SendaFHRecorderDB.current] end
 local function events(kind)
 	local out = {}
 	for _, e in ipairs(S().events) do

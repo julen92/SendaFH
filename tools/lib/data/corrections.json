@@ -1,5 +1,5 @@
 {
-	"_about": "Polestar's own fixes to the merged reference data (data build applies them after QuestieDB, before recordings). One entry per fact, with where the fact comes from. quests: `set` replaces fields. npcs/objects: `set` replaces fields (Forever elite and rare ranks, which QuestieDB's Forever store lacks); `addSpawns` adds { \"<uiMapID>\": { f, pts } } maps the entity lacks (an existing map is replaced). items: `removeDrops` { npc: [ids], object: [ids] } and `removeVendors` [ids] drop wrong sources the pfQuest/QuestieDB union kept. Documented in docs/ARCHITECTURE.md (Reference data, Sources and precedence).",
+	"_about": "SendaFH's own fixes to the merged reference data (data build applies them after QuestieDB, before recordings). One entry per fact, with where the fact comes from. quests: `set` replaces fields. npcs/objects: `set` replaces fields (Forever elite and rare ranks, which QuestieDB's Forever store lacks); `addSpawns` adds { \"<uiMapID>\": { f, pts } } maps the entity lacks (an existing map is replaced). items: `removeDrops` { npc: [ids], object: [ids] } and `removeVendors` [ids] drop wrong sources the pfQuest/QuestieDB union kept. Documented in docs/ARCHITECTURE.md (Reference data, Sources and precedence).",
 	"quests": {
 		"1501": {
 			"set": {
@@ -214,7 +214,7 @@
 					95621
 				]
 			},
-			"note": "Unwelcome Guests (Barrens): Wowhead Forever https://www.wowhead.com/forever/quest=95508 lists one objective \"Assist Walton\" (1), credited by npc=261367 Terry Longdrink (level 19, hostile to the Horde, at The Barrens 41.8,11.4; https://www.wowhead.com/forever/npc=261367), checked 2026-10-13. QuestieDB 1.0.5 has no objectives. Unwelcome Guests comes after Trouble in the Valley 95621: two Wowhead Forever comments on https://www.wowhead.com/forever/quest=95508 back the order, and Polestar's saved variables from the client record Walton's quest window opening without 95508 or 95621 (not offered), checked 2026-10-16. QuestieDB 1.0.5 has no prerequisite."
+			"note": "Unwelcome Guests (Barrens): Wowhead Forever https://www.wowhead.com/forever/quest=95508 lists one objective \"Assist Walton\" (1), credited by npc=261367 Terry Longdrink (level 19, hostile to the Horde, at The Barrens 41.8,11.4; https://www.wowhead.com/forever/npc=261367), checked 2026-10-13. QuestieDB 1.0.5 has no objectives. Unwelcome Guests comes after Trouble in the Valley 95621: two Wowhead Forever comments on https://www.wowhead.com/forever/quest=95508 back the order, and SendaFH's saved variables from the client record Walton's quest window opening without 95508 or 95621 (not offered), checked 2026-10-16. QuestieDB 1.0.5 has no prerequisite."
 		},
 		"95621": {
 			"set": {
@@ -461,13 +461,13 @@
 			"set": {
 				"classes": 2
 			},
-			"note": "As Above, So Below (Hilda the Breaker 246389, Bandarion Keep) is Paladin-only: Mike_'s in-game report (Discord, Polestar 0.2.3, Scourge Mage 11): Polestar marked it 'Not offered by Hilda the Breaker', which it does only when the giver's quest window opened without the quest; warcraft.wiki.gg https://warcraft.wiki.gg/wiki/Hilda_the_Breaker: Hilda the Breaker is a Forsaken paladin trainer at Bandarion Keep, the Undead Paladin hub (checked 2026-10-15). QuestieDB 1.0.5 has no class gate (classes null)."
+			"note": "As Above, So Below (Hilda the Breaker 246389, Bandarion Keep) is Paladin-only: Mike_'s in-game report (Discord, SendaFH 0.2.3, Scourge Mage 11): SendaFH marked it 'Not offered by Hilda the Breaker', which it does only when the giver's quest window opened without the quest; warcraft.wiki.gg https://warcraft.wiki.gg/wiki/Hilda_the_Breaker: Hilda the Breaker is a Forsaken paladin trainer at Bandarion Keep, the Undead Paladin hub (checked 2026-10-15). QuestieDB 1.0.5 has no class gate (classes null)."
 		},
 		"99153": {
 			"set": {
 				"classes": 2
 			},
-			"note": "The One That Got Away (Ephram Barbaro 259190, Bandarion Keep) is Paladin-only: Mike_'s in-game report (Discord, Polestar 0.2.3, Scourge Mage 11): Polestar marked it 'Not offered by Ephram Barbaro', which it does only when the giver's quest window opened without the quest; warcraft.wiki.gg https://warcraft.wiki.gg/wiki/Hilda_the_Breaker: Hilda the Breaker is a Forsaken paladin trainer at Bandarion Keep, the Undead Paladin hub (checked 2026-10-15). QuestieDB 1.0.5 has no class gate (classes null)."
+			"note": "The One That Got Away (Ephram Barbaro 259190, Bandarion Keep) is Paladin-only: Mike_'s in-game report (Discord, SendaFH 0.2.3, Scourge Mage 11): SendaFH marked it 'Not offered by Ephram Barbaro', which it does only when the giver's quest window opened without the quest; warcraft.wiki.gg https://warcraft.wiki.gg/wiki/Hilda_the_Breaker: Hilda the Breaker is a Forsaken paladin trainer at Bandarion Keep, the Undead Paladin hub (checked 2026-10-15). QuestieDB 1.0.5 has no class gate (classes null)."
 		}
 	},
 	"npcs": {

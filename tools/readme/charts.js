@@ -1,5 +1,5 @@
 'use strict';
-// The README's route charts, from the simulator. Scores Polestar's guides
+// The README's route charts, from the simulator. Scores SendaFH's guides
 // in-process under the simulator's model (tools/lib/sim/compare.js, the same
 // scoring as `sim compare`) and writes nothing outside docs/assets/charts:
 //   levels.svg   hours to each level, per faction: the guides and an earlier
@@ -11,7 +11,7 @@
 // (compare() refuses stale results; consensus is checked here), so every
 // number in a chart comes from one world.
 //
-//   node tools/polestar.js readme charts --draft <dir|git rev> [--draft-label <text>] [--sim <dir>] [--guides <dir>]
+//   node tools/sendafh.js readme charts --draft <dir|git rev> [--draft-label <text>] [--sim <dir>] [--guides <dir>]
 //
 // o.draft is the earlier guides to compare against: a guides folder, or a git
 // revision whose guides/ is extracted to a temporary folder (the README uses
@@ -44,7 +44,7 @@ const H = 3600;
 
 function draftGuides(spec) {
 	if (fs.existsSync(spec) && fs.statSync(spec).isDirectory()) return { dir: path.resolve(spec), label: spec, cleanup() {} };
-	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-guides-'));
+	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-guides-'));
 	const tar = execFileSync('git', ['archive', spec, 'guides'], { cwd: ROOT, maxBuffer: 1 << 30 });
 	execFileSync('tar', ['-x', '-C', tmp], { input: tar });
 	const rev = execFileSync('git', ['rev-parse', '--short', spec], { cwd: ROOT, encoding: 'utf8' }).trim();
@@ -84,8 +84,8 @@ async function score(o) {
 					race: c.race,
 					best: series(row(c, 'best')),
 					consensus: cr ? { timeTo: cr.consensusTimeTo, seconds: cr.consensusHours * H } : null,
-					guides: series(row(c, 'polestar')),
-					draft: series(row(p, 'polestar')),
+					guides: series(row(c, 'sendafh')),
+					draft: series(row(p, 'sendafh')),
 				};
 			});
 			for (const s of starts) if (!s.guides || !s.draft) throw new Error(`${faction} ${s.race}: the guides did not score`);
@@ -95,13 +95,13 @@ async function score(o) {
 		prev.cleanup();
 	}
 	const tag = /^v(\d+\.\d+\.\d+)$/.exec(o.draft || '');
-	const draftName = o['draft-label'] || (tag ? `Polestar ${tag[1]}` : 'Earlier guides');
+	const draftName = o['draft-label'] || (tag ? `SendaFH ${tag[1]}` : 'Earlier guides');
 	return { worldHash: hash, draft: prev.label, draftName, factions };
 }
 
 const raceName = (r, faction) => (r === 'Skyborne' ? `Skyborne (${faction})` : r === 'NightElf' ? 'Night Elf' : r);
 
-// A card in Polestar's world: the window ground under a starlit band, the
+// A card in SendaFH's world: the window ground under a starlit band, the
 // title and subtitle at 32/32, a hairline where the content begins.
 function card(o, { W, Hh, title, subtitle, body, legend = '' }) {
 	// Outline the header first: defs() lists only the glyphs placed so far.

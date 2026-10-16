@@ -25,9 +25,9 @@ function packageVersion() {
 	return JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 }
 
-// The whole `## Interface:` value of addon/Polestar/Polestar.toc (a
+// The whole `## Interface:` value of addon/SendaFH/SendaFH.toc (a
 // multi-version line like "11507, 16001" included), copied into every pack's TOC.
-function coreInterface(tocFile = path.join(ROOT, 'addon', 'Polestar', 'Polestar.toc')) {
+function coreInterface(tocFile = path.join(ROOT, 'addon', 'SendaFH', 'SendaFH.toc')) {
 	const m = /^## Interface:\s*(.+?)\s*$/m.exec(fs.readFileSync(tocFile, 'utf8'));
 	if (!m) throw new Error(`${tocFile} has no ## Interface line`);
 	return m[1];
@@ -61,7 +61,7 @@ function findGuideFiles(packDir, includeDrafts = false) {
 function loadProjectData(dataDir, diag) {
 	const data = loadData(dataDir);
 	if (!fs.existsSync(dataDir)) {
-		diag.warn(dataDir, 0, 'reference data not found (run `node tools/polestar.js data build` or pass --data); nothing can be filled in');
+		diag.warn(dataDir, 0, 'reference data not found (run `node tools/sendafh.js data build` or pass --data); nothing can be filled in');
 	} else if (data.missingCore.length) {
 		// professions.json / factions.json are reported where a guide needs them.
 		diag.warn(dataDir, 0, `missing ${data.missingCore.join(', ')}`);
@@ -244,16 +244,16 @@ function writePackDir(outDir, files) {
 	for (const name of Object.keys(files).sort()) fs.writeFileSync(path.join(outDir, name), files[name]);
 }
 
-// Addon folders of the release: always these (Polestar_Nav is committed:
+// Addon folders of the release: always these (SendaFH_Nav is committed:
 // Shortest Path Forever's walking router, `nav vendor`), plus the generated
 // data addons when they have been built (each skipped while its folder or TOC
 // is missing; `pack` refuses a release without the Codex, which Lookup,
 // Dungeons and Rares read: tools/lib/codex/pack.js releaseRefusal), the names
 // addons of each language last (`i18n names`, committed; the client loads only
 // its own).
-const RELEASE_ADDONS = ['Polestar', 'Polestar_Guides', 'Polestar_Nav'];
+const RELEASE_ADDONS = ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav'];
 const RELEASE_DATA_ADDONS = [
-	'Polestar_QuestDB', 'Polestar_ItemDB', 'Polestar_Codex',
+	'SendaFH_QuestDB', 'SendaFH_ItemDB', 'SendaFH_Codex',
 	...LOCALE_CODES.map((l) => `${NAMES_PREFIX}${l}`),
 ];
 

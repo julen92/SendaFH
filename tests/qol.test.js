@@ -1,5 +1,5 @@
 'use strict';
-// Quality of Life (addon/Polestar/QoL): action buttons and their combat
+// Quality of Life (addon/SendaFH/QoL): action buttons and their combat
 // deferral, XP pace and splits, merchant, quest rewards, flight masters,
 // Hearthstone, death helper, questing toggles and the options page.
 // Runs the real Core/Init.lua + Compat + Theme + QoL against tests/lua/stub_qol.lua
@@ -9,12 +9,12 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const FILES = { name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'QoL/QoL.xml'] };
+const FILES = { name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'QoL/QoL.xml'] };
 
 const PRELUDE = `
 local q = stub.qol
-local QoL = Polestar.QoL
-local function set(k, v) Polestar.Set("qol." .. k, v); stub.runTimers() end
+local QoL = SendaFH.QoL
+local function set(k, v) SendaFH.Set("qol." .. k, v); stub.runTimers() end
 local function calls(name)
 	local out = {}
 	for _, c in ipairs(q.calls) do if c[1] == name then out[#out + 1] = c[2] or true end end
@@ -44,7 +44,7 @@ function run(script, opts = {}) {
 test('options: every qol setting is registered, on Questing or Quality of Life, with label and help', () => {
 	const [specs, defaults] = run(`
 		local out = {}
-		for _, spec in ipairs(Polestar.Widgets.OptionsRegistry) do
+		for _, spec in ipairs(SendaFH.Widgets.OptionsRegistry) do
 			if spec.page == "Quality of Life" or spec.page == "Questing" then
 				for _, c in ipairs(spec.controls) do
 					out[#out + 1] = { key = c.key, kind = c.kind, label = c.label, help = c.help, page = spec.page, tab = spec.tab, section = spec.section }
@@ -57,7 +57,7 @@ test('options: every qol setting is registered, on Questing or Quality of Life, 
 			"rewardHighlight", "rewardAutoPick", "flightAutoOpen", "flightHighlight", "deathHelper", "instantQuestText",
 			"skipGossip", "fastLoot", "declineDuels", "repairGuild", "hideErrors", "autoReleasePvP", "declineGuildInvites",
 			"declinePartyStrangers", "acceptPartyFriends", "acceptSummon", "acceptResurrect", "buyGoals", "trainAll",
-			"rewardEquip" }) do keys[k] = Polestar.GetDefault("qol." .. k) end
+			"rewardEquip" }) do keys[k] = SendaFH.GetDefault("qol." .. k) end
 		emit(keys)
 	`);
 	const registered = new Set(specs.filter((c) => c.key).map((c) => c.key.replace(/^qol\./, '')));
@@ -80,7 +80,7 @@ test('options: every qol setting is registered, on Questing or Quality of Life, 
 
 test('quest item button: the current use goal item, else a quest log item, else a usable quest item one of the step\'s open quests handed over', () => {
 	const out = run(`
-		local b = PolestarQuestItemButton
+		local b = SendaFHQuestItemButton
 		q.items[900] = { name = "Torch", classID = 12, spell = 11 }
 		q.items[901] = { name = "Quest Wand", classID = 12 }
 		q.items[902] = { name = "Bag Quest Thing", classID = 12, spell = 12 }
@@ -103,7 +103,7 @@ test('quest item button: the current use goal item, else a quest log item, else 
 		q.addItem(0, 1, 903, 10)
 		q.step({ { t = "kill", target = "Wolf", quest = 5, oi = 1 } })
 		emit({ b:GetAttribute("item") or "nil", b:IsShown() })
-		Polestar.QuestDB = { IsLoaded = function() return true end, HandsOver = function(quest, item) return quest == 5 and item == 902 end }
+		SendaFH.QuestDB = { IsLoaded = function() return true end, HandsOver = function(quest, item) return quest == 5 and item == 902 end }
 		q.step({ { t = "kill", target = "Wolf", quest = 5, oi = 1 } })
 		emit({ b:GetAttribute("item") or "nil", b:IsShown() })
 
@@ -133,7 +133,7 @@ test('quest item button: the current use goal item, else a quest log item, else 
 
 test('secure buttons: changes during combat wait for PLAYER_REGEN_ENABLED; display still updates', () => {
 	const out = run(`
-		local b, t = PolestarQuestItemButton, PolestarTargetButton
+		local b, t = SendaFHQuestItemButton, SendaFHTargetButton
 		q.items[900] = { name = "Torch" }
 		q.items[903] = { name = "Bomb" }
 		q.addItem(0, 1, 900, 1)
@@ -158,9 +158,9 @@ test('secure buttons: a login under combat lockdown (/reload mid-fight) defers e
 		q.items[900] = { name = "Torch" }
 		q.addItem(0, 1, 900, 1)
 		q.step({ { t = "use", item = 900, quest = 7 } })
-		emit({ PolestarQuestItemButton:GetAttribute("item") or "nil", QoL.HasQueued("item:PolestarQuestItemButton") })
+		emit({ SendaFHQuestItemButton:GetAttribute("item") or "nil", QoL.HasQueued("item:SendaFHQuestItemButton") })
 		q.combat(false)
-		emit({ PolestarQuestItemButton:GetAttribute("item"), PolestarQuestItemButton:IsShown(), PolestarTargetButton:IsShown() })
+		emit({ SendaFHQuestItemButton:GetAttribute("item"), SendaFHQuestItemButton:IsShown(), SendaFHTargetButton:IsShown() })
 	`, { before: 'stub.inCombat = true' });
 	assert.deepEqual(out[0], ['nil', true]);
 	assert.deepEqual(out[1], ['item:900', true, false]);
@@ -168,7 +168,7 @@ test('secure buttons: a login under combat lockdown (/reload mid-fight) defers e
 
 test('quest item button: range tint and cooldown follow the item', () => {
 	const [far, near, cd] = run(`
-		local b = PolestarQuestItemButton
+		local b = SendaFHQuestItemButton
 		q.items[900] = { name = "Torch" }
 		q.addItem(0, 1, 900, 1)
 		q.cooldowns[900] = { 50, 10 }
@@ -191,7 +191,7 @@ test('quest item button: range tint and cooldown follow the item', () => {
 
 test('target button: kill targets and QuestDB droppers, preferred name last, each click cycles', () => {
 	const out = run(`
-		local t = PolestarTargetButton
+		local t = SendaFHTargetButton
 		q.step({
 			{ t = "kill", target = "Kobold Vermin", quest = 7, oi = 1 },
 			{ t = "collect", item = 950, itemName = "Candle", quest = 7, oi = 2 },
@@ -199,11 +199,11 @@ test('target button: kill targets and QuestDB droppers, preferred name last, eac
 		})
 		-- no QuestDB yet: kill targets only
 		emit(t:GetAttribute("macrotext"))
-		Polestar.QuestDB = {
+		SendaFH.QuestDB = {
 			IsLoaded = function() return true end,
 			GetObjectiveMobs = function(quest, oi) if quest == 7 and oi == 2 then return { "Kobold Laborer", "Kobold Vermin" } end end,
 		}
-		Polestar.Fire("QUESTDB_LOADED")
+		SendaFH.Fire("QUESTDB_LOADED")
 		stub.runTimers()
 		emit({ t:GetAttribute("type"), t:GetAttribute("macrotext"), t.Label:GetText() })
 		q.click(t, true)   -- key down: no change
@@ -229,7 +229,7 @@ test('target button: kill targets and QuestDB droppers, preferred name last, eac
 
 test('step key: one binding does the step\'s next action, the NPC, the quest item, the mobs or the Hearthstone, in guide order', () => {
 	const out = run(`
-		local s = PolestarStepButton
+		local s = SendaFHStepButton
 		local function now() return { s:GetAttribute("type") or "nil", s:GetAttribute("item") or s:GetAttribute("macrotext") or "nil" } end
 		q.items[900] = { name = "Torch" }
 		q.items[901] = { name = "Quest Wand", classID = 12 }
@@ -292,7 +292,7 @@ test('step key: one binding does the step\'s next action, the NPC, the quest ite
 
 test('step key: the route\'s own goals come before optional ones, and an NPC name with a control character is passed over, never put in the macro', () => {
 	const out = run(`
-		local s = PolestarStepButton
+		local s = SendaFHStepButton
 		local function now() return { s:GetAttribute("type") or "nil", s:GetAttribute("item") or s:GetAttribute("macrotext") or "nil" } end
 		-- an optional accept first: the route's kill takes the key
 		q.step({ { t = "accept", quest = 7, npc = 197, npcName = "Marshal McBride", optional = true }, { t = "kill", target = "Kobold Vermin", quest = 8, oi = 1 } })
@@ -323,12 +323,12 @@ test('step key: the route\'s own goals come before optional ones, and an NPC nam
 test('key bindings: each CLICK binding has its label, and the step key its button from login', () => {
 	const fs = require('node:fs');
 	const path = require('node:path');
-	const xml = fs.readFileSync(path.join(__dirname, '..', 'addon', 'Polestar', 'Bindings.xml'), 'utf8');
+	const xml = fs.readFileSync(path.join(__dirname, '..', 'addon', 'SendaFH', 'Bindings.xml'), 'utf8');
 	const names = [...xml.matchAll(/name="CLICK (\w+):LeftButton"/g)].map((m) => m[1]);
-	assert.ok(names.includes('PolestarStepButton'));
+	assert.ok(names.includes('SendaFHStepButton'));
 	const [r] = runAddon({
 		stubs: ['stub_world.lua'],
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		login: true,
 		script: `
 			local labels = {}
@@ -336,7 +336,7 @@ test('key bindings: each CLICK binding has its label, and the step key its butto
 				local l = _G["BINDING_NAME_CLICK " .. n .. ":LeftButton"]
 				labels[n] = type(l) == "string" and l ~= "" and not l:find("^CLICK ")
 			end
-			emit({ labels = labels, step = PolestarStepButton ~= nil })
+			emit({ labels = labels, step = SendaFHStepButton ~= nil })
 		`,
 	}).emitted;
 	for (const n of names) assert.equal(r.labels[n], true, n + ' has a label');
@@ -345,21 +345,21 @@ test('key bindings: each CLICK binding has its label, and the step key its butto
 
 test('target button: a name with a line break or other control character never reaches the macro, from the guide or from QuestDB (a pack could hide "/run ..." in it)', () => {
 	const out = run(`
-		local t = PolestarTargetButton
+		local t = SendaFHTargetButton
 		q.step({
 			{ t = "kill", target = "Kobold Vermin\\n/run SendMail(\\"Thief\\", \\"x\\", \\"\\")", quest = 7, oi = 1 },
 			{ t = "kill", target = "Kobold Worker\\r/script SetSendMailMoney(1)", quest = 7, oi = 2 },
 		})
 		emit({ t:GetAttribute("macrotext") or "nil", t:IsShown() })
-		Polestar.QuestDB = {
+		SendaFH.QuestDB = {
 			IsLoaded = function() return true end,
 			GetObjectiveMobs = function() return { "Kobold Laborer", "Tunnel Rat\\n/run X()" } end,
 		}
-		Polestar.Fire("QUESTDB_LOADED")
+		SendaFH.Fire("QUESTDB_LOADED")
 		q.step({ { t = "collect", item = 950, itemName = "Candle", quest = 7, oi = 3 } })
 		stub.runTimers()
 		emit(t:GetAttribute("macrotext"))
-		emit(Polestar.QoL.Buttons.TargetMacro({ "Kobold Laborer", "Bad\\n/run X()" }, 2))
+		emit(SendaFH.QoL.Buttons.TargetMacro({ "Kobold Laborer", "Bad\\n/run X()" }, 2))
 	`);
 	assert.deepEqual(out[0], ['nil', false], 'only unsafe names: no macro, no button');
 	assert.equal(out[1], '/targetexact Kobold Laborer');
@@ -368,7 +368,7 @@ test('target button: a name with a line break or other control character never r
 
 test('hearth: button while a hearth goal is open; GetHearth reports bind and cooldown', () => {
 	const out = run(`
-		local h = PolestarHearthButton
+		local h = SendaFHHearthButton
 		q.items[6948] = { name = "Hearthstone" }
 		q.addItem(0, 1, 6948, 1)
 		q.step({ { t = "kill", target = "Wolf" } })
@@ -402,7 +402,7 @@ local function secureClick(self, _, down)
 	if use == nil then use = GetCVarBool("ActionButtonUseKeyDown") end
 	if (down and use) or (not down and not use) then acted = acted + 1 end
 end
-local item, hearth, target = PolestarQuestItemButton, PolestarHearthButton, PolestarTargetButton
+local item, hearth, target = SendaFHQuestItemButton, SendaFHHearthButton, SendaFHTargetButton
 for _, b in ipairs({ item, hearth, target }) do b:SetScript("OnClick", secureClick) end
 local holder = select(2, item:GetPoint(1))
 local R = stub.RunScript
@@ -460,7 +460,7 @@ test('action buttons: a left-drag moves the whole set and never uses the item; c
 			stub.cvars.ActionButtonUseKeyDown = cvar
 			emit({ drag(item, -300, 50), drag(target, -300, 50), mouseClick(item, false), mouseClick(item, true), keyPress(item), attr(item) })
 		end
-		emit({ spot(), PolestarCharDB.qol.buttonPos, slot(item), slot(target) })
+		emit({ spot(), SendaFHCharDB.qol.buttonPos, slot(item), slot(target) })
 
 		-- a hearth goal: the Hearthstone button shows above the item, where the set now is
 		q.step({ { t = "hearth", location = "Goldshire" }, { t = "use", item = 900, quest = 7 } })
@@ -474,7 +474,7 @@ test('action buttons: a left-drag moves the whole set and never uses the item; c
 		q.combat(false)
 
 		QoL.Buttons.ResetPositions()
-		emit({ spot(), PolestarCharDB.qol.buttonPos or false })
+		emit({ spot(), SendaFHCharDB.qol.buttonPos or false })
 	`);
 	assert.deepEqual(out[0], [[true, 0, 'false'], [true, 0, 'false'], 1, 1, [1, 1], 'nil'],
 		'ActionButtonUseKeyDown on: drags act never; clicks once in either order; a key acts on the press; leaving restores nil');
@@ -489,7 +489,7 @@ test('action buttons: a left-drag moves the whole set and never uses the item; c
 
 test('action buttons: the set comes back where it was left after a reload', () => {
 	const [s] = run(`${ACTS} emit(spot())`, {
-		saved: { Polestar: 'PolestarCharDB = { qol = { buttonPos = { "TOPLEFT", "TOPLEFT", 40, -60 } } }' },
+		saved: { SendaFH: 'SendaFHCharDB = { qol = { buttonPos = { "TOPLEFT", "TOPLEFT", 40, -60 } } }' },
 	});
 	assert.deepEqual(s, ['TOPLEFT', 'TOPLEFT', 40, -60]);
 });
@@ -572,8 +572,8 @@ test('xp: level-ups close a split per level in CharState', () => {
 		stub.fire("QUEST_TURNED_IN", 3, 700, 0)
 		q.gainXP(700)                                -- 1100 of 1000: level 11, 100 into it
 		stub.advance(50)
-		local splits = PolestarCharDB.qol.xp.splits
-		emit({ s10 = splits[10], level = PolestarCharDB.qol.xp.level })
+		local splits = SendaFHCharDB.qol.xp.splits
+		emit({ s10 = splits[10], level = SendaFHCharDB.qol.xp.level })
 		local st = QoL.GetXPStats()
 		emit({ level = st.level, xp = st.xp, levelSeconds = math.floor(st.levelSeconds * 1000 + 0.5) / 1000 })
 		-- UnitLevel lagging one event: XP dropped at the same level still closes the level
@@ -582,7 +582,7 @@ test('xp: level-ups close a split per level in CharState', () => {
 		q.xp = 20
 		q.xpMax = 1200
 		stub.fire("PLAYER_XP_UPDATE", "player")
-		emit({ s11 = PolestarCharDB.qol.xp.splits[11] ~= nil, level = PolestarCharDB.qol.xp.level })
+		emit({ s11 = SendaFHCharDB.qol.xp.splits[11] ~= nil, level = SendaFHCharDB.qol.xp.level })
 	`);
 	assert.equal(splits.level, 11);
 	assert.equal(splits.s10.seconds, 300);
@@ -600,7 +600,7 @@ test('xp: tracker off returns nil and prints nothing', () => {
 		set("xpTracker", false)
 		q.gainXP(100)
 		emit(QoL.GetXPStats() == nil)
-		SlashCmdList.POLESTAR("xp")
+		SlashCmdList.SENDAFH("xp")
 		emit(printed("tracker is off"))
 	`);
 	assert.equal(stats, true);
@@ -1184,7 +1184,7 @@ test('rewards: ranking by gear upgrade, else vendor value (stack included)', () 
 // whether the best's hairline is drawn, and whether the mark hangs off the
 // item icon (never over the name).
 const MARKS = `
-local T = Polestar.Theme
+local T = SendaFH.Theme
 local function tint(t)
 	local r, g, b = t:GetVertexColor()
 	local sr, sg, sb = T.Color("success")
@@ -1226,7 +1226,7 @@ test('rewards: a green arrow on every upgrade, the best framed, on the icon; the
 		emit({ best = QoL.Rewards.best, reason = QoL.Rewards.reason, picks = #calls("GetQuestReward") })
 		emit(marks())
 
-		Polestar.Gear = {
+		SendaFH.Gear = {
 			IsEnabled = function() return true end,
 			IsUpgrade = function(link)
 				if link:find("item:13") then return true, 8 end
@@ -1262,7 +1262,7 @@ test('rewards: a disabled Gear module marks no upgrades; a single choice gets it
 		q.items[12] = { name = "Ring", price = 400 }
 		q.choices = { { id = 11 }, { id = 12 } }
 		local on = false
-		Polestar.Gear = { IsEnabled = function() return on end, IsUpgrade = function(link) return link:find("item:11") ~= nil, 5 end }
+		SendaFH.Gear = { IsEnabled = function() return on end, IsUpgrade = function(link) return link:find("item:11") ~= nil, 5 end }
 		q.questComplete(); stub.runTimers()
 		emit(marks())
 		on = true
@@ -1279,7 +1279,7 @@ test('rewards: auto-pick takes the best when on; Shift, quest cost and a disable
 		q.items[11] = { name = "Cloak", price = 120 }
 		q.items[12] = { name = "Ring", price = 400 }
 		q.choices = { { id = 11 }, { id = 12 } }
-		Polestar.Gear = { IsEnabled = function() return false end, IsUpgrade = function() return true, 50 end }
+		SendaFH.Gear = { IsEnabled = function() return false end, IsUpgrade = function() return true, 50 end }
 		set("rewardAutoPick", true)
 		q.questComplete(); stub.runTimers()
 		emit(calls("GetQuestReward"))
@@ -1313,7 +1313,7 @@ const WEAR = `
 		GetQuestReward(i)
 		stub.advance(1)
 	end
-	Polestar.Gear = {
+	SendaFH.Gear = {
 		IsEnabled = function() return true end,
 		IsUpgrade = function(link)
 			if link:find("item:11|", 1, true) then return true, 6, 12.5 end
@@ -1368,7 +1368,7 @@ test('rewards: wearing waits for combat to end; off by default, Shift at the tur
 		turnIn(2, nil, {})
 		emit(#worn())                       -- the gloves are no upgrade
 
-		Polestar.Gear.IsEnabled = function() return false end
+		SendaFH.Gear.IsEnabled = function() return false end
 		turnIn(1)
 		emit(#worn())
 	`);
@@ -1384,7 +1384,7 @@ test('rewards: a turn-in made before anything else sees the panel wears that que
 		set("rewardEquip", true)
 		turnIn(2, nil, {})                  -- the gloves: nothing worn, but this panel offered the boots too
 		q.calls = {}
-		q.early = true                      -- turns in on QUEST_COMPLETE, ahead of Polestar, as automation does
+		q.early = true                      -- turns in on QUEST_COMPLETE, ahead of SendaFH, as automation does
 		offer({ { id = 13 } }, {})          -- the only reward: the belt
 		stub.advance(1)
 		emit(worn())
@@ -1423,7 +1423,7 @@ const GEAR = `
 	local function linkOf(id) return id and ("|Hitem:" .. id .. "|h[" .. ((q.items[id] or {}).name or "?") .. "]|h") end
 	local function idOf(link) return tonumber(link:match("item:(%d+)")) end
 	local function at(slot) return score[q.worn[slot]] or 0 end
-	Polestar.Gear = {
+	SendaFH.Gear = {
 		IsEnabled = function() return true end,
 		Client = { InventoryLink = function(slot) return linkOf(q.worn[slot]) end },
 		GetItemInfo = function(link) local id = idOf(link); return inv[id] and { id = id, inv = inv[id] } end,
@@ -1445,8 +1445,8 @@ const GEAR = `
 			return r
 		end,
 	}
-	Polestar.Gear.IsUpgrade = function(link)
-		local r = Polestar.Gear.CompareToEquipped(link)
+	SendaFH.Gear.IsUpgrade = function(link)
+		local r = SendaFH.Gear.CompareToEquipped(link)
 		return r.delta > 0, r.delta, r.pct
 	end
 `;
@@ -1534,7 +1534,7 @@ test('rewards: a reward that never goes on (its bind confirmation cancelled) hol
 test('rewards: with the real Gear module, a two-hander stays on against a one-hander that wins only with a bag shield, rings end as the best two', () => {
 	const out = runAddon({
 		stubs: ['stub_qol.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'Gear/ItemDB.lua', 'Gear/Weights.lua', 'Gear/SpecData.lua', 'Gear/Gear.lua', 'QoL/QoL.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'Gear/ItemDB.lua', 'Gear/Weights.lua', 'Gear/SpecData.lua', 'Gear/Gear.lua', 'QoL/QoL.xml'] }],
 		before: `
 			local q = stub.qol
 			q.level = 30
@@ -1547,7 +1547,7 @@ test('rewards: with the real Gear module, a two-hander stays on against a one-ha
 		`,
 		login: true,
 		script: PRELUDE + `
-			Polestar.ItemDB.Register({ schema = 1, build = "test" }, {
+			SendaFH.ItemDB.Register({ schema = 1, build = "test" }, {
 				[9032] = "17 22 17 2 2 8 str10 dmin40 dmax60 speed3000",          -- two-hander: 126.9
 				[9033] = "13 22 17 2 2 7 agi3 dmin12 dmax22 speed1800",           -- weak one-hander: 67.6
 				[9034] = "14 30 25 3 4 6 sta20 armor3000",                        -- strong shield: 70
@@ -1610,7 +1610,7 @@ test('rewards: waits for uncached item data before ranking; an upgrade is marked
 		q.items[11] = { name = "Cloak", price = 120 }
 		q.items[12] = { name = "Ring", price = 400, uncached = true }
 		q.choices = { { id = 11 }, { id = 12 } }
-		Polestar.Gear = { IsEnabled = function() return true end, IsUpgrade = function(link) return link:find("item:12") ~= nil, 4 end }
+		SendaFH.Gear = { IsEnabled = function() return true end, IsUpgrade = function(link) return link:find("item:12") ~= nil, 4 end }
 		q.questComplete()
 		stub.runTimers()
 		emit(QoL.Rewards.best or "pending")
@@ -1778,7 +1778,7 @@ test('death: as a ghost the arrow points at the faster choice; resurrection rele
 
 test('death: in metres the advice gives the distances in metres', () => {
 	const [note] = run(`
-		Polestar.Set("nav.distanceUnit", "metres")
+		SendaFH.Set("nav.distanceUnit", "metres")
 		QoL.SetData({ spiritHealers = { { 0, 20, 0, 9000, 50, 49 } }, flightMasters = {} })
 		q.player = { c = 0, wx = 0, wy = 0 }
 		local _, cx, cy = q.mapPoint(0, -400)
@@ -1822,7 +1822,7 @@ test('instant quest text: sets the CVar, restores the player value when turned o
 	assert.equal(absent, true);
 	const [untouched] = run(`emit(stub.cvars.instantQuestText)`, {
 		before: 'stub.cvars.instantQuestText = "0"',
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { qol = { instantQuestText = false } } }' },
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { qol = { instantQuestText = false } } }' },
 	});
 	assert.equal(untouched, '0', 'off: the CVar is never touched');
 });
@@ -2058,7 +2058,7 @@ function coveredDefaults(before, saved) {
 		local o = {}
 		for _, k in ipairs({ ${COVERED_KEYS.map((k) => `"${k}"`).join(', ')} }) do o[k] = QoL.On(k) end
 		o.instantQuestText = QoL.On("instantQuestText")
-		for _, spec in ipairs(Polestar.Widgets.OptionsRegistry) do
+		for _, spec in ipairs(SendaFH.Widgets.OptionsRegistry) do
 			for _, c in ipairs(spec.controls) do if c.key == "qol.sellJunk" then o.help = c.help end end
 		end
 		emit(o)
@@ -2076,12 +2076,12 @@ test('EllesmereUI: overlapping toggles start off while its module is installed a
 	assert.match(loaded.help, /Off by default: EllesmereUI QoL does this too\./);
 
 	const later = coveredDefaults('stub.qol.installed.EllesmereUIQoL = true');
-	assert.equal(later.sellJunk, false, 'enabled but loading after Polestar counts');
+	assert.equal(later.sellJunk, false, 'enabled but loading after SendaFH counts');
 	const disabled = coveredDefaults('stub.qol.installed.EllesmereUIQoL = false');
 	assert.equal(disabled.sellJunk, true, 'installed but disabled does not');
 
 	const mine = coveredDefaults('stub.addonsLoaded.EllesmereUIQoL = true',
-		{ Polestar: 'PolestarDB = { schema = 1, settings = { qol = { sellJunk = true } } }' });
+		{ SendaFH: 'SendaFHDB = { schema = 1, settings = { qol = { sellJunk = true } } }' });
 	assert.equal(mine.sellJunk, true);
 });
 
@@ -2110,12 +2110,12 @@ test('merchant: guild bank first when allowed (no affordability gate, as Blizzar
 test('full addon: QoL loads with every module and creates its buttons at login', () => {
 	const [r] = runAddon({
 		stubs: ['stub_world.lua'],
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		login: true,
 		script: `
-			local st = Polestar.QoL.GetXPStats()
-			emit({ qol = Polestar.QoL ~= nil, item = PolestarQuestItemButton ~= nil, target = PolestarTargetButton ~= nil,
-				hearth = PolestarHearthButton ~= nil, xp = st ~= nil and st.level ~= nil, healers = #Polestar.QoL.data.spiritHealers })
+			local st = SendaFH.QoL.GetXPStats()
+			emit({ qol = SendaFH.QoL ~= nil, item = SendaFHQuestItemButton ~= nil, target = SendaFHTargetButton ~= nil,
+				hearth = SendaFHHearthButton ~= nil, xp = st ~= nil and st.level ~= nil, healers = #SendaFH.QoL.data.spiritHealers })
 		`,
 	}).emitted;
 	assert.deepEqual(r, { qol: true, item: true, target: true, hearth: true, xp: true, healers: r.healers });

@@ -396,7 +396,7 @@ function draftGuide(name, data, opts = {}) {
 				line(`step ${matName(t.item)}`);
 				world();
 				if (need.length === 1) line(`  only ${need[0]}`);
-				line('  tip Kill the mobs that drop it at the farm spot Polestar picks for your level and faction. The Auction House works too.');
+				line('  tip Kill the mobs that drop it at the farm spot SendaFH picks for your level and faction. The Auction House works too.');
 				line(`  collect ${t.item} x${t.count} nearest`);
 				continue;
 			}

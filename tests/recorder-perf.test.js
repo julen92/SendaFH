@@ -1,7 +1,7 @@
 'use strict';
-// Performance budgets for the Recorder (addon/Polestar_Recorder) while it
+// Performance budgets for the Recorder (addon/SendaFH_Recorder) while it
 // records, against the world of tests/lua/stub_recorder.lua: the budgets
-// perf.test.js holds Polestar to, so the Recorder can stay on while a player
+// perf.test.js holds SendaFH to, so the Recorder can stay on while a player
 // plays. Addon time is CPU time inside its event handlers, OnUpdate scripts
 // and C_Timer callbacks (tests/lua/profile.lua).
 //
@@ -43,7 +43,7 @@ const CPU_CLOCK = process.platform !== 'win32';
 // Recording on, the delayed work after login done, and the measuring helpers.
 const PRELUDE = `
 local P = stub.profile
-SlashCmdList.POLESTARREC("on")
+SlashCmdList.SENDAFHREC("on")
 stub.advance(3) -- the delayed work after login
 local out = {}
 local ROUNDS = ${ROUNDS}
@@ -69,7 +69,7 @@ end
 -- percent.
 local refEvents
 local refFrame = CreateFrame("Frame")
-refFrame:RegisterEvent("POLESTAR_TEST_REFERENCE")
+refFrame:RegisterEvent("SENDAFH_TEST_REFERENCE")
 refFrame:SetScript("OnEvent", function(_, _, i)
 	local kind, id = UnitGUID("player"):match("^(%a+)%-[^-]*%-(%x+)")
 	local map = C_Map.GetBestMapForUnit("player")
@@ -84,7 +84,7 @@ local function reference()
 	refEvents = {}
 	collectgarbage("collect")
 	local t = P.total()
-	for i = 1, 4000 do stub.fire("POLESTAR_TEST_REFERENCE", i) end
+	for i = 1, 4000 do stub.fire("SENDAFH_TEST_REFERENCE", i) end
 	return (P.total() - t) / 10
 end
 
@@ -124,7 +124,7 @@ local function burst(key, fire)
 	hold(key, rounds, refs)
 end
 
-local S = PolestarRecorderDB.sessions[PolestarRecorderDB.current]
+local S = SendaFHRecorderDB.sessions[SendaFHRecorderDB.current]
 local function count(kind)
 	local n = 0
 	for _, e in ipairs(S.events) do if e.e == kind then n = n + 1 end end
@@ -135,7 +135,7 @@ end
 function measure(script) {
 	return runAddon({
 		stubs: ['stub_recorder.lua', 'profile.lua'],
-		addons: ['Polestar_Recorder'],
+		addons: ['SendaFH_Recorder'],
 		login: true,
 		before: 'stub.profile.start()',
 		script: `${PRELUDE}\n${script}\nemit(out)`,

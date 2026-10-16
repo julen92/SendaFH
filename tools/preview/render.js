@@ -78,7 +78,7 @@ class TextureCache {
 	load(name) {
 		if (!this.src.has(name)) {
 			const fid = /^fid:(\d+)$/.exec(name);
-			// "Nav/<name>": Polestar's Media/Nav textures (pins, glow, arrow).
+			// "Nav/<name>": SendaFH's Media/Nav textures (pins, glow, arrow).
 			const nav = /^Nav\/([\w-]+)$/.exec(name);
 			const file = fid ? (this.clientArt ? path.join(this.clientArt, `${fid[1]}.tga`) : null)
 				: nav ? path.join(this.dir, '..', 'Nav', nav[1] + '.tga') : path.join(this.dir, name + '.tga');
@@ -255,9 +255,9 @@ function textureName(p) {
 	if (p === null || p === undefined) return null;
 	// A client file id (map tiles, icons): drawn only from a local art cache.
 	if (typeof p === 'number' || /^\d+$/.test(String(p))) return `fid:${p}`;
-	const m = /Polestar\\Media\\UI\\([\w-]+)$/.exec(p);
+	const m = /SendaFH\\Media\\UI\\([\w-]+)$/.exec(p);
 	if (m) return m[1];
-	const nav = /Polestar\\Media\\Nav\\([\w-]+)$/.exec(p);
+	const nav = /SendaFH\\Media\\Nav\\([\w-]+)$/.exec(p);
 	if (nav) return `Nav/${nav[1]}`;
 	if (/WHITE8X8/i.test(p)) return 'white';
 	return null;

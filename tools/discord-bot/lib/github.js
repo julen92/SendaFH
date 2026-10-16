@@ -25,7 +25,7 @@ function createGitHub({ token, repo, api = API, fetch: fetchImpl = fetch }) {
 				Authorization: `Bearer ${token}`,
 				Accept: 'application/vnd.github+json',
 				'X-GitHub-Api-Version': '2022-11-28',
-				'User-Agent': 'polestar-bot',
+				'User-Agent': 'sendafh-bot',
 				'Content-Type': 'application/json',
 			},
 			body: body === undefined ? undefined : JSON.stringify(body),
@@ -120,7 +120,7 @@ function createMedia({ github, repo = github.repo, branch, fetch: fetchImpl = fe
 				} catch (err) {
 					if (err.status !== 404) throw err;
 				}
-				const readme = 'Screenshots copied from the Polestar Discord #bugs forum by tools/discord-bot, so the\n' +
+				const readme = 'Screenshots copied from the SendaFH Discord #bugs forum by tools/discord-bot, so the\n' +
 					'issues keep them after Discord\'s links expire. Nothing here is built or released.\n';
 				const tree = await github.request('POST', `${r}/git/trees`, {
 					tree: [{ path: 'README.md', mode: '100644', type: 'blob', content: readme }],

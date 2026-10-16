@@ -9,7 +9,7 @@ const { validateSoloPolicy } = require('../lib/dsl/validate');
 const { packCommand, buildPack } = require('../lib/pack/build');
 const { worldFile, dataHash } = require('../lib/sim/world');
 
-const usage = `usage: node tools/polestar.js lint [<dir>] [options]
+const usage = `usage: node tools/sendafh.js lint [<dir>] [options]
 
 Runs every compile check (syntax, data lookups, cross-guide validation) on a
 guide pack without writing anything: the pack in <dir> (or --pack), else the nearest
@@ -70,7 +70,7 @@ async function run(argv) {
 	validateSoloPolicy(guides, excluded, diag);
 	printDiagnostics(diag, out);
 	// Another pack: the simulator's world is ours to rebuild, not the pack author's.
-	if (stale.length && pack.official) console.error(`note: solo-filter checks skipped for ${stale.join(' and ')}: the simulator's cached world is from other data or an older builder (\`node tools/polestar.js sim world\` rebuilds it)`);
+	if (stale.length && pack.official) console.error(`note: solo-filter checks skipped for ${stale.join(' and ')}: the simulator's cached world is from other data or an older builder (\`node tools/sendafh.js sim world\` rebuilds it)`);
 	const summary = `${plural(sources.length, 'file')}, ${plural(guides.length, 'guide')}: ${plural(diag.errors.length, 'error')}, ${plural(diag.warnings.length, 'warning')}`;
 	if (out.format !== 'json') {
 		if (diag.hasErrors()) console.error(`lint failed: ${summary}`);

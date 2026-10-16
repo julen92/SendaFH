@@ -148,7 +148,7 @@ local __ns = { Constants = { ${constants} } }
 ForeverDungeonJournal_NS = __ns
 ForeverDungeonJournal = __ns
 for _, p in ipairs({ ${files.map(luaString).join(', ')} }) do
-  local ok, err = __polestar_loaddata(p, ${luaString(FOLDER)}, __ns)
+  local ok, err = __sendafh_loaddata(p, ${luaString(FOLDER)}, __ns)
   if not ok then error(err, 0) end
 end
 __dj = __ns`;

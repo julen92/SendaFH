@@ -1,0 +1,16 @@
+<Bindings>
+	<Binding name="SENDAFH_TOGGLE" header="SENDAFH" category="ADDONS">
+		SendaFH.Bindings.Toggle()
+	</Binding>
+	<Binding name="SENDAFH_NEXT" category="ADDONS">
+		SendaFH.Bindings.Next()
+	</Binding>
+	<Binding name="SENDAFH_PREV" category="ADDONS">
+		SendaFH.Bindings.Prev()
+	</Binding>
+	<Binding name="CLICK SendaFHQuestItemButton:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK SendaFHTargetButton:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK SendaFHHearthButton:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK SendaFHStepButton:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK SendaFHTravelButton:LeftButton" category="ADDONS"/>
+</Bindings>

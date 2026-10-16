@@ -4,7 +4,7 @@ faction Horde
 levels 44-46
 zone Feralas
 next forever/horde/40-50/04-tanaris
-# Route from the Polestar route simulator's Horde consensus (Tauren export),
+# Route from the SendaFH route simulator's Horde consensus (Tauren export),
 # visits 39-43, levels 44-45.9. Checked by lint, not play-tested on Forever
 # yet. Era + known Forever quests only.
 #

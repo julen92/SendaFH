@@ -1,12 +1,12 @@
-# Translating Polestar
+# Translating SendaFH
 
-Polestar follows the game's language: a German client reads Polestar's
+SendaFH follows the game's language: a German client reads SendaFH's
 interface in German, and any text without a translation in English. The
 translation tools are adapted from Ding! by Yendi (@moust4ki), GPL-3.0.
 
 ## Languages
 
-`node tools/polestar.js i18n status` lists every language with how much of it
+`node tools/sendafh.js i18n status` lists every language with how much of it
 is translated (`--markdown` prints the table for the README and release
 notes). The list, with each language's status and translators, is
 `tools/lib/i18n/locales.js`.
@@ -24,7 +24,7 @@ Spain's and Latin America's clients use different words for game terms
 
 ## The file
 
-Each language has one file, `addon/Polestar/Locales/<locale>.lua`:
+Each language has one file, `addon/SendaFH/Locales/<locale>.lua`:
 
 ```lua
 -- German (deDE). ...
@@ -62,7 +62,7 @@ Keep `|4singular:plural;` (translate both forms), `|cAARRGGBB…|r` colours and
 
 ## Game terms and the glossary
 
-Where the game names something itself, Polestar shows the game's word and
+Where the game names something itself, SendaFH shows the game's word and
 there is nothing to translate: reputation standings, item qualities, the
 Alliance and the Horde, gear slots, the Dungeon Journal.
 
@@ -89,22 +89,22 @@ for your language from
 
 ## Commands
 
-- `node tools/polestar.js i18n sync [<locale>...]` adds every text the code
+- `node tools/sendafh.js i18n sync [<locale>...]` adds every text the code
   gained to the file, commented out at the end of its file's group, and moves
   translations of texts the code lost to the block at the end. It never
   changes a line that holds a translation. A language named that has no file
-  gets one, loaded from `addon/Polestar/Core/Core.xml`. Without a locale it
+  gets one, loaded from `addon/SendaFH/Core/Core.xml`. Without a locale it
   updates every existing file.
-- `node tools/polestar.js i18n check [<locale>...]` lists each language's
+- `node tools/sendafh.js i18n check [<locale>...]` lists each language's
   translated and missing counts and fails on a file Lua cannot load, a stale
   key (a translated text the code no longer has, outside the end block), a key
   set twice, or a translation whose formats differ from the English. Missing
   translations are fine. CI runs it (`npm run i18n:check`), and `npm test` runs
   the same checks (`tests/i18n.test.js`).
-- `node tools/polestar.js i18n status` prints the table of languages.
-- `node tools/polestar.js i18n keys` lists every key with the files and lines
+- `node tools/sendafh.js i18n status` prints the table of languages.
+- `node tools/sendafh.js i18n keys` lists every key with the files and lines
   that use it.
-- `node tools/polestar.js i18n import <locale> <file.lua>...` merges
+- `node tools/sendafh.js i18n import <locale> <file.lua>...` merges
   translations written elsewhere: a file that returns
   `{ ["English"] = "translation" }`, sets `L["English"] = "..."`, or calls
   `ns.AddTranslations` (Ding!'s layout). It fills only texts not translated
@@ -114,25 +114,25 @@ for your language from
 
 Write every player-facing text as a literal `L["..."]` (or
 `ns.LC("context", "text")`) where it is used, so `i18n keys` finds it. After
-adding, changing or removing texts, run `node tools/polestar.js i18n sync`
+adding, changing or removing texts, run `node tools/sendafh.js i18n sync`
 and commit the locale files with the change: a stale key fails `npm test`. A
 text looked up through a variable (`L[category]`) must be listed in
 `DATA_KEYS` in `tools/lib/i18n/keys.js`. A game term the client names
 (`ITEM_QUALITY3_DESC`, `FACTION_HORDE`…) is read from the client, not put in
 `L`, and its English value goes in `tests/lua/wow_stub.lua`. Tests that need a
-translated client fake a language Polestar does not ship:
+translated client fake a language SendaFH does not ship:
 `fakeLocale('itIT', { ... })` (`tests/helpers/locale.js`).
 
 ## Game names
 
 Quest, NPC, object and item names are not translated by hand: they are the
 game's own. A client in another language reads them from the client where it
-has them (quest titles, item names) and from Polestar's names addon of its
-language, `Polestar_Names_<locale>` (DingDB's names, by Yendi, then pfQuest's
+has them (quest titles, item names) and from SendaFH's names addon of its
+language, `SendaFH_Names_<locale>` (DingDB's names, by Yendi, then pfQuest's
 for the ones DingDB lacks), loaded only on that client. A name neither has
 stays English. docs/ARCHITECTURE.md, "Names", has the details.
 
-- `node tools/polestar.js i18n names [<locale>...]` rebuilds the addons from
+- `node tools/sendafh.js i18n names [<locale>...]` rebuilds the addons from
   DingDB (cloned into `data/sources/ding` at the commit pinned in
   `tools/lib/i18n/names.js`, every file checked against its sha256) and
   pfQuest's `db/<locale>` (the clone `data build` uses), keeping only the ids
@@ -151,12 +151,12 @@ stays English. docs/ARCHITECTURE.md, "Names", has the details.
 ## Adding a language
 
 Add it to `LOCALES` in `tools/lib/i18n/locales.js` with its status and
-translators (and to `ns.AI_LOCALES` in `addon/Polestar/Core/Init.lua` when its
-status is `ai`), then run `node tools/polestar.js i18n sync <locale>`.
+translators (and to `ns.AI_LOCALES` in `addon/SendaFH/Core/Init.lua` when its
+status is `ai`), then run `node tools/sendafh.js i18n sync <locale>`.
 
 ## Reviewing an AI-made language
 
 Play with it, correct what reads wrong, and open a pull request that also
 sets its `status` to `"reviewed"` with your name in `translators`
 (`tools/lib/i18n/locales.js`) and removes it from `ns.AI_LOCALES`
-(`addon/Polestar/Core/Init.lua`).
+(`addon/SendaFH/Core/Init.lua`).

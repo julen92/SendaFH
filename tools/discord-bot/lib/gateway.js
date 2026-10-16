@@ -63,7 +63,7 @@ function createGateway({ token, url, onDispatch, onFatal, log = console, WebSock
 		send(OP.IDENTIFY, {
 			token,
 			intents: INTENTS,
-			properties: { os: process.platform, browser: 'polestar-bot', device: 'polestar-bot' },
+			properties: { os: process.platform, browser: 'sendafh-bot', device: 'sendafh-bot' },
 		});
 	}
 

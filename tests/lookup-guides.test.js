@@ -68,12 +68,12 @@ ${MAPS}
 w.level = ${level}
 w.moveTo(${HOME}, 50, 50)
 ${setup}`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 stub.login()
-Polestar.Set("behavior.autoNextGuide", false)
-local id, why = Polestar.Lookup.Guide(${luaValue(kind)}, ${luaValue(id)})
-local g = id and Polestar.Guides.Get(id)
+SendaFH.Set("behavior.autoNextGuide", false)
+local id, why = SendaFH.Lookup.Guide(${luaValue(kind)}, ${luaValue(id)})
+local g = id and SendaFH.Guides.Get(id)
 local steps = {}
 if g then
 	for i, s in ipairs(g.steps) do
@@ -82,7 +82,7 @@ if g then
 		steps[i] = { title = s.title, goals = table.concat(verbs, " ") }
 	end
 end
-emit({ id = id or false, why = why or false, active = Polestar.Engine.GetGuide() and Polestar.Engine.GetGuide().id or false, steps = steps })
+emit({ id = id or false, why = why or false, active = SendaFH.Engine.GetGuide() and SendaFH.Engine.GetGuide().id or false, steps = steps })
 stub.advance(0.6)
 ${SIMULATE}`,
 	}).emitted;

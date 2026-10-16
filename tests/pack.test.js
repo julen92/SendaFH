@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { GUIDES_DIR, DATA_DIR } = require('./helpers/dsl');
-const { quiet, fakeAddons, polestar } = require('./helpers/cli');
+const { quiet, fakeAddons, sendafh } = require('./helpers/cli');
 const { tmpdir } = require('./helpers/tmp');
 const pack = require('../tools/commands/pack');
 const { buildZip, writeZip, readZip, directoryEntries, crc32 } = require('../tools/lib/zip');
@@ -23,23 +23,23 @@ function python(...args) {
 
 const hasPython = spawnSync('python3', ['--version']).status === 0;
 
-// The release always holds Polestar_Nav (committed) and a release-safe Codex (`codex build`).
-const RELEASE = ['Polestar', 'Polestar_Guides', 'Polestar_Nav', 'Polestar_Recorder', 'Polestar_Codex'];
+// The release always holds SendaFH_Nav (committed) and a release-safe Codex (`codex build`).
+const RELEASE = ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav', 'SendaFH_Recorder', 'SendaFH_Codex'];
 
-test('pack zips Polestar + Polestar_Guides + Polestar_Nav + Polestar_Codex and the recorder separately, reproducibly', { skip: !hasPython && 'python3 not installed' }, async () => {
+test('pack zips SendaFH + SendaFH_Guides + SendaFH_Nav + SendaFH_Codex and the recorder separately, reproducibly', { skip: !hasPython && 'python3 not installed' }, async () => {
 	const addons = fakeAddons(tmpdir(), RELEASE);
 	const zips = [];
 	for (const n of [1, 2]) {
 		const dist = tmpdir();
 		const { result, out } = await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', addons, '--dist', dist]));
 		assert.equal(result, 0, out);
-		assert.deepEqual(fs.readdirSync(dist).sort(), [`Polestar-${VERSION}.zip`, `Polestar_Recorder-${VERSION}.zip`, 'SHA256SUMS']);
+		assert.deepEqual(fs.readdirSync(dist).sort(), [`SendaFH-${VERSION}.zip`, `SendaFH_Recorder-${VERSION}.zip`, 'SHA256SUMS']);
 		zips.push(dist);
 	}
-	for (const f of [`Polestar-${VERSION}.zip`, `Polestar_Recorder-${VERSION}.zip`, 'SHA256SUMS']) {
+	for (const f of [`SendaFH-${VERSION}.zip`, `SendaFH_Recorder-${VERSION}.zip`, 'SHA256SUMS']) {
 		assert.ok(fs.readFileSync(path.join(zips[0], f)).equals(fs.readFileSync(path.join(zips[1], f))), `${f} differs between runs`);
 	}
-	const list = python('-l', path.join(zips[0], `Polestar-${VERSION}.zip`));
+	const list = python('-l', path.join(zips[0], `SendaFH-${VERSION}.zip`));
 	assert.equal(list.status, 0, list.stderr);
 	const names = list.stdout
 		.split('\n')
@@ -47,51 +47,51 @@ test('pack zips Polestar + Polestar_Guides + Polestar_Nav + Polestar_Codex and t
 		.map((l) => l.split(/\s+\d{4}-\d\d-\d\d /)[0].trim())
 		.filter(Boolean);
 	assert.deepEqual(names, [
-		'Polestar/',
-		'Polestar/LICENSE',
-		'Polestar/README.txt',
-		'Polestar/Main.lua',
-		'Polestar/Polestar.toc',
-		'Polestar_Guides/',
-		'Polestar_Guides/Guides.lua',
-		'Polestar_Guides/LICENSE-DATA.txt',
-		'Polestar_Guides/MapFrames.lua',
-		'Polestar_Guides/Pack.lua',
-		'Polestar_Guides/Polestar_Guides.toc',
-		'Polestar_Nav/',
-		'Polestar_Nav/Main.lua',
-		'Polestar_Nav/Polestar_Nav.toc',
-		'Polestar_Codex/',
-		'Polestar_Codex/LICENSE-DATA.txt',
-		'Polestar_Codex/Main.lua',
-		'Polestar_Codex/Meta.lua',
-		'Polestar_Codex/Polestar_Codex.toc',
+		'SendaFH/',
+		'SendaFH/LICENSE',
+		'SendaFH/README.txt',
+		'SendaFH/Main.lua',
+		'SendaFH/SendaFH.toc',
+		'SendaFH_Guides/',
+		'SendaFH_Guides/Guides.lua',
+		'SendaFH_Guides/LICENSE-DATA.txt',
+		'SendaFH_Guides/MapFrames.lua',
+		'SendaFH_Guides/Pack.lua',
+		'SendaFH_Guides/SendaFH_Guides.toc',
+		'SendaFH_Nav/',
+		'SendaFH_Nav/Main.lua',
+		'SendaFH_Nav/SendaFH_Nav.toc',
+		'SendaFH_Codex/',
+		'SendaFH_Codex/LICENSE-DATA.txt',
+		'SendaFH_Codex/Main.lua',
+		'SendaFH_Codex/Meta.lua',
+		'SendaFH_Codex/SendaFH_Codex.toc',
 	]);
-	assert.equal(python('-t', path.join(zips[0], `Polestar-${VERSION}.zip`)).status, 0);
-	const rec = python('-l', path.join(zips[0], `Polestar_Recorder-${VERSION}.zip`));
-	assert.match(rec.stdout, /Polestar_Recorder\/Polestar_Recorder\.toc/);
-	assert.match(rec.stdout, /Polestar_Recorder\/LICENSE /);
+	assert.equal(python('-t', path.join(zips[0], `SendaFH-${VERSION}.zip`)).status, 0);
+	const rec = python('-l', path.join(zips[0], `SendaFH_Recorder-${VERSION}.zip`));
+	assert.match(rec.stdout, /SendaFH_Recorder\/SendaFH_Recorder\.toc/);
+	assert.match(rec.stdout, /SendaFH_Recorder\/LICENSE /);
 	assert.doesNotMatch(rec.stdout + list.stdout, /\.hidden/);
 });
 
-test('the Polestar folder in the zip carries the GPL and install steps naming every folder shipped', async () => {
-	const addons = fakeAddons(tmpdir(), [...RELEASE, 'Polestar_QuestDB', 'Polestar_ItemDB']);
+test('the SendaFH folder in the zip carries the GPL and install steps naming every folder shipped', async () => {
+	const addons = fakeAddons(tmpdir(), [...RELEASE, 'SendaFH_QuestDB', 'SendaFH_ItemDB']);
 	const dist = tmpdir();
 	const { result, out } = await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', addons, '--dist', dist]));
 	assert.equal(result, 0, out);
-	const files = Object.fromEntries(readZip(path.join(dist, `Polestar-${VERSION}.zip`)).map((e) => [e.name, e.data]));
-	assert.ok(files['Polestar/LICENSE'].equals(fs.readFileSync(path.join(ROOT, 'LICENSE'))));
-	const readme = files['Polestar/README.txt'].toString('utf8');
-	assert.match(readme, new RegExp(`^Polestar ${VERSION.replace(/\./g, '\\.')}\r\n`));
+	const files = Object.fromEntries(readZip(path.join(dist, `SendaFH-${VERSION}.zip`)).map((e) => [e.name, e.data]));
+	assert.ok(files['SendaFH/LICENSE'].equals(fs.readFileSync(path.join(ROOT, 'LICENSE'))));
+	const readme = files['SendaFH/README.txt'].toString('utf8');
+	assert.match(readme, new RegExp(`^SendaFH ${VERSION.replace(/\./g, '\\.')}\r\n`));
 	assert.match(readme, /_forever_\/Interface\/AddOns\//);
 	assert.match(readme, /\/reload does not/);
-	for (const n of ['Polestar', 'Polestar_Guides', 'Polestar_Nav', 'Polestar_QuestDB', 'Polestar_ItemDB', 'Polestar_Codex']) assert.match(readme, new RegExp(`^ +${n}\r$`, 'm'));
-	assert.match(readme, /part of Polestar: Polestar_Codex holds what Lookup,/);
-	assert.match(readme, /Polestar_Nav the arrow's walking routes\r\n +\(Shortest Path Forever's pathing, by Cillian Berragan/);
-	// security L12 / review P3-15: the adapted GPL-3.0-or-later code inside Polestar/ is named where it ships.
+	for (const n of ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav', 'SendaFH_QuestDB', 'SendaFH_ItemDB', 'SendaFH_Codex']) assert.match(readme, new RegExp(`^ +${n}\r$`, 'm'));
+	assert.match(readme, /part of SendaFH: SendaFH_Codex holds what Lookup,/);
+	assert.match(readme, /SendaFH_Nav the arrow's walking routes\r\n +\(Shortest Path Forever's pathing, by Cillian Berragan/);
+	// security L12 / review P3-15: the adapted GPL-3.0-or-later code inside SendaFH/ is named where it ships.
 	assert.match(readme, /^Portions Copyright \(C\) 2026 Cillian Berragan \(Shortest Path Forever\),\r$/m);
-	assert.match(files['Polestar/LICENSE'].toString('utf8'), /^Portions Copyright \(C\) 2026 Cillian Berragan \(Shortest Path Forever,$/m);
-	assert.doesNotMatch(readme, /^ +Polestar_Recorder\r$/m);
+	assert.match(files['SendaFH/LICENSE'].toString('utf8'), /^Portions Copyright \(C\) 2026 Cillian Berragan \(Shortest Path Forever,$/m);
+	assert.doesNotMatch(readme, /^ +SendaFH_Recorder\r$/m);
 	assert.doesNotMatch(readme.replace(/\r\n/g, ''), /\n/, 'CRLF line endings throughout');
 });
 
@@ -102,22 +102,22 @@ test('pack writes SHA256SUMS for the zips it wrote, in the format sha256sum -c r
 	const sum = (f) => crypto.createHash('sha256').update(fs.readFileSync(path.join(dist, f))).digest('hex');
 	assert.equal(
 		fs.readFileSync(path.join(dist, 'SHA256SUMS'), 'utf8'),
-		[`Polestar-${VERSION}.zip`, `Polestar_Recorder-${VERSION}.zip`].map((f) => `${sum(f)}  ${f}\n`).join(''),
+		[`SendaFH-${VERSION}.zip`, `SendaFH_Recorder-${VERSION}.zip`].map((f) => `${sum(f)}  ${f}\n`).join(''),
 	);
 });
 
 test('the release zip includes the built data addons and leaves out ones not built', async () => {
-	const addons = fakeAddons(tmpdir(), [...RELEASE, 'Polestar_QuestDB']);
+	const addons = fakeAddons(tmpdir(), [...RELEASE, 'SendaFH_QuestDB']);
 	const dist = tmpdir();
 	const { result, out } = await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', addons, '--dist', dist]));
 	assert.equal(result, 0, out);
-	assert.match(out, /note: Polestar_ItemDB not built/);
-	const tops = [...new Set(readZip(path.join(dist, `Polestar-${VERSION}.zip`)).map((e) => e.name.split('/')[0]))];
-	assert.deepEqual(tops, ['Polestar', 'Polestar_Guides', 'Polestar_Nav', 'Polestar_QuestDB', 'Polestar_Codex']);
-	fakeAddons(addons, ['Polestar_ItemDB']);
+	assert.match(out, /note: SendaFH_ItemDB not built/);
+	const tops = [...new Set(readZip(path.join(dist, `SendaFH-${VERSION}.zip`)).map((e) => e.name.split('/')[0]))];
+	assert.deepEqual(tops, ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav', 'SendaFH_QuestDB', 'SendaFH_Codex']);
+	fakeAddons(addons, ['SendaFH_ItemDB']);
 	assert.equal((await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', addons, '--dist', dist]))).result, 0);
-	const all = [...new Set(readZip(path.join(dist, `Polestar-${VERSION}.zip`)).map((e) => e.name.split('/')[0]))];
-	assert.deepEqual(all, ['Polestar', 'Polestar_Guides', 'Polestar_Nav', 'Polestar_QuestDB', 'Polestar_ItemDB', 'Polestar_Codex']);
+	const all = [...new Set(readZip(path.join(dist, `SendaFH-${VERSION}.zip`)).map((e) => e.name.split('/')[0]))];
+	assert.deepEqual(all, ['SendaFH', 'SendaFH_Guides', 'SendaFH_Nav', 'SendaFH_QuestDB', 'SendaFH_ItemDB', 'SendaFH_Codex']);
 });
 
 test('pack refuses a release without the Codex, or with a --local-extras one, and writes no zip', async () => {
@@ -128,15 +128,15 @@ test('pack refuses a release without the Codex, or with a --local-extras one, an
 	};
 	const none = await run(fakeAddons(tmpdir()));
 	assert.equal(none.result, 1);
-	assert.match(none.out, /pack failed: Polestar_Codex not built \(run `node tools\/polestar\.js codex build`\)/);
+	assert.match(none.out, /pack failed: SendaFH_Codex not built \(run `node tools\/sendafh\.js codex build`\)/);
 	assert.deepEqual(none.files, []);
 
 	const local = fakeAddons(tmpdir(), RELEASE);
-	const meta = path.join(local, 'Polestar_Codex', 'Meta.lua');
+	const meta = path.join(local, 'SendaFH_Codex', 'Meta.lua');
 	fs.writeFileSync(meta, fs.readFileSync(meta, 'utf8').replace('localExtras = false', 'localExtras = true'));
 	const refused = await run(local);
 	assert.equal(refused.result, 1);
-	assert.match(refused.out, /pack failed: Polestar_Codex it is a --local-extras build/);
+	assert.match(refused.out, /pack failed: SendaFH_Codex it is a --local-extras build/);
 	assert.deepEqual(refused.files, []);
 
 	// An older local build that predates the flag still names its inputs.
@@ -145,7 +145,7 @@ test('pack refuses a release without the Codex, or with a --local-extras one, an
 	assert.equal(named.result, 1);
 	assert.match(named.out, /its sources include a local-only input \(AtlasLootClassic\)/);
 
-	fs.rmSync(path.join(local, 'Polestar_Codex', 'LICENSE-DATA.txt'));
+	fs.rmSync(path.join(local, 'SendaFH_Codex', 'LICENSE-DATA.txt'));
 	fs.writeFileSync(meta, 'C.Register("meta", {})\n');
 	assert.match((await run(local)).out, /LICENSE-DATA\.txt is missing/);
 });
@@ -180,15 +180,15 @@ test('zip: UTF-8 names, empty and binary files, stored and deflated entries roun
 });
 
 test('zip: directoryEntries stores trees under their basename, sorted, without hidden files', () => {
-	const root = fakeAddons(tmpdir(), ['Polestar']);
+	const root = fakeAddons(tmpdir(), ['SendaFH']);
 	assert.deepEqual(
-		directoryEntries([path.join(root, 'Polestar')]).map((e) => e.name),
-		['Polestar/', 'Polestar/Main.lua', 'Polestar/Polestar.toc'],
+		directoryEntries([path.join(root, 'SendaFH')]).map((e) => e.name),
+		['SendaFH/', 'SendaFH/Main.lua', 'SendaFH/SendaFH.toc'],
 	);
 });
 
 test('zip: an entry that inflates past its declared size, or an archive past the cap, is refused', () => {
-	const bomb = Buffer.from(buildZip([{ name: 'Polestar_Guides/Guides/a.lua', data: Buffer.alloc(4 * 1024 * 1024, 45) }]));
+	const bomb = Buffer.from(buildZip([{ name: 'SendaFH_Guides/Guides/a.lua', data: Buffer.alloc(4 * 1024 * 1024, 45) }]));
 	const cd = bomb.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
 	bomb.writeUInt32LE(16, cd + 24);
 	assert.throws(() => readZip(bomb), /corrupt entry/);
@@ -199,16 +199,16 @@ test('inside a pack, pack writes dist/<folder>-<version>.zip with exactly its fi
 	const PACKS = path.join(__dirname, 'fixtures', 'packs');
 	const dir = tmpdir();
 	fs.cpSync(path.join(PACKS, 'mini'), dir, { recursive: true });
-	const cli = () => polestar(['pack', '--data', DATA_DIR, '--context', path.join(PACKS, 'context'), '--context-data', DATA_DIR], { cwd: path.join(dir, 'guides') });
+	const cli = () => sendafh(['pack', '--data', DATA_DIR, '--context', path.join(PACKS, 'context'), '--context-data', DATA_DIR], { cwd: path.join(dir, 'guides') });
 	const first = cli();
 	assert.equal(first.status, 0, first.stderr);
-	assert.deepEqual(fs.readdirSync(path.join(dir, 'dist')), ['PolestarPack_MiniPack-0.3.0.zip']);
-	const zip = path.join(dir, 'dist', 'PolestarPack_MiniPack-0.3.0.zip');
+	assert.deepEqual(fs.readdirSync(path.join(dir, 'dist')), ['SendaFHPack_MiniPack-0.3.0.zip']);
+	const zip = path.join(dir, 'dist', 'SendaFHPack_MiniPack-0.3.0.zip');
 	const bytes = fs.readFileSync(zip);
 	const entries = readZip(zip);
 	assert.deepEqual(
 		entries.map((e) => e.name),
-		['PolestarPack_MiniPack/', ...['Guides.lua', 'LICENSE-DATA.txt', 'MapFrames.lua', 'Pack.lua', 'PolestarPack_MiniPack.toc'].map((f) => `PolestarPack_MiniPack/${f}`)],
+		['SendaFHPack_MiniPack/', ...['Guides.lua', 'LICENSE-DATA.txt', 'MapFrames.lua', 'Pack.lua', 'SendaFHPack_MiniPack.toc'].map((f) => `SendaFHPack_MiniPack/${f}`)],
 	);
 	assert.match(entries.find((e) => e.name.endsWith('.toc')).data.toString('utf8'), /## Version: 0\.3\.0/);
 	const second = cli();
@@ -224,8 +224,8 @@ test("a pack's LICENSE ships in the zip as LICENSE.txt, byte for byte; its place
 	fs.writeFileSync(path.join(dir, 'LICENSE'), text);
 	const first = await quiet(() => pack.run(args));
 	assert.equal(first.result, 0, first.out);
-	const zip = path.join(dir, 'dist', 'PolestarPack_MiniPack-0.3.0.zip');
-	const entry = readZip(zip).find((e) => e.name === 'PolestarPack_MiniPack/LICENSE.txt');
+	const zip = path.join(dir, 'dist', 'SendaFHPack_MiniPack-0.3.0.zip');
+	const entry = readZip(zip).find((e) => e.name === 'SendaFHPack_MiniPack/LICENSE.txt');
 	assert.equal(entry && entry.data.toString('utf8'), text);
 	const bytes = fs.readFileSync(zip);
 	await quiet(() => pack.run(args));
@@ -234,7 +234,7 @@ test("a pack's LICENSE ships in the zip as LICENSE.txt, byte for byte; its place
 	fs.writeFileSync(path.join(dir, 'LICENSE'), 'Licensed under CC0-1.0: replace this line with the full text of that licence.\n');
 	const lint = await quiet(() => require('../tools/commands/lint').run(args));
 	assert.equal(lint.result, 0, lint.out);
-	assert.match(lint.out, /LICENSE:1: warning: LICENSE still holds the placeholder line `polestar new` writes, not the licence text\n {2}hint: replace the line with the full text of the CC0-1\.0 licence: the built addon ships LICENSE as LICENSE\.txt/);
+	assert.match(lint.out, /LICENSE:1: warning: LICENSE still holds the placeholder line `sendafh new` writes, not the licence text\n {2}hint: replace the line with the full text of the CC0-1\.0 licence: the built addon ships LICENSE as LICENSE\.txt/);
 });
 
 test('pack refuses a pack with errors and writes nothing', async () => {
@@ -263,19 +263,19 @@ test('pack without reference data stops with one error and writes nothing; --no-
 });
 
 test('our release: the guide pack folder is not checked for a TOC before it is generated, and write errors are reported', async () => {
-	const addons = fakeAddons(tmpdir(), ['Polestar', 'Polestar_Nav', 'Polestar_Recorder', 'Polestar_Codex']);
+	const addons = fakeAddons(tmpdir(), ['SendaFH', 'SendaFH_Nav', 'SendaFH_Recorder', 'SendaFH_Codex']);
 	const dist = tmpdir();
 	const ok = await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', addons, '--dist', dist]));
 	assert.equal(ok.result, 0, ok.out);
-	assert.doesNotMatch(ok.out, /Polestar_Guides\.toc says version/);
-	assert.ok(fs.existsSync(path.join(addons, 'Polestar_Guides', 'Polestar_Guides.toc')));
-	// A Polestar_Guides folder we did not generate is refused cleanly.
-	const foreign = fakeAddons(tmpdir(), ['Polestar', 'Polestar_Nav', 'Polestar_Recorder', 'Polestar_Codex']);
-	fs.mkdirSync(path.join(foreign, 'Polestar_Guides'));
-	fs.writeFileSync(path.join(foreign, 'Polestar_Guides', 'mine.txt'), 'mine\n');
+	assert.doesNotMatch(ok.out, /SendaFH_Guides\.toc says version/);
+	assert.ok(fs.existsSync(path.join(addons, 'SendaFH_Guides', 'SendaFH_Guides.toc')));
+	// A SendaFH_Guides folder we did not generate is refused cleanly.
+	const foreign = fakeAddons(tmpdir(), ['SendaFH', 'SendaFH_Nav', 'SendaFH_Recorder', 'SendaFH_Codex']);
+	fs.mkdirSync(path.join(foreign, 'SendaFH_Guides'));
+	fs.writeFileSync(path.join(foreign, 'SendaFH_Guides', 'mine.txt'), 'mine\n');
 	const bad = await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', foreign, '--dist', tmpdir()]));
 	assert.equal(bad.result, 1, bad.out);
-	assert.match(bad.out, /^pack failed: refusing to write into .*Polestar_Guides/m);
+	assert.match(bad.out, /^pack failed: refusing to write into .*SendaFH_Guides/m);
 });
 
 // Runs `pack` for our release while reading `file` gives `text` (one of the
@@ -287,17 +287,17 @@ async function packReading(file, text) {
 		return readFileSync.call(this, f, ...rest);
 	};
 	try {
-		const addons = fakeAddons(tmpdir(), ['Polestar', 'Polestar_Nav', 'Polestar_Recorder', 'Polestar_Codex'], packageVersion());
+		const addons = fakeAddons(tmpdir(), ['SendaFH', 'SendaFH_Nav', 'SendaFH_Recorder', 'SendaFH_Codex'], packageVersion());
 		return await quiet(() => pack.run(['--guides', GUIDES_DIR, '--data', DATA_DIR, '--addons', addons, '--dist', tmpdir()]));
 	} finally {
 		fs.readFileSync = readFileSync;
 	}
 }
 
-test('our release: a Polestar.toc without an `## Interface` line is a clear error, not a stack trace', async () => {
-	const r = await packReading(path.join(ROOT, 'addon', 'Polestar', 'Polestar.toc'), '## Title: Polestar\nMain.lua\n');
+test('our release: a SendaFH.toc without an `## Interface` line is a clear error, not a stack trace', async () => {
+	const r = await packReading(path.join(ROOT, 'addon', 'SendaFH', 'SendaFH.toc'), '## Title: SendaFH\nMain.lua\n');
 	assert.equal(r.result, 1, r.out);
-	assert.match(r.out, /^pack failed: .*Polestar\.toc has no ## Interface line$/m);
+	assert.match(r.out, /^pack failed: .*SendaFH\.toc has no ## Interface line$/m);
 });
 
 test('our release: guides/pack.json with another version than package.json is a warning, and the zips are still written', async () => {

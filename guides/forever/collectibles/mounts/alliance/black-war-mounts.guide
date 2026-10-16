@@ -17,7 +17,7 @@ zone Stormwind City
 # (npcs.json).
 
 step PvP rank 11
-  tip Forever's PvP ranks come from Rank Points earned in battlegrounds and world PvP, with a weekly cap; Commander (rank 11) unlocks the Black War mounts. Polestar cannot read your rank, so this step waits for level 40 and the riding skill.
+  tip Forever's PvP ranks come from Rank Points earned in battlegrounds and world PvP, with a weekly cap; Commander (rank 11) unlocks the Black War mounts. SendaFH cannot read your rank, so this step waits for level 40 and the riding skill.
   level 40
   skill Riding 75
 

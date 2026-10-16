@@ -1,5 +1,5 @@
 'use strict';
-// Zone art overlays (tools/lib/maps/overlays.js -> addon/Polestar/UI/ZoneArtOverlays.lua):
+// Zone art overlays (tools/lib/maps/overlays.js -> addon/SendaFH/UI/ZoneArtOverlays.lua):
 // the table built from synthetic DB2 rows (keyed by art, tiles row-major,
 // partial tiles, bad rows dropped), the generated Lua, and the addon reading it.
 
@@ -75,15 +75,15 @@ test('the generated Lua registers the table with ZoneArt, byte-identical for the
 	assert.equal(lua, emitLua(buildOverlays(TABLES_FIXTURE), '9.9.9.1'));
 	assert.match(lua, /ZA\.RegisterOverlays\("9\.9\.9\.1", \{/);
 	assert.match(lua, /\[100\] = \{ 256, 256, -- Greenvale \(10\)\n\t\t\{ 600, 300, 10, 20, 1001, 1002, 1003, 1004, 1005, 1006 \},/);
-	const dir = tmpdir('polestar-overlays-');
+	const dir = tmpdir('sendafh-overlays-');
 	const file = path.join(dir, 'ZoneArtOverlays.lua');
 	fs.writeFileSync(file, lua);
 	const [out] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'] }],
 		script: `uistub.install()
-			local ZA = Polestar.UI.ZoneArt
-			assert(loadfile(${JSON.stringify(file)}))("Polestar", { UI = Polestar.UI })
+			local ZA = SendaFH.UI.ZoneArt
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH", { UI = SendaFH.UI })
 			emit({ ZA.overlaysBuild, ZA.overlays[100], ZA.overlays[101][2] })`,
 	}).emitted;
 	assert.equal(out[0], '9.9.9.1');
@@ -92,7 +92,7 @@ test('the generated Lua registers the table with ZoneArt, byte-identical for the
 });
 
 test('tables come from the source cache, fetched once when missing; --offline never fetches', async () => {
-	const dir = tmpdir('polestar-wago-');
+	const dir = tmpdir('sendafh-wago-');
 	const fetched = [];
 	const fetchImpl = async (url) => {
 		fetched.push(url);

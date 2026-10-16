@@ -16,9 +16,9 @@ const DOT = 4, RIM = 1, SPACING = 9, SMALL_SPACING = 7, STOP_GAP = 2, LATER_ALPH
 // whose fraction is world yards / 1000 (fx = wy / 1000, fy = wx / 1000).
 function strokes(script) {
 	return runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Maps/RouteStrokes.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Maps/RouteStrokes.lua'] }],
 		script: `
-local S = Polestar.RouteStrokes
+local S = SendaFH.RouteStrokes
 local WALK, FLY, BOAT, TRAM = { 1, 1, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { 1, 0, 1 }
 local COLORS = { walk = WALK, flight = FLY, boat = BOAT, zeppelin = BOAT, tram = TRAM }
 local function view(extra)
@@ -221,7 +221,7 @@ test('the live start: the nearest point ahead on the walk, progress never runs b
 
 // The painters with Nav: Core/Init.lua, Nav/Nav.xml and the route line files
 // against tests/lua/stub_nav.lua (map 9000: 2000 yd across, origin at its centre).
-const LINES = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml', 'Maps/FlightPaths.lua', 'Maps/RouteStrokes.lua', 'Maps/RouteLines.lua'] };
+const LINES = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml', 'Maps/FlightPaths.lua', 'Maps/RouteStrokes.lua', 'Maps/RouteLines.lua'] };
 
 function painted(script) {
 	return runAddon({
@@ -229,7 +229,7 @@ function painted(script) {
 		addons: [LINES],
 		login: true,
 		script: `
-local N, R, Pins, nav = Polestar.Nav, Polestar.RouteLines, Polestar.Pins, stub.nav
+local N, R, Pins, nav = SendaFH.Nav, SendaFH.RouteLines, SendaFH.Pins, stub.nav
 local function target(wx, wy)
 	local m, x, y = nav.mapPoint(wx, wy)
 	N.SetTarget(m, x, y, "Target")
@@ -241,7 +241,7 @@ local function shown(owner)
 	return n
 end
 local function worldPin()
-	local pool = WorldMapFrame.pinPools.PolestarRouteLinesTemplate
+	local pool = WorldMapFrame.pinPools.SendaFHRouteLinesTemplate
 	if pool then for pin in pool:EnumerateActive() do return pin end end
 end
 ${script}`,
@@ -250,7 +250,7 @@ ${script}`,
 
 test('the painters draw the route on the world map and the minimap, and stand in for the trail', () => {
 	const [out] = painted(`
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -600)
@@ -263,11 +263,11 @@ test('the painters draw the route on the world map and the minimap, and stand in
 		r.worldLines = shown(worldPin())
 		r.minimap = R.GetStrokes("minimap").n
 		r.paths = #R.GetPaths()
-		Polestar.Set("nav.routeLines", false)
+		SendaFH.Set("nav.routeLines", false)
 		stub.advance(0.3)
 		r.offWorld = worldPin() == nil
 		r.offTrail = Pins.GetTrail() ~= nil
-		Polestar.Set("nav.routeLines", true)
+		SendaFH.Set("nav.routeLines", true)
 		stub.advance(0.3)
 		r.backTrail = Pins.GetTrail() ~= nil
 		r.backWorld = shown(worldPin())
@@ -285,7 +285,7 @@ test('the painters draw the route on the world map and the minimap, and stand in
 
 test('the minimap redraws only when something changed, and its line pool never shrinks or passes its bound', () => {
 	const [out] = painted(`
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -600)
@@ -308,9 +308,9 @@ test('the minimap redraws only when something changed, and its line pool never s
 
 test('NAV_QA C4: in combat the world map pin is neither acquired nor released; the refresh waits for combat to end', () => {
 	const [out] = painted(`
-		local C = Polestar.Compat
+		local C = SendaFH.Compat
 		function C.InCombat() return stub.inCombat and true or false end
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.place(0, 0)
 		target(0, -600)
 		nav.showWorldMap(9000)
@@ -320,7 +320,7 @@ test('NAV_QA C4: in combat the world map pin is neither acquired nor released; t
 		target(300, -600)
 		stub.advance(0.3)
 		local r = { samePin = worldPin() == pin, lines = shown(pin) }
-		Polestar.Set("nav.routeLines", false)
+		SendaFH.Set("nav.routeLines", false)
 		r.keptInCombat = worldPin() == pin
 		stub.inCombat = false
 		stub.fire("PLAYER_REGEN_ENABLED")
@@ -334,11 +334,11 @@ test('NAV_QA C4: in combat the world map pin is neither acquired nor released; t
 
 test('NAV_QA C5: a secret position or facing hides the minimap line, with no error', () => {
 	const [out] = painted(`
-		local C = Polestar.Compat
+		local C = SendaFH.Compat
 		-- The client's secret values cannot be faked in plain Lua: this facing reads as secret.
 		local SECRET = 1.2345
 		function C.IsSecret(v) return v == SECRET end
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -600)
@@ -360,7 +360,7 @@ test('NAV_QA C5: a secret position or facing hides the minimap line, with no err
 
 test('NAV_QA C12: a pooled line swapping between dot and stroke starts from the whole texture', () => {
 	const [out] = painted(`
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -600)
@@ -373,7 +373,7 @@ test('NAV_QA C12: a pooled line swapping between dot and stroke starts from the 
 		local geom = { legs = { { kind = "tram", pts = { { 0, 0, 0 }, { 0, 0, -600 } }, current = true } } }
 		local real = N.GetRouteGeometry
 		N.GetRouteGeometry = function() return geom end
-		Polestar.Fire("NAV_ROUTE_GEOMETRY")
+		SendaFH.Fire("NAV_ROUTE_GEOMETRY")
 		N.GetRouteGeometry = real
 		emit({ coords = line.texCoord, dot = pin.dots[1] })`);
 	assert.equal(out.dot, false);
@@ -446,9 +446,9 @@ test('review P3-8: Blizzard_WorldMap loading after login installs the route-line
 		addons: [LINES],
 		login: true,
 		script: `
-local N, R, nav = Polestar.Nav, Polestar.RouteLines, stub.nav
+local N, R, nav = SendaFH.Nav, SendaFH.RouteLines, stub.nav
 WorldMapFrame:GetCanvas():SetSize(1000, 1000)
-Polestar.Set("nav.travel", false)
+SendaFH.Set("nav.travel", false)
 nav.place(0, 0)
 local m, x, y = nav.mapPoint(0, -600)
 N.SetTarget(m, x, y, "Target")
@@ -457,7 +457,7 @@ local before = WorldMapFrame.pinPools
 WorldMapFrame.pinPools = stub.savedPools
 stub.fire("ADDON_LOADED", "Blizzard_WorldMap")
 nav.showWorldMap(9000)
-local pool = WorldMapFrame.pinPools.PolestarRouteLinesTemplate
+local pool = WorldMapFrame.pinPools.SendaFHRouteLinesTemplate
 local n = 0
 if pool then for _ in pool:EnumerateActive() do n = n + 1 end end
 emit({ before = before == nil, pins = n, strokes = R.GetStrokes("world").n })`,
@@ -469,8 +469,8 @@ emit({ before = before == nil, pins = n, strokes = R.GetStrokes("world").n })`,
 
 test('review P3-9: the world map walk starts at the player with the minimap line off', () => {
 	const [out] = painted(`
-		Polestar.Set("nav.travel", false)
-		Polestar.Set("nav.minimapPins", false)
+		SendaFH.Set("nav.travel", false)
+		SendaFH.Set("nav.minimapPins", false)
 		nav.place(0, 0)
 		target(0, -600)
 		nav.showWorldMap(9000)
@@ -506,7 +506,7 @@ test('review P3-9: Active() counts only legs that draw: no one-point, jump-only 
 				{ kind = "walk", pts = { { 0, 300, 300 }, { 0, 300, 0 } } } } },
 		}) do
 			geom = { legs = case[2] }
-			Polestar.Fire("NAV_ROUTE_GEOMETRY")
+			SendaFH.Fire("NAV_ROUTE_GEOMETRY")
 			r[case[1]] = { active = R.Active(), trail = Pins.GetTrail() ~= nil }
 		end
 		emit(r)`);
@@ -521,19 +521,19 @@ test('review P3-9: Active() counts only legs that draw: no one-point, jump-only 
 test('review P3-9: a theme change re-applies the outline colour to pooled lines', () => {
 	const [out] = runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Maps/FlightPaths.lua', 'Maps/RouteStrokes.lua', 'Maps/RouteLines.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Maps/FlightPaths.lua', 'Maps/RouteStrokes.lua', 'Maps/RouteLines.lua'] }],
 		login: true,
 		script: `
-local N, nav, T = Polestar.Nav, stub.nav, Polestar.Theme
+local N, nav, T = SendaFH.Nav, stub.nav, SendaFH.Theme
 WorldMapFrame:GetCanvas():SetSize(1000, 1000)
-Polestar.Set("nav.travel", false)
+SendaFH.Set("nav.travel", false)
 nav.place(0, 0)
 local m, x, y = nav.mapPoint(0, -600)
 N.SetTarget(m, x, y, "Target")
 nav.showWorldMap(9000)
 stub.advance(0.3)
 local pin
-for p in WorldMapFrame.pinPools.PolestarRouteLinesTemplate:EnumerateActive() do pin = p end
+for p in WorldMapFrame.pinPools.SendaFHRouteLinesTemplate:EnumerateActive() do pin = p end
 local outline = pin.outlines[1]
 outline:SetVertexColor(1, 0, 0) -- stale
 T.Refresh()
@@ -546,9 +546,9 @@ emit({ got = { r, g, b }, want = { sr, sg, sb } })`,
 
 test('the committed FlightPaths.lua holds the real network\'s tracks (not a test fixture\'s)', () => {
 	const [out] = strokes(`
-		local f = assert(loadfile(${JSON.stringify(require('node:path').join(__dirname, '..', 'addon', 'Polestar', 'Maps', 'FlightPaths.lua'))}))
+		local f = assert(loadfile(${JSON.stringify(require('node:path').join(__dirname, '..', 'addon', 'SendaFH', 'Maps', 'FlightPaths.lua'))}))
 		local ns = {}
-		f("Polestar", ns)
+		f("SendaFH", ns)
 		local pairs_, from = 0, 0
 		for _, to in pairs(ns.FlightTracks) do
 			from = from + 1

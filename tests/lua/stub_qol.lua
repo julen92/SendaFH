@@ -1,4 +1,4 @@
--- A fake world for Quality of Life tests (addon/Polestar/QoL), loaded after
+-- A fake world for Quality of Life tests (addon/SendaFH/QoL), loaded after
 -- wow_stub.lua. It installs contract-faithful fakes for the Engine, Nav and
 -- Pins (just before ADDON_LOADED, after the addon files ran), overrides the
 -- map half of Compat with one flat test map, and provides the client APIs QoL
@@ -559,7 +559,7 @@ function q.step(goals, index)
 	q.engine.step = index
 	q.engine.view = { index = index, status = "current", goals = views }
 	q.engine.guide = { id = "test", steps = steps }
-	Polestar.Fire("STEP_CHANGED", index)
+	SendaFH.Fire("STEP_CHANGED", index)
 	stub.runTimers()
 end
 
@@ -595,11 +595,11 @@ end
 
 local addonLoaded = stub.addonLoaded
 function stub.addonLoaded(name)
-	if name == "Polestar" and Polestar then
-		Polestar.Engine = Engine
-		Polestar.Nav = Nav
-		Polestar.Pins = Pins
-		local C = Polestar.Compat
+	if name == "SendaFH" and SendaFH then
+		SendaFH.Engine = Engine
+		SendaFH.Nav = Nav
+		SendaFH.Pins = Pins
+		local C = SendaFH.Compat
 		function C.MapToWorld(map, x, y, frame)
 			if map ~= 9000 or frame == "e" then return nil end
 			return MAP.c, MAP.top + (MAP.bottom - MAP.top) * y / 100, MAP.left + (MAP.right - MAP.left) * x / 100

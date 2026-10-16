@@ -24,12 +24,12 @@ const { loadSpawnHeights, HEIGHTS_SOURCE } = require('../travel/cmangos');
 const CORRECTIONS = require('./corrections.json');
 
 // tools/lib/data/corrections.json: quests `set` fields; items `removeDrops`/`removeVendors`; npcs/objects `set`
-// fields and `addSpawns` maps. Every corrected record's source gains "polestar-correction".
+// fields and `addSpawns` maps. Every corrected record's source gains "sendafh-correction".
 function applyCorrections(tables) {
 	let n = 0;
 	const tag = (e) => {
 		if (!e.source) e.source = [];
-		if (!e.source.includes('polestar-correction')) e.source.push('polestar-correction');
+		if (!e.source.includes('sendafh-correction')) e.source.push('sendafh-correction');
 		n++;
 	};
 	for (const [id, c] of Object.entries(CORRECTIONS.quests || {})) {
@@ -145,7 +145,7 @@ function instanceAreas(areaRows, mapRows, mapped) {
 }
 
 const QUESTIE_LICENSE =
-	'No license file in Questie/Questie or Questie/QuestieDB; CurseForge lists GPL-3.0, and the maintainers ask that it be treated as all rights reserved (https://github.com/Questie/Questie/issues/4447). Read from the local install; facts only (quest, NPC, object and item facts, no code or text) ship in Polestar\'s packs, credited here, and come out if the maintainers ask (data build --no-questie).';
+	'No license file in Questie/Questie or Questie/QuestieDB; CurseForge lists GPL-3.0, and the maintainers ask that it be treated as all rights reserved (https://github.com/Questie/Questie/issues/4447). Read from the local install; facts only (quest, NPC, object and item facts, no code or text) ship in SendaFH\'s packs, credited here, and come out if the maintainers ask (data build --no-questie).';
 
 async function buildData(options = {}) {
 	const root = options.root || ROOT;
@@ -322,10 +322,10 @@ async function buildData(options = {}) {
 		const hash = crypto.createHash('sha256');
 		for (const { file, rec: r } of recordings) hash.update(file).update('\0').update(JSON.stringify(r)).update('\0');
 		sources.push({
-			name: 'Polestar recordings',
+			name: 'SendaFH recordings',
 			url: null,
 			revision: hash.digest('hex').slice(0, 16),
-			license: 'Polestar original work',
+			license: 'SendaFH original work',
 			copyright: null,
 			sessions: recordings.map((r) => r.file),
 		});

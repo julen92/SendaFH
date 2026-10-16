@@ -120,7 +120,7 @@ test('parseEntity reads the page entry location and boss flag; wowheadWants asks
 	assert.deepEqual(want.object, [123329, 169243]);
 });
 
-const LUA_FILES = { name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Core/Data.lua', 'Core/Guides.lua', 'Lookup/Codex.lua'] };
+const LUA_FILES = { name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Core/Data.lua', 'Core/Guides.lua', 'Lookup/Codex.lua'] };
 
 test('the pack carries chest bosses and roles; an encounter boss keeps the old bare npc ref', () => {
 	const codex = sampleCodex();
@@ -139,9 +139,9 @@ test('the pack carries chest bosses and roles; an encounter boss keeps the old b
 		const [got] = runAddon({
 			before: pack.stubLua,
 			addons: [LUA_FILES],
-			script: `Polestar.Codex.Load()
+			script: `SendaFH.Codex.Load()
 local out = {}
-for i, b in ipairs(Polestar.Codex.Instance("stratholme").bosses) do out[i] = { b.name, b.npc or false, b.object or false, b.role or false, #b.items } end
+for i, b in ipairs(SendaFH.Codex.Instance("stratholme").bosses) do out[i] = { b.name, b.npc or false, b.object or false, b.role or false, #b.items } end
 emit(out)`,
 		}).emitted;
 		assert.deepEqual(got, [
@@ -190,11 +190,11 @@ function bossRows(before = '') {
 		return runAddon({
 			stubs: ['stub_ui.lua'],
 			before: `${pack.stubLua}\n${before}`,
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Gear/Gear.xml', 'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml', 'UI/UI.xml'] }],
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Gear/Gear.xml', 'Lookup/Lookup.xml', 'Dungeons/Dungeons.xml', 'UI/UI.xml'] }],
 			script: `uistub.install()
 stub.login()
-local DS = Polestar.UI.DungeonsSection
-Polestar.Dungeons.Open("wailing-caverns")
+local DS = SendaFH.UI.DungeonsSection
+SendaFH.Dungeons.Open("wailing-caverns")
 DS.SetTab("bosses")
 local out = {}
 for _, r in ipairs(DS.bossRows) do if r:IsShown() then out[#out + 1] = { r.Name:GetText(), r.Level:GetText() } end end

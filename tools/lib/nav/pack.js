@@ -9,14 +9,14 @@
 // permission): the HPA* graph, the cluster encodings and the floor links of
 // tools/baker/gen_nav.py, and the zlib + base64 parts of tools/pack_nav.py.
 // The format is written down in each generated NavN.lua's header (HEADER).
-// Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for Polestar, 2026-10-15.
+// Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for SendaFH, 2026-10-15.
 //
 //   const { packNav, shipPack, checkPack } = require('tools/lib/nav/pack');
 //   const files = await packNav({ dir, cells = 128, continents, places, date, log });
 //   // files: Map 'Nav0.lua' | 'Nav0_1.lua' | ... | 'Chokepoints.lua' -> Lua source, in load order;
 //   // files.manifest: PACK.json without hashes; files.timing: seconds and memory per map
-//   shipPack(files, 'addon/Polestar_Nav');   // Nav/<files>, PACK.json, Nav/Nav.xml
-//   checkPack('addon/Polestar_Nav');         // -> [problem, ...], [] when it matches PACK.json
+//   shipPack(files, 'addon/SendaFH_Nav');   // Nav/<files>, PACK.json, Nav/Nav.xml
+//   checkPack('addon/SendaFH_Nav');         // -> [problem, ...], [] when it matches PACK.json
 //
 // Three stages, each usable on its own so another surface source can feed
 // the same encoder:
@@ -692,7 +692,7 @@ async function cellGridFromDir({ dir, c, C, log }) {
 		} catch (e) {
 			throw new Error(`pack: tile ${key}: ${e.message}`);
 		}
-		if (!t.links) throw new Error(`pack: tile ${key}: not linked (rerun \`node tools/polestar.js nav build\`)`);
+		if (!t.links) throw new Error(`pack: tile ${key}: not linked (rerun \`node tools/sendafh.js nav build\`)`);
 		return t;
 	};
 	return { cg: cellGrid({ tiles, loadTile, regions, C, log }), index };
@@ -1213,7 +1213,7 @@ const PART_NOTE = '-- Compressed terrain for on-demand decoding (Shortest Path F
 const CREDIT = [
 	'-- The navigation grid in Shortest Path Forever\'s walking-map format (github.com/cjber/shortest-path-forever),',
 	'-- written by tools/lib/nav/pack.js, a port of his tools/baker/gen_nav.py and tools/pack_nav.py, used with his permission.',
-	'-- Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for Polestar, 2026-10-15.',
+	'-- Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for SendaFH, 2026-10-15.',
 ];
 
 // One map's strings -> its metadata file and parts (pack_nav.py write_bundle);
@@ -1283,13 +1283,13 @@ function packFiles({ map, cg, maps, global, gen }) {
 // cells and date give the same bytes. -> Map name -> Lua source, in load
 // order, with .manifest (PACK.json's content without the hashes: grid,
 // cells, date, per map its counts and sizes) and .log (timings, memory).
-async function packNav({ dir, cells = 128, continents, global = 'PolestarPathData', places = null, date = new Date().toISOString().slice(0, 10), log = () => {} }) {
+async function packNav({ dir, cells = 128, continents, global = 'SendaFHPathData', places = null, date = new Date().toISOString().slice(0, 10), log = () => {} }) {
 	if (!/^\d{4}-\d\d-\d\d$/.test(String(date))) throw new Error(`pack: date must be YYYY-MM-DD, got ${date}`);
 	const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
 	const list = (continents || Object.keys(index.continents).map(Number)).slice().sort((a, b) => a - b);
 	const files = new Map();
 	const grid = { product: index.product || null, build: index.build || null, builtAt: index.builtAt || null, version: index.version };
-	const manifest = { generator: 'node tools/polestar.js nav pack', grid, cells, date, maps: {} };
+	const manifest = { generator: 'node tools/sendafh.js nav pack', grid, cells, date, maps: {} };
 	const timing = {};
 	const source = `the navigation grid (${grid.product} ${grid.build}, built ${String(grid.builtAt).slice(0, 10)}) on ${date}`;
 	const gen = header('lua', `nav pack --cells ${cells}`, source);
@@ -1359,7 +1359,7 @@ function shipPack(files, addonDir) {
 function checkPack(addonDir) {
 	const { navXml, OWN_MAPS } = require('./vendor');
 	const file = path.join(addonDir, PACK_JSON);
-	if (!fs.existsSync(file)) return [`${file} is missing: run \`node tools/polestar.js nav pack\``];
+	if (!fs.existsSync(file)) return [`${file} is missing: run \`node tools/sendafh.js nav pack\``];
 	let manifest;
 	try {
 		manifest = JSON.parse(fs.readFileSync(file, 'utf8'));

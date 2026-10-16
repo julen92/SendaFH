@@ -1,5 +1,5 @@
 'use strict';
-// Maps module (addon/Polestar/Maps): travel pin layers built from the travel
+// Maps module (addon/SendaFH/Maps): travel pin layers built from the travel
 // data, the flight timer (learning real durations, falling back to estimates),
 // the instance tracker (hourly window, runs, lockouts) and its options.
 // Runs Core, Theme, Nav and Maps against stub_world.lua + stub_maps.lua with
@@ -12,12 +12,12 @@ const { runAddon } = require('./helpers/lua');
 const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Maps/Maps.xml'];
 
 const PRELUDE = `
-local M = Polestar.Maps
+local M = SendaFH.Maps
 local m = stub.maps
 local w = stub.world
-Polestar.Nav.RegisterTravelData(m.travel, true)
+SendaFH.Nav.RegisterTravelData(m.travel, true)
 local function known(...)
-	local flags = Polestar.CharState().flags
+	local flags = SendaFH.CharState().flags
 	flags.taxi = {}
 	for _, id in ipairs({ ... }) do flags.taxi[id] = true end
 end
@@ -34,14 +34,14 @@ end
 `;
 
 // travelPins: turn the travel icon layers on (they are off by default).
-const TRAVEL_PINS = 'PolestarDB = { schema = 1, settings = { maps = { taxiPins = true, dockPins = true, innPins = true } } }';
+const TRAVEL_PINS = 'SendaFHDB = { schema = 1, settings = { maps = { taxiPins = true, dockPins = true, innPins = true } } }';
 
 function run(script, { faction = 'Alliance', travelPins = false } = {}) {
 	return runAddon({
 		stubs: ['stub_world.lua', 'stub_maps.lua'],
 		before: `stub.maps.useWorld(); stub.maps.place(0, 800); stub.world.faction = "${faction}"`,
-		addons: [{ name: 'Polestar', files: FILES }],
-		saved: travelPins ? { Polestar: TRAVEL_PINS } : undefined,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		saved: travelPins ? { SendaFH: TRAVEL_PINS } : undefined,
 		login: true,
 		script: PRELUDE + script,
 	}).emitted;
@@ -56,7 +56,7 @@ test('pin layers come from the travel data: own-faction and neutral flight maste
 		known(1)
 		w.bind("West Hold")
 		M.RefreshTravelPins()
-		local P = Polestar.Pins
+		local P = SendaFH.Pins
 		local taxi = {}
 		for _, p in ipairs(P.GetLayer("maps.taxi")) do
 			taxi[#taxi + 1] = { id = p.nodeID, known = p.known, icon = p.icon, c = p.c, wx = p.wx, wy = p.wy }
@@ -65,8 +65,8 @@ test('pin layers come from the travel data: own-faction and neutral flight maste
 		for _, p in ipairs(P.GetLayer("maps.docks")) do docks[#docks + 1] = p.transport .. ">" .. p.dest end
 		local inns = {}
 		for _, p in ipairs(P.GetLayer("maps.inns")) do inns[#inns + 1] = { bound = p.bound, glow = p.glow or false, icon = p.icon } end
-		local g = { Polestar.Theme.Color("success") }
-		local a = { Polestar.Theme.Color("warning") }
+		local g = { SendaFH.Theme.Color("success") }
+		local a = { SendaFH.Theme.Color("warning") }
 		local layer = P.GetLayer("maps.taxi")
 		emit({ taxi = taxi, docks = docks, inns = inns,
 			knownColor = layer[1].color[1] == g[1] and layer[1].color[2] == g[2],
@@ -89,7 +89,7 @@ test('tooltips name destinations with learned or estimated flight times, and whe
 		known(1, 3)
 		M.LearnFlight(1, 3, nil, nil, 41.4)
 		M.RefreshTravelPins()
-		local P = Polestar.Pins
+		local P = SendaFH.Pins
 		local west = P.GetLayer("maps.taxi")[1]
 		local dock = P.GetLayer("maps.docks")[1]
 		local inn = P.GetLayer("maps.inns")[2]
@@ -110,16 +110,16 @@ test('the Horde sees its own and neutral nodes; settings drop and restore layers
 	const [out] = run(`
 		known()
 		M.RefreshTravelPins()
-		local P = Polestar.Pins
+		local P = SendaFH.Pins
 		local ids = {}
 		for _, p in ipairs(P.GetLayer("maps.taxi")) do ids[#ids + 1] = p.nodeID end
 		local docks = {}
 		for _, p in ipairs(P.GetLayer("maps.docks")) do docks[#docks + 1] = p.transport end
-		Polestar.Set("maps.taxiPins", false)
+		SendaFH.Set("maps.taxiPins", false)
 		stub.runTimers()
 		local off = P.GetLayer("maps.taxi") == nil
-		Polestar.Set("maps.taxiPins", true)
-		Polestar.Set("maps.travelMinimap", true)
+		SendaFH.Set("maps.taxiPins", true)
+		SendaFH.Set("maps.travelMinimap", true)
 		stub.runTimers()
 		emit({ ids = ids, docks = docks, off = off, back = #P.GetLayer("maps.taxi") })`, { faction: 'Horde', travelPins: true });
 	assert.deepEqual(out.ids, [3, 4]);
@@ -132,10 +132,10 @@ test('discovering a flight master on the taxi map recolours its pin', () => {
 	const [out] = run(`
 		known(1)
 		M.RefreshTravelPins()
-		local before = Polestar.Pins.GetLayer("maps.taxi")[3].known
+		local before = SendaFH.Pins.GetLayer("maps.taxi")[3].known
 		m.openTaxi(3, { 1 })
 		stub.runTimers()
-		emit({ before = before, after = Polestar.Pins.GetLayer("maps.taxi")[3].known })`, { travelPins: true });
+		emit({ before = before, after = SendaFH.Pins.GetLayer("maps.taxi")[3].known })`, { travelPins: true });
 	assert.deepEqual(out, { before: false, after: true });
 });
 
@@ -150,7 +150,7 @@ local function fly(from, slotTo, reach, wx, wy, seconds)
 	m.board()
 	stub.advance(0.5)
 	local dest, left, source = M.GetFlight()
-	local f = stub.frame("PolestarFlightTimer")
+	local f = stub.frame("SendaFHFlightTimer")
 	local shown = { dest = dest, left = left and math.floor(left + 0.5), source = source,
 		text = f and f.Time:GetText(), title = f and f.Dest:GetText(), visible = f and f:IsShown() }
 	stub.advance(seconds - 0.5)
@@ -167,7 +167,7 @@ test('the flight timer estimates an unflown route, then learns and prefers the r
 	const [out] = run(`${FLY}
 		known(1, 2, 3)
 		local first = fly(1, 2, { 3, 2 }, 600, 0, 40)      -- West Hold -> Mid Camp, 40 s
-		local learned = Polestar.CharState().flightTimes["1>3"]
+		local learned = SendaFH.CharState().flightTimes["1>3"]
 		local second = fly(1, 2, { 3, 2 }, 600, 0, 40)
 		emit({ first = first, learned = learned, second = second })`);
 	// 1000 yd / 30 yd/s + 2 s = 35 s estimated.
@@ -200,13 +200,13 @@ test('a flight that does not end at its destination is not learned; the timer co
 	const [out] = run(`${FLY}
 		known(1, 2, 3)
 		local f = fly(1, 2, { 3, 2 }, 0, -800, 50)        -- landed at East Hold instead
-		local times = Polestar.CharState().flightTimes or {}
+		local times = SendaFH.CharState().flightTimes or {}
 		m.openTaxi(1, { 3 })
 		TakeTaxiNode(2)
 		m.board()
 		stub.advance(36)
-		local late = stub.frame("PolestarFlightTimer").Time:GetText()
-		local during = Polestar.CharState().flightNow
+		local late = stub.frame("SendaFHFlightTimer").Time:GetText()
+		local during = SendaFH.CharState().flightNow
 		emit({ learned = times["1>3"] or false, late = late, during = during and during.to or false })`);
 	assert.equal(out.learned, false);
 	assert.equal(out.late, 'landing');
@@ -215,10 +215,10 @@ test('a flight that does not end at its destination is not learned; the timer co
 
 test('the flight timer stays out of the way when disabled', () => {
 	const [out] = run(`${FLY}
-		Polestar.Set("maps.flightTimer", false)
+		SendaFH.Set("maps.flightTimer", false)
 		known(1, 3)
 		local f = fly(1, 1, { 3 }, 600, 0, 40)
-		emit({ visible = f.visible or false, learned = (Polestar.CharState().flightTimes or {})["1>3"] or false })`);
+		emit({ visible = f.visible or false, learned = (SendaFH.CharState().flightTimes or {})["1>3"] or false })`);
 	assert.deepEqual(out, { visible: false, learned: false });
 });
 
@@ -271,9 +271,9 @@ test('entering counts once per instance; re-entering continues the run; a reset 
 		steps[#steps + 1] = st()
 		m.jump(3600)
 		steps[#steps + 1] = st()
-		local runs = Polestar.CharState().instanceRuns
+		local runs = SendaFH.CharState().instanceRuns
 		emit({ steps = steps, runs = #runs, firstTime = runs[1].time, firstReset = runs[1].reset or false,
-			entries = #PolestarDB.instances.entries, char = PolestarDB.instances.entries[1].char })`);
+			entries = #SendaFHDB.instances.entries, char = SendaFHDB.instances.entries[1].char })`);
 	assert.deepEqual(out.steps[0], [1, 0]);
 	assert.deepEqual(out.steps[1], [1, 0], 'going back into the same instance does not count');
 	assert.deepEqual(out.steps[2], [2, 0], 'after a reset it is a new instance');
@@ -297,7 +297,7 @@ test('a run records its time and experience, across a level-up', () => {
 		local live = M.RunSeconds(M.GetInstanceStatus().run)
 		m.leave()
 		m.addXP(40)                 -- outside: not part of the run
-		local run = Polestar.CharState().instanceRuns[1]
+		local run = SendaFH.CharState().instanceRuns[1]
 		emit({ xp = run.xp, time = run.time, live = live, level = run.level })`);
 	assert.deepEqual(out, { xp: 170, time: 900, live: 900, level: 20 });
 });
@@ -314,7 +314,7 @@ test('a different instance copy seen in a creature GUID splits a resumed run and
 		w.units.target = "Creature-0-4372-34-200-1706-0000BBBB"
 		stub.fire("PLAYER_TARGET_CHANGED")      -- ...but it is another copy
 		local s = M.GetInstanceStatus()
-		local runs = Polestar.CharState().instanceRuns
+		local runs = SendaFH.CharState().instanceRuns
 		emit({ inHour = s.inHour, runs = #runs, firstTime = runs[1].time, zones = { runs[1].zone, runs[2].zone } })`);
 	assert.deepEqual(out, { inHour: 2, runs: 2, firstTime: 600, zones: ['100', '200'] });
 });
@@ -329,7 +329,7 @@ test('saved raid lockouts count down, and the slash command reports everything',
 		local locks = M.GetSavedLockouts()
 		m.enter("Ragefire Chasm", 389)
 		stub.messages = {}
-		SlashCmdList.POLESTAR("instances")
+		SlashCmdList.SENDAFH("instances")
 		stub.runTimers()
 		emit({ locks = locks, messages = stub.messages })`);
 	assert.equal(out.locks.length, 1, 'only locked instances');
@@ -345,17 +345,17 @@ test('saved raid lockouts count down, and the slash command reports everything',
 
 test('the compact tracker is off until a player turns it on, then shows while it matters and follows its settings', () => {
 	const [out] = run(`
-		local f = stub.frame("PolestarInstanceTracker")
+		local f = stub.frame("SendaFHInstanceTracker")
 		m.enter("Ragefire Chasm", 389)
 		local default = f:IsShown()
-		Polestar.Set("maps.instanceDisplay", true)
+		SendaFH.Set("maps.instanceDisplay", true)
 		local inside = { shown = f:IsShown(), count = f.Count:GetText(), run = f.Run:GetText() }
 		m.leave()
 		local after = f:IsShown()
-		Polestar.Set("maps.instanceDisplay", false)
+		SendaFH.Set("maps.instanceDisplay", false)
 		local off = f:IsShown()
-		Polestar.Set("maps.instanceDisplay", true)
-		Polestar.Set("maps.perHour", 1)
+		SendaFH.Set("maps.instanceDisplay", true)
+		SendaFH.Set("maps.perHour", 1)
 		local capped = f.Wait:GetText()
 		m.jump(3601)
 		stub.advance(1.1)
@@ -376,10 +376,10 @@ test('the world map shows zone ranges on the continent, the hovered zone, and pl
 	const [out] = runAddon({
 		stubs: ['stub_world.lua', 'stub_maps.lua'],
 		before: 'stub.maps.useWorld(); stub.maps.withMapCanvas(); stub.maps.place(0, 800); stub.world.level = 8',
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		login: true,
 		script: `
-			local M, m = Polestar.Maps, stub.maps
+			local M, m = SendaFH.Maps, stub.maps
 			M.RegisterZoneLevels({ [9000] = { 10, 20, 50, 50 } })
 			local function labels()
 				local out = {}
@@ -391,7 +391,7 @@ test('the world map shows zone ranges on the continent, the hovered zone, and pl
 				end
 				return out
 			end
-			local bar = stub.frame("PolestarMapInfo")
+			local bar = stub.frame("SendaFHMapInfo")
 			m.showMap(9100)
 			m.cursor = { 0.4, 0.3 }
 			stub.advance(0.2)
@@ -403,8 +403,8 @@ test('the world map shows zone ranges on the continent, the hovered zone, and pl
 			m.showMap(9000)
 			stub.advance(0.2)
 			local zone = { labels = #labels(), zone = bar.Zone:GetText(), coords = bar.Coords:GetText() }
-			Polestar.Set("maps.coords", false)
-			Polestar.Set("maps.zoneLevels", false)
+			SendaFH.Set("maps.coords", false)
+			SendaFH.Set("maps.zoneLevels", false)
 			emit({ continent = continent, zoomed = zoomed, zone = zone, hidden = not bar:IsShown() })`,
 	}).emitted;
 	assert.deepEqual(out.continent.labels, [{ name: 'Testshire', range: '10–20', x: 400, y: -300, scale: 1 }]);
@@ -424,7 +424,7 @@ test('the world map shows zone ranges on the continent, the hovered zone, and pl
 test('every Maps setting is registered with a label and help: map features on the Map page, flights and instances under Quality of Life', () => {
 	const [out] = run(`
 		local pages, missing = {}, {}
-		for _, spec in ipairs(Polestar.Widgets.OptionsRegistry) do
+		for _, spec in ipairs(SendaFH.Widgets.OptionsRegistry) do
 			for _, c in ipairs(spec.controls) do
 				if c.key and c.key:find("^maps%.") then
 					if not (c.label and c.help) then missing[#missing + 1] = c.key end

@@ -1,5 +1,5 @@
 'use strict';
-// node tools/polestar.js itemdb build [options]
+// node tools/sendafh.js itemdb build [options]
 
 const path = require('node:path');
 const { parseArgs } = require('node:util');
@@ -7,18 +7,18 @@ const { parseArgs } = require('node:util');
 // The data addon is loaded on demand into every player's client: keep it small.
 const SIZE_BUDGET = 1024 * 1024;
 
-const usage = `usage: node tools/polestar.js itemdb build [options]
+const usage = `usage: node tools/sendafh.js itemdb build [options]
 
-Writes the load-on-demand data addon addon/Polestar_ItemDB (Items.lua + TOC):
+Writes the load-on-demand data addon addon/SendaFH_ItemDB (Items.lua + TOC):
 stats of every equippable Classic Era item (item level, required level,
 inventory type, armor, weapon damage and speed, primary stats and the equip
-bonuses Polestar.Gear scores), from Blizzard client tables (wago.tools CSV:
+bonuses SendaFH.Gear scores), from Blizzard client tables (wago.tools CSV:
 ItemSparse, Item, ItemEffect, SpellEffect). Size budget: ${SIZE_BUDGET / 1024} KiB.
 
   --offline            use cached tables only
   --build <version>    wago.tools Classic Era build (default: newest listed)
   --sources <dir>      source cache (default data/sources)
-  --out <dir>          default addon/Polestar_ItemDB`;
+  --out <dir>          default addon/SendaFH_ItemDB`;
 
 function fail(msg) {
 	console.error(`${msg}\n\n${usage}`);
@@ -66,4 +66,4 @@ async function run(argv) {
 	return fail(sub ? `unknown subcommand "${sub}"` : 'missing subcommand');
 }
 
-module.exports = { name: 'itemdb', summary: 'Build the Polestar_ItemDB data addon (item stats) from client tables', usage, run, SIZE_BUDGET };
+module.exports = { name: 'itemdb', summary: 'Build the SendaFH_ItemDB data addon (item stats) from client tables', usage, run, SIZE_BUDGET };

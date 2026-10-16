@@ -280,11 +280,11 @@ test('new verbs emit Lua that loads under Lua 5.1 and round-trips, with reagents
 	assert.match(lua, /reagents = \{ \{ item = 2589, itemName = "Linen Cloth", count = 2 \} \}/);
 	assert.equal(lua, emitGuides([{ guide: r.guides[0], source: 'test.guide' }]));
 	const [out] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua'] }],
 		script: `
 			local got
-			Polestar.RegisterGuide = function(g) got = g end
-			assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+			SendaFH.RegisterGuide = function(g) got = g end
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 			emit(got)`,
 	}).emitted;
 	assert.deepEqual(out, plain(r.guides[0]));
@@ -301,13 +301,13 @@ test('the compiled new-verb goals pass the real engine registry', () => {
 	assert.deepEqual(r.errors, []);
 	const file = path.join(writeTestPack(r.guides).dir, 'Guides.lua');
 	const [ok] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `
 			${TEST_PACK}
 			local res = {}
-			local real = Polestar.RegisterGuide
-			Polestar.RegisterGuide = function(g) local ok, e = real(g); res[#res + 1] = ok and "ok" or e; return ok, e end
-			assert(loadfile(${JSON.stringify(file)}))("Polestar_Guides", {})
+			local real = SendaFH.RegisterGuide
+			SendaFH.RegisterGuide = function(g) local ok, e = real(g); res[#res + 1] = ok and "ok" or e; return ok, e end
+			assert(loadfile(${JSON.stringify(file)}))("SendaFH_Guides", {})
 			emit(res)`,
 	}).emitted;
 	assert.deepEqual(ok, ['ok']);

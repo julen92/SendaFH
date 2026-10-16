@@ -1,17 +1,17 @@
 'use strict';
-// node tools/polestar.js gear build | fetch
+// node tools/sendafh.js gear build | fetch
 
 const path = require('node:path');
 const { parseArgs } = require('node:util');
 const { SOURCES } = require('../lib/paths');
 
-const usage = `usage: node tools/polestar.js gear build [--addons <dir>]
-       node tools/polestar.js gear fetch
+const usage = `usage: node tools/sendafh.js gear build [--addons <dir>]
+       node tools/sendafh.js gear fetch
 
-build: the data behind Polestar's upgrade advice:
-  addon/Polestar_ItemDB/Forever.lua   ForeverLevelingBiS (MIT): Forever item stats over
+build: the data behind SendaFH's upgrade advice:
+  addon/SendaFH_ItemDB/Forever.lua   ForeverLevelingBiS (MIT): Forever item stats over
                                       the Era table, and quest reward choices
-  addon/Polestar/Gear/SpecData.lua    stat weight bands per spec and level (Polestar's
+  addon/SendaFH/Gear/SpecData.lua    stat weight bands per spec and level (SendaFH's
                                       weights blended with wowsims, MIT), racial traits
 Reads the installed ForeverLevelingBiS and the wowsims cache under
 data/sources/wowsims (no network). Run \`itemdb build\` first.

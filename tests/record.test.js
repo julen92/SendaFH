@@ -1,6 +1,6 @@
 'use strict';
 // `record import|watch|draft` (tools/commands/record.js, tools/lib/recording/)
-// against a fixture PolestarRecorderDB SavedVariables file.
+// against a fixture SendaFHRecorderDB SavedVariables file.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -18,7 +18,7 @@ const { Diagnostics } = require('../tools/lib/dsl/diag');
 const { checkLocation } = require('../tools/lib/dsl/places');
 const { tmpdir } = require('./helpers/tmp');
 
-const CLI = path.join(__dirname, '..', 'tools', 'polestar.js');
+const CLI = path.join(__dirname, '..', 'tools', 'sendafh.js');
 const HUMAN = '1791000000-Testchar';
 const UNDEAD = '1790990000-Altchar';
 
@@ -87,7 +87,7 @@ const UNDEAD_SESSION = `{
 function svText({ human = humanSession(), undead = UNDEAD_SESSION } = {}) {
 	const sessions = [human && `["${HUMAN}"] = ${human}`, undead && `["${UNDEAD}"] = ${undead}`].filter(Boolean).join(',\n');
 	return `
-PolestarRecorderDB = {
+SendaFHRecorderDB = {
 	["schema"] = 1,
 	["current"] = "${HUMAN}",
 	["fp"] = { ["Testchar-Test Realm"] = { ["Stormwind, Elwynn"] = true } },
@@ -103,11 +103,11 @@ ${sessions}
 `;
 }
 
-// <dir>/WTF/Account/<account>/SavedVariables/Polestar_Recorder.lua
+// <dir>/WTF/Account/<account>/SavedVariables/SendaFH_Recorder.lua
 function writeSv(dir, text, account = 'TESTACCOUNT') {
 	const svDir = path.join(dir, 'WTF', 'Account', account, 'SavedVariables');
 	fs.mkdirSync(svDir, { recursive: true });
-	const file = path.join(svDir, 'Polestar_Recorder.lua');
+	const file = path.join(svDir, 'SendaFH_Recorder.lua');
 	fs.writeFileSync(file, text);
 	return file;
 }
@@ -117,7 +117,7 @@ function readJson(file) {
 }
 
 test('import normalizes each session to the recordings schema', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const sv = writeSv(dir, svText());
 	const out = path.join(dir, 'recordings');
 	const result = importFile(sv, { outDir: out, now: new Date('2026-10-12T15:30:00Z') });
@@ -150,7 +150,7 @@ test('import normalizes each session to the recordings schema', () => {
 });
 
 test('import archives the raw file once per distinct content, under the account name', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const sv = writeSv(dir, svText(), 'MYACCOUNT');
 	const out = path.join(dir, 'recordings');
 	const first = importFile(sv, { outDir: out, now: new Date('2026-10-12T15:30:00Z') });
@@ -169,7 +169,7 @@ test('import archives the raw file once per distinct content, under the account 
 });
 
 test('an anonymized import keeps no character name or realm anywhere, keys each character by a stable hash, and archives nothing', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const out = path.join(dir, 'recordings');
 	const sv = writeSv(dir, svText());
 	const result = importFile(sv, { outDir: out, anonymize: true });
@@ -189,12 +189,12 @@ test('an anonymized import keeps no character name or realm anywhere, keys each 
 	assert.equal(human.session, `1791000000-${human.char.id}`);
 	assert.equal(human.char.race, 'Human');
 	// The same character in a later file gets the same id, so its sessions group together.
-	const again = importFile(writeSv(tmpdir('polestar-record-'), svText({ undead: null })), { outDir: path.join(dir, 'other'), anonymize: true });
+	const again = importFile(writeSv(tmpdir('sendafh-record-'), svText({ undead: null })), { outDir: path.join(dir, 'other'), anonymize: true });
 	assert.equal(again.sessions[0].session.char.id, human.char.id);
 });
 
 test('a session already imported keeps the longer event list; sessions missing from a reset file survive', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const out = path.join(dir, 'recordings');
 	const sv = writeSv(dir, svText());
 	importFile(sv, { outDir: out });
@@ -223,7 +223,7 @@ test('a session already imported keeps the longer event list; sessions missing f
 });
 
 test('auto-detection prefers the launch "_forever_" client in any Wine prefix over a leftover beta', () => {
-	const home = tmpdir('polestar-record-');
+	const home = tmpdir('sendafh-record-');
 	// Never the machine's own native install (C:\... or /Applications/...).
 	const native = { platform: 'linux' };
 	const client = (prefix, name, flavor) => {
@@ -232,8 +232,8 @@ test('auto-detection prefers the launch "_forever_" client in any Wine prefix ov
 		fs.writeFileSync(path.join(dir, '.flavor.info'), `Product Flavor!STRING:0\n${flavor}\n`);
 		return dir;
 	};
-	const saved = process.env.POLESTAR_WTF;
-	delete process.env.POLESTAR_WTF;
+	const saved = process.env.SENDAFH_WTF;
+	delete process.env.SENDAFH_WTF;
 	try {
 		const beta = client(['Games'], '_classic_beta_', 'wow_classic_beta');
 		const betaSv = writeSv(beta, svText());
@@ -251,13 +251,13 @@ test('auto-detection prefers the launch "_forever_" client in any Wine prefix ov
 		assert.deepEqual(findSavedVariables({ home, native }), [plainSv]);
 
 		// A native install is searched too, at the injected root.
-		const root = tmpdir('polestar-record-');
+		const root = tmpdir('sendafh-record-');
 		const mac = path.join(root, 'Applications', 'World of Warcraft', '_forever_');
 		fs.rmSync(path.join(home, '.wine'), { recursive: true });
 		const macSv = writeSv(mac, svText());
 		assert.deepEqual(findSavedVariables({ home, native: { platform: 'darwin', root } }), [macSv]);
 	} finally {
-		if (saved !== undefined) process.env.POLESTAR_WTF = saved;
+		if (saved !== undefined) process.env.SENDAFH_WTF = saved;
 	}
 });
 
@@ -283,7 +283,7 @@ test('data build: recorded kills linked to a quest nobody knows are skipped, not
 });
 
 test('SavedVariables are found per account under a WTF folder; --sv wins', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const a = writeSv(dir, svText(), 'ACCOUNT_A');
 	const b = writeSv(dir, svText(), 'ACCOUNT_B');
 	fs.mkdirSync(path.join(dir, 'WTF', 'Account', 'ACCOUNT_C', 'SavedVariables'), { recursive: true });
@@ -335,7 +335,7 @@ step Dungar Longdrink
 `;
 
 test('draft turns a session into a guide in the .guide DSL', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const sv = writeSv(dir, svText());
 	const out = path.join(dir, 'recordings');
 	importFile(sv, { outDir: out });
@@ -372,7 +372,7 @@ test('the draft parses without diagnostics in the guide compiler', () => {
 });
 
 test('the recording keeps the full flight point name; the draft flies to its town, which lint accepts', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	importFile(writeSv(dir, svText()), { outDir: dir });
 	const session = readJson(path.join(dir, `${HUMAN}.json`));
 	assert.equal(session.events.find((ev) => ev.e === 'taxi').to, 'Sentinel Hill, Westfall');
@@ -390,7 +390,7 @@ test('the recording keeps the full flight point name; the draft flies to its tow
 });
 
 test('record CLI: import then draft, refusing to overwrite an edited draft', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const sv = writeSv(dir, svText());
 	const out = path.join(dir, 'recordings');
 	const drafts = path.join(dir, 'drafts');
@@ -417,11 +417,11 @@ test('record CLI: import then draft, refusing to overwrite an edited draft', () 
 
 	const missing = run('import', '--wtf', path.join(dir, 'empty'));
 	assert.equal(missing.status, 1);
-	assert.match(missing.stderr, /no Polestar_Recorder SavedVariables found/);
+	assert.match(missing.stderr, /no SendaFH_Recorder SavedVariables found/);
 });
 
 test('watch re-imports when the client rewrites the file and reports sessions that vanished', async () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const out = path.join(dir, 'recordings');
 	const sv = writeSv(dir, svText());
 	const seen = [];
@@ -460,7 +460,7 @@ test('watch re-imports when the client rewrites the file and reports sessions th
 });
 
 test('quest XP reward fields pass through import unchanged', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const extra = `{ ["t"] = 1530, ["e"] = "reward", ["q"] = 62, ["rewardXp"] = 450, ["rewardXpBase"] = 420, ["lvl"] = 3 },`;
 	const human = humanSession(extra).replace('["xp"] = 300,', '["xp"] = 300, ["rewardXp"] = 450, ["rewardXpBase"] = 420,');
 	const sv = writeSv(dir, svText({ human, undead: null }));
@@ -502,7 +502,7 @@ function progressSession({ events = 'full', factionsAt = 1791000500, standing = 
 }
 
 test('progress events and the factions/skills/legacy dumps pass through import; per-session bookkeeping does not', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const out = path.join(dir, 'recordings');
 	const sv = writeSv(dir, svText({ human: progressSession(), undead: null }));
 	importFile(sv, { outDir: out });
@@ -542,14 +542,14 @@ test('normalizing tolerates a session written by an older or damaged recorder', 
 });
 
 test('record draft inside a guide pack writes a pack-prefixed draft into <pack>/drafts/', () => {
-	const dir = tmpdir('polestar-record-');
+	const dir = tmpdir('sendafh-record-');
 	const out = path.join(dir, 'recordings');
 	importFile(writeSv(dir, svText()), { outDir: out });
 	const session = readJson(path.join(out, `${HUMAN}.json`));
 	assert.equal(draftGuide(session, { pack: 'joe' }).id, 'joe/draft/alliance/human/2026-10-03-0400');
 	assert.equal(draftGuide(session, { pack: 'guides' }).id, 'draft/alliance/human/2026-10-03-0400');
 
-	const pack = tmpdir('polestar-pack-');
+	const pack = tmpdir('sendafh-pack-');
 	fs.cpSync(path.join(__dirname, 'fixtures', 'packs', 'joe'), pack, { recursive: true });
 	const r = spawnSync(process.execPath, [CLI, 'record', 'draft', HUMAN, '--recordings', out], { cwd: path.join(pack, 'guides'), encoding: 'utf8' });
 	assert.equal(r.status, 0, r.stderr);
@@ -558,7 +558,7 @@ test('record draft inside a guide pack writes a pack-prefixed draft into <pack>/
 	assert.equal(text, EXPECTED_DRAFT.replace('guide draft/', 'guide joe/draft/'));
 	assert.match(r.stdout, /joe\/draft\/alliance\/human\/2026-10-03-0400/);
 	// --pack names the pack from anywhere.
-	const other = tmpdir('polestar-pack-');
+	const other = tmpdir('sendafh-pack-');
 	fs.cpSync(path.join(__dirname, 'fixtures', 'packs', 'mini'), other, { recursive: true });
 	const r2 = spawnSync(process.execPath, [CLI, 'record', 'draft', HUMAN, '--recordings', out, '--pack', other], { encoding: 'utf8' });
 	assert.equal(r2.status, 0, r2.stderr);

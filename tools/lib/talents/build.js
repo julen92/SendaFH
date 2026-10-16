@@ -2,7 +2,7 @@
 // Talent plans for the addon's Talents module: talents/forever/<class>.json
 // (picks by talent name, one per level) resolved against the Forever client's
 // trait tables and replayed point by point under the client's rules, then
-// written as addon/Polestar/Talents/Builds.lua with a snapshot of the tree,
+// written as addon/SendaFH/Talents/Builds.lua with a snapshot of the tree,
 // so the addon can check its plan against the live tree at run time.
 //
 // Forever's three-column trees are one C_Traits tree per class:

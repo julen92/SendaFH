@@ -1,5 +1,5 @@
 # The acceptance pack's second guide (tests/acceptance-packs.test.js),
-# added after `polestar new` writes the pack.
+# added after `sendafh new` writes the pack.
 guide acceptance-good/farms
 title The Westfall Farms
 faction Alliance

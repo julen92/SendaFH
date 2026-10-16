@@ -1,8 +1,8 @@
 'use strict';
-// Walking paths (addon/Polestar/Nav/Walk.lua): the arrow follows the walking
-// engine vendored from Shortest Path Forever (addon/Polestar_Nav) instead of a
+// Walking paths (addon/SendaFH/Nav/Walk.lua): the arrow follows the walking
+// engine vendored from Shortest Path Forever (addon/SendaFH_Nav) instead of a
 // straight line. A fake engine with deterministic callbacks stands in for
-// Polestar_NavEngine: the arrow follows the path's points, straying asks
+// SendaFH_NavEngine: the arrow follows the path's points, straying asks
 // again, a new target cancels the stale search, nothing is searched in
 // combat, hand-made crossings and guide `goto`s win, and every failure (no
 // engine, no data, unreachable, an error, the option off) is today's straight
@@ -12,12 +12,12 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
-// The fake engine, installed before the addon loads (Polestar_Nav's API.lua sets the same global).
+// The fake engine, installed before the addon loads (SendaFH_Nav's API.lua sets the same global).
 const ENGINE = `
 fake = { calls = {}, avail = {} }
-Polestar_NavEngine = {
+SendaFH_NavEngine = {
 	Find = function(map, from, to, callback, waterWalking)
 		if fake.throw then error("boom") end
 		local job = { map = map, from = from, to = to, callback = callback, waterWalking = waterWalking }
@@ -42,7 +42,7 @@ end
 `;
 
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local nav = stub.nav
 local floor = math.floor
 local function target(wx, wy, label)
@@ -62,7 +62,7 @@ local function calls() return #fake.calls end
 // The planner's measures (Walk.Measure): the fake engine with Path.FindMany too.
 // settle(job, fn) answers a batch with fn(x, y) per target (a cost, or false).
 const MANY = `
-Polestar_NavEngine.FindMany = function(map, from, targets, callback, waterWalking, reverse)
+SendaFH_NavEngine.FindMany = function(map, from, targets, callback, waterWalking, reverse)
 	local job = { many = true, map = map, from = from, targets = targets, callback = callback, waterWalking = waterWalking, reverse = reverse }
 	fake.calls[#fake.calls + 1] = job
 	return job
@@ -209,7 +209,7 @@ test('hand-made crossings win: the engine walks to the gate, the crossing itself
 		nav.place(600, 25)
 		r.crossing = aim()
 		r.calls = calls()
-		local leg = Polestar.Nav.travel.CurrentLeg()
+		local leg = SendaFH.Nav.travel.CurrentLeg()
 		r.handmade = leg.handmade == true
 		emit(r)`);
 	assert.deepEqual(out.toGate, [1, 600, 20], 'searched only up to the gate');
@@ -230,7 +230,7 @@ test('a guide goal after a guide goto keeps the straight arrow from the mouth; t
 			{ goals = { { t = "accept", quest = 1 }, { t = "collect", map = m, x = ix, y = iy } } },
 			{ goals = { { t = "talk", map = m, x = ox, y = oy }, { t = "kill", map = m, x = ix, y = iy } } },
 		} }
-		Polestar.Engine.GetGuide = function() return guide end
+		SendaFH.Engine.GetGuide = function() return guide end
 		nav.place(0, 0)
 		nav.setWaypoint({ map = m, x = mx, y = my, label = "Mouth", stepIndex = 1, goalIndex = 1, kind = "goto", r = 5 })
 		aim()
@@ -252,7 +252,7 @@ test('fallbacks: no engine, no data for the continent, unreachable, an error: th
 	const [none] = run(`
 		nav.place(0, 0)
 		target(0, -600)
-		emit({ aim(), Polestar.Nav.Path == nil })`, { engine: false });
+		emit({ aim(), SendaFH.Nav.Path == nil })`, { engine: false });
 	assert.deepEqual(none, [['travel', 600, 0, -600], true]);
 
 	const [out] = run(`
@@ -287,12 +287,12 @@ test('fallbacks: no engine, no data for the continent, unreachable, an error: th
 test('nav.navRouting off: the straight arrow, the search in flight cancelled', () => {
 	const [out] = run(`
 		local r = {}
-		r.default = Polestar.Get("nav.navRouting")
+		r.default = SendaFH.Get("nav.navRouting")
 		nav.place(0, 0)
 		target(0, -600)
 		N.Sample()
 		local job = fake.last()
-		Polestar.Set("nav.navRouting", false)
+		SendaFH.Set("nav.navRouting", false)
 		r.aim = aim()
 		r.cancelled = job.cancelled == true
 		target(0, -500)
@@ -318,7 +318,7 @@ test('a ghost\'s walk is searched with water walking', () => {
 test('route geometry: the walk carries the engine\'s path once in, the straight line before; changes are announced', () => {
 	const [out] = run(`
 		local r, fired = {}, 0
-		Polestar.On("NAV_ROUTE_GEOMETRY", function() fired = fired + 1 end)
+		SendaFH.On("NAV_ROUTE_GEOMETRY", function() fired = fired + 1 end)
 		r.none = N.GetRouteGeometry() == nil
 		nav.place(0, 0)
 		target(0, -600)
@@ -348,7 +348,7 @@ test('route geometry: the walk carries the engine\'s path once in, the straight 
 // a nameless cave mouth, a lift (bottom then top landing) along it, and
 // chokepoints the split must leave out.
 const CHOKES = `
-PolestarNavChokepoints = { [0] = {
+SendaFHNavChokepoints = { [0] = {
 	{ wx = 8, wy = -150, r = 10, kind = "bridge", name = "Bridge Hollow", zone = "Testshire",
 		sides = { { wx = 0, wy = -100, area = "Westbrook" }, { wx = 0, wy = -200, area = "Lakeshire" } } },
 	{ wx = 0, wy = -400, r = 10, kind = "cave", name = "", zone = "Testshire" },
@@ -405,7 +405,7 @@ test('K2: the steps stay the same over 10 position updates along a leg, and adva
 		end
 		nav.place(0, -148)
 		N.Sample()
-		emit({ same = same, calls = calls(), next = Polestar.Nav.travel.CurrentLabel() })`);
+		emit({ same = same, calls = calls(), next = SendaFH.Nav.travel.CurrentLabel() })`);
 	assert.equal(out.same, true);
 	assert.equal(out.calls, 1, 'no new search on the way');
 	assert.equal(out.next, 'Walk to the cave mouth in Testshire');
@@ -416,7 +416,7 @@ test('K3, K6: walk steps carry no wait and their times sum exactly to the walk; 
 		nav.useTravelWorld()
 		${CHOKES}
 		local asked
-		Polestar.Transit = {
+		SendaFH.Transit = {
 			Now = function() return 100 end,
 			LiftNear = function() return 7, "The Great Lift" end,
 			NextDeparture = function(kind, id, now, side) asked = { kind, id, side } return 40, 20 end,
@@ -437,7 +437,7 @@ test('K3, K6: walk steps carry no wait and their times sum exactly to the walk; 
 			N.Sample()
 		end
 		emit({ walkSecs = walkSecs, walkYards = walkYards, lift = { lift.seconds, lift.lift }, asked = asked,
-			total = legs[1].seconds + legs[1].rest, caption = Polestar.Nav.travel.CurrentLabel() })`);
+			total = legs[1].seconds + legs[1].rest, caption = SendaFH.Nav.travel.CurrentLabel() })`);
 	assert.equal(out.walkSecs, Math.round(600 / 7), 'the pieces add up to the path at run speed');
 	assert.equal(out.walkYards, 600);
 	assert.deepEqual(out.lift, [60, 7]);
@@ -463,7 +463,7 @@ test('K4: a lift\'s side comes from the path\'s direction, not the player\'s hei
 
 test('K7: legs under a few yards are dropped and every ETA stays finite', () => {
 	const [out] = run(`${SPLIT}
-		local T = Polestar.Nav.travel
+		local T = SendaFH.Nav.travel
 		local finite = true
 		local legs = N.GetRoute()
 		for i = 1, #legs do
@@ -482,14 +482,14 @@ test('K7: legs under a few yards are dropped and every ETA stays finite', () => 
 test('second review: a walk leg takes the engine path\'s length once it arrives', () => {
 	const [out] = run(`
 		nav.useTravelWorld()
-		local T = Polestar.Nav.travel
+		local T = SendaFH.Nav.travel
 		local function walk()
 			local legs, ci = N.GetRoute()
 			local l = legs[ci]
 			return { l.kind, l.yards, l.seconds, l.seconds + l.rest, #legs }
 		end
 		local r, changes = {}, 0
-		Polestar.On("ROUTE_CHANGED", function() changes = changes + 1 end)
+		SendaFH.On("ROUTE_CHANGED", function() changes = changes + 1 end)
 		nav.place(0, 0)
 		target(0, -600)
 		N.Sample()
@@ -513,7 +513,7 @@ test('second review: a walk leg takes the engine path\'s length once it arrives'
 		N.Sample()
 		fake.resolve(0, -40, 300, -300, 0, -650)
 		r.again = walk()
-		Polestar.Set("nav.navRouting", false)
+		SendaFH.Set("nav.navRouting", false)
 		r.cleared = walk()
 		emit(r)`);
 	assert.deepEqual(out.straight, ['walk', 750, 107, 107, 1], 'straight x1.25 at 7 yd/s before the path');
@@ -530,7 +530,7 @@ test('second review: a walk leg takes the engine path\'s length once it arrives'
 test('K8: a hand-made crossing, chain node or guide goto at the same spot keeps its own caption', () => {
 	const [out] = run(`
 		nav.useTravelWorld()
-		PolestarNavChokepoints = { [0] = {
+		SendaFHNavChokepoints = { [0] = {
 			{ wx = 0, wy = -575, r = 10, kind = "cave", name = "Goto Cave", zone = "Testshire" },
 			{ wx = 0, wy = -300, r = 10, kind = "gate", name = "Chain Gate", zone = "Testshire" },
 			{ wx = 0, wy = -150, r = 10, kind = "bridge", name = "Kept Bridge", zone = "Testshire" },
@@ -552,7 +552,7 @@ test('K8: a hand-made crossing, chain node or guide goto at the same spot keeps 
 test("K4: a packed lift's landings a few yards apart: the side boarded comes from the path's height, the ride goes to the other landing", () => {
 	const [out] = run(`
 		nav.useTravelWorld()
-		PolestarNavChokepoints = { [0] = {
+		SendaFHNavChokepoints = { [0] = {
 			{ wx = 0, wy = -300, z = 0, r = 6, kind = "lift", name = "Ruins", zone = "Testshire", lift = "Undervator", liftEnd = "bottom", pair = 2 },
 			{ wx = 0, wy = -308, z = 90, r = 6, kind = "lift", name = "Ruins", zone = "Testshire", lift = "Undervator", liftEnd = "top", pair = 1 },
 		} }
@@ -677,7 +677,7 @@ N.RegisterTravelData({ build = "test",
 	},
 	flights = { 1, 2, 1700, 2, 1, 1700, 1, 3, 1700, 3, 1, 1700 },
 }, true)
-Polestar.CharState().flags.taxi = { [1] = true, [2] = true, [3] = true }
+SendaFH.CharState().flags.taxi = { [1] = true, [2] = true, [3] = true }
 local function at(x, y, ax, ay) return math.abs(x - ax) < 0.01 and math.abs(y - ay) < 0.01 end
 -- The engine's walks into (0, 0): the ridge from Ridge Roost.
 local function terrain(x, y)
@@ -697,7 +697,7 @@ local function route()
 	return { lands = fly and fly.to.name, yards = walk and walk.yards, seconds = walk and walk.seconds, engine = walk and walk.engine or false }
 end
 local changes = 0
-Polestar.On("ROUTE_CHANGED", function() changes = changes + 1 end)
+SendaFH.On("ROUTE_CHANGED", function() changes = changes + 1 end)
 `;
 
 test('terrain: one reversed FindMany from the target prices the walks into it; the route then lands where the walk is short, once', () => {
@@ -845,7 +845,7 @@ N.RegisterCrossings({ complete = true,
 	},
 	crossings = { { id = "gate", a = { map = 9002, c = 0, wx = 600, wy = 20, r = 15 }, b = { map = 9003, c = 0, wx = 600, wy = -20, r = 15 },
 		ab = "Through the gate to East Vale" } } })
-Polestar.CharState().flags.taxi = { [1] = true, [2] = true }
+SendaFH.CharState().flags.taxi = { [1] = true, [2] = true }
 local function legsNow()
 	local legs, ci = N.GetRoute()
 	local out = {}
@@ -1003,7 +1003,7 @@ test('review 3: the last walk to a target after a guide goto is never searched, 
 			{ goals = { { t = "goto", map = m, x = mx, y = my } } },
 			{ goals = { { t = "collect", map = m, x = ix, y = iy } } },
 		} }
-		Polestar.Engine.GetGuide = function() return guide end
+		SendaFH.Engine.GetGuide = function() return guide end
 		nav.place(900, 800)
 		nav.setWaypoint({ map = m, x = ix, y = iy, label = "Inside", stepIndex = 2, goalIndex = 1, kind = "collect", r = 5 })
 		N.Sample()
@@ -1033,7 +1033,7 @@ N.RegisterTravelData({ build = "test",
 			a = { "Testshire Docks", 0, -900, 0, 9000, 50, 95 }, b = { "Farland Pier", 1, 400, 0, 9001, 50, 10 } },
 	},
 }, true)
-Polestar.CharState().flags.taxi = { [1] = true, [2] = true }
+SendaFH.CharState().flags.taxi = { [1] = true, [2] = true }
 local function kinds()
 	local legs, ci = N.GetRoute()
 	local out = {}
@@ -1139,10 +1139,10 @@ test('review 10: a later walk priced by its path times the boat after it again b
 					a = { "Testshire Docks", 0, -900, 0, 9000, 50, 95 }, b = { "Farland Pier", 1, 400, 0, 9001, 50, 10 } },
 			},
 		}, true)
-		Polestar.CharState().flags.taxi = { [1] = true, [2] = true }
+		SendaFH.CharState().flags.taxi = { [1] = true, [2] = true }
 		-- The boat leaves at 1000 s and sails 60 s.
-		Polestar.Transit.Now = function() return 0 end
-		Polestar.Transit.NextDeparture = function(kind, id, at) if kind == "boat" then return 1000 - at, 60 end end
+		SendaFH.Transit.Now = function() return 0 end
+		SendaFH.Transit.NextDeparture = function(kind, id, at) if kind == "boat" then return 1000 - at, 60 end end
 		local function legsNow()
 			local legs, ci = N.GetRoute()
 			local out = {}

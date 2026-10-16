@@ -1,5 +1,5 @@
 'use strict';
-// node tools/polestar.js travel build | route | chain | import
+// node tools/sendafh.js travel build | route | chain | import
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -13,20 +13,20 @@ const { recordedWalks } = require('../lib/travel/paths');
 const { Frames } = require('../lib/travel/geo');
 const { readRecordings } = require('../lib/data/recordings');
 
-const usage = `usage: node tools/polestar.js travel build [options]
-       node tools/polestar.js travel route --from <map,x,y> --to <map,x,y> [options]
-       node tools/polestar.js travel chain --to <map,x,y> [options]
-       node tools/polestar.js travel import --carbonite <ZoneConnections.lua> --source <text> [options]
+const usage = `usage: node tools/sendafh.js travel build [options]
+       node tools/sendafh.js travel route --from <map,x,y> --to <map,x,y> [options]
+       node tools/sendafh.js travel chain --to <map,x,y> [options]
+       node tools/sendafh.js travel import --carbonite <ZoneConnections.lua> --source <text> [options]
 
 build: the flight network (Blizzard Classic Era TaxiNodes/TaxiPath/TaxiPathNode
 via wago.tools), boats/zeppelins/tram (plus the ships WoW Forever added, from
 the Forever client's TaxiPathNode), inns, learned walking paths and zone
 crossings learned from recordings -> data/forever/travel.json,
-addon/Polestar/Nav/TravelData.lua and the flights' tracks in
-addon/Polestar/Maps/FlightPaths.lua. The shipped crossings file
+addon/SendaFH/Nav/TravelData.lua and the flights' tracks in
+addon/SendaFH/Maps/FlightPaths.lua. The shipped crossings file
 (tools/lib/travel/crossings.json, from "travel import") goes into TravelData.lua.
 With the optional local crossings file (data/local/crossings.json, validated)
-it also writes the local data addon addon/Polestar_Travel (installed when
+it also writes the local data addon addon/SendaFH_Travel (installed when
 built, never packaged).
 
   --offline            use cached wago.tools tables only
@@ -37,14 +37,14 @@ built, never packaged).
   --sources <dir>      data/sources (wago cache)
   --shipped <file>     the shipped crossings file (default: tools/lib/travel/crossings.json; "none" to leave it out)
   --crossings <file>   the local crossings file (default: <data>/../local/crossings.json)
-  --travel-addon <dir> Polestar_Travel output (default: addon/Polestar_Travel)
+  --travel-addon <dir> SendaFH_Travel output (default: addon/SendaFH_Travel)
   --json <file>        travel.json output (default: <data>/travel.json)
-  --lua <file>         TravelData.lua output (default: addon/Polestar/Nav/TravelData.lua)
-  --flight-lua <file>  FlightPaths.lua output (default: addon/Polestar/Maps/FlightPaths.lua;
+  --lua <file>         TravelData.lua output (default: addon/SendaFH/Nav/TravelData.lua)
+  --flight-lua <file>  FlightPaths.lua output (default: addon/SendaFH/Maps/FlightPaths.lua;
                        with --lua, FlightPaths.lua beside that file)
 
 route: run the addon's own planner (Nav/Travel.lua + TravelData.lua, plus
-Polestar_Travel when built) under Lua 5.1 between two Era-frame map points
+SendaFH_Travel when built) under Lua 5.1 between two Era-frame map points
 and print the legs.
 
   --from <map,x,y>     start (uiMapID, map percent)
@@ -55,8 +55,8 @@ and print the legs.
   --speed <yd/s>       run speed (default 7)
   --hearth <location>  bind location, Hearthstone ready
   --data <dir>         data/forever (map-frames, zones, travel.json)
-  --lua <file>         TravelData.lua (default: addon/Polestar/Nav/TravelData.lua)
-  --crossings-lua <f>  Polestar_Travel's Crossings.lua (default: addon/Polestar_Travel/Crossings.lua when built; "none" to skip)
+  --lua <file>         TravelData.lua (default: addon/SendaFH/Nav/TravelData.lua)
+  --crossings-lua <f>  SendaFH_Travel's Crossings.lua (default: addon/SendaFH_Travel/Crossings.lua when built; "none" to skip)
   --json               print the legs as JSON
 
 chain: a candidate approach chain (a cave, a climb) for the local crossings
@@ -122,9 +122,9 @@ async function build(rest) {
 		log: (m) => console.log(m),
 	});
 	const jsonOut = path.resolve(values.json || path.join(dataDir, 'travel.json'));
-	const luaOut = path.resolve(values.lua || path.join(ROOT, 'addon', 'Polestar', 'Nav', 'TravelData.lua'));
+	const luaOut = path.resolve(values.lua || path.join(ROOT, 'addon', 'SendaFH', 'Nav', 'TravelData.lua'));
 	// A named TravelData.lua (tests, trial builds) keeps the flights' tracks beside it, never in the addon.
-	const flightOut = path.resolve(values['flight-lua'] || (values.lua ? path.join(path.dirname(luaOut), 'FlightPaths.lua') : path.join(ROOT, 'addon', 'Polestar', 'Maps', 'FlightPaths.lua')));
+	const flightOut = path.resolve(values['flight-lua'] || (values.lua ? path.join(path.dirname(luaOut), 'FlightPaths.lua') : path.join(ROOT, 'addon', 'SendaFH', 'Maps', 'FlightPaths.lua')));
 	const travelAddonDir = path.resolve(values['travel-addon'] || path.join(ROOT, 'addon', TRAVEL_ADDON));
 	writeTravel(result, { jsonOut, luaOut, flightOut, travelAddonDir });
 	const c = result.travel.counts;
@@ -193,7 +193,7 @@ function route(rest) {
 			json: { type: 'boolean' },
 		},
 	});
-	// Polestar_Travel joins by default when built, unless a TravelData.lua was named.
+	// SendaFH_Travel joins by default when built, unless a TravelData.lua was named.
 	let crossingsLua = values['crossings-lua'];
 	if (crossingsLua === undefined && !values.lua) {
 		const built = path.join(ROOT, 'addon', TRAVEL_ADDON, 'Crossings.lua');
@@ -262,7 +262,7 @@ function chain(rest) {
 	const dataDir = path.resolve(values.data || DATA);
 	const read = (f) => {
 		const file = path.join(dataDir, f);
-		if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/polestar.js data build)`);
+		if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/sendafh.js data build)`);
 		return JSON.parse(fs.readFileSync(file, 'utf8'));
 	};
 	const frames = new Frames(read('map-frames.json').era, read('zones.json'));

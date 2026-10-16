@@ -14,7 +14,7 @@ const { threadId } = require('node:worker_threads');
 const { compareVersions } = require('../../data/wago');
 
 const LATEST_URL = 'https://wago.tools/api/builds/latest';
-const UA = 'polestar-planner';
+const UA = 'sendafh-planner';
 const fileUrl = (fdid, product) => `https://wago.tools/api/casc/${fdid}?download&branch=${encodeURIComponent(product)}`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

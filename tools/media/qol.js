@@ -11,7 +11,7 @@
 //   qol-coin     quest reward badge: sells for most, a coin with a dark rim
 //   qol-ring     flight map destination marker: a ring with four ticks
 //
-//   node tools/polestar.js media qol
+//   node tools/sendafh.js media qol
 
 const path = require('node:path');
 const { Canvas, sdf } = require('../lib/tga');

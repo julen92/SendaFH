@@ -1,5 +1,5 @@
 'use strict';
-// polestar find: the reference data and our guides searched by id or name,
+// sendafh find: the reference data and our guides searched by id or name,
 // each result with a guide line ready to paste.
 
 const { test } = require('node:test');
@@ -160,7 +160,7 @@ test('missing reference data is an error naming the files and data build, not "n
 	for (const extra of [[], ['--json']]) {
 		const { result, out } = await quiet(() => cmd.run(['Westfall Stew', '--data', empty, '--guides', GUIDES, ...extra]));
 		assert.equal(result, 1);
-		assert.match(out, /find: the reference data in .* is missing quests\.json, npcs\.json, objects\.json, items\.json, zones\.json; run node tools\/polestar\.js data build/);
+		assert.match(out, /find: the reference data in .* is missing quests\.json, npcs\.json, objects\.json, items\.json, zones\.json; run node tools\/sendafh\.js data build/);
 		assert.doesNotMatch(out, /nothing matches|^\[\]$/m);
 	}
 	// Guides need no reference data.

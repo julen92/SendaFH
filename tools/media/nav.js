@@ -3,7 +3,7 @@
 // minimap edge pointer. Drawn from signed distance functions so they stay
 // anti-aliased at any display scale and carry no third-party artwork.
 //
-//   node tools/polestar.js media nav
+//   node tools/sendafh.js media nav
 //
 // Tintable layers are white; the addon colours them with SetVertexColor. Dark
 // rims are baked in (black stays black under a tint), so the arrow reads on
@@ -79,7 +79,7 @@ function glow(size) {
 	return c;
 }
 
-// Four-pointed star: Polestar's mark, used at the centre of map pins.
+// Four-pointed star: SendaFH's mark, used at the centre of map pins.
 function star(cx, cy, outer, inner) {
 	const pts = [];
 	for (let i = 0; i < 8; i++) {

@@ -1,5 +1,5 @@
 'use strict';
-// `node tools/polestar.js play`: the browser playground (tools/play). Starts
+// `node tools/sendafh.js play`: the browser playground (tools/play). Starts
 // the local server over one live Lua session of the real addons and prints
 // the URL; Ctrl-C saves the SavedVariables and stops it. Given another guide
 // pack (a folder argument, --pack, or the nearest pack.json) that pack is
@@ -13,17 +13,17 @@ const { writePackDir } = require('../lib/dsl/project');
 const { PACK_OPTIONS, PACK_USAGE, otherPack, buildPack, folderIn } = require('../lib/pack/build');
 
 const { ROOT } = require('../lib/paths');
-const DEFAULT_ART = '/tmp/polestar-art';
+const DEFAULT_ART = '/tmp/sendafh-art';
 
-// Client art when none is named: $POLESTAR_CLIENT_ART, else /tmp/polestar-art
+// Client art when none is named: $SENDAFH_CLIENT_ART, else /tmp/sendafh-art
 // when it holds maps.json, else '' (draw without art).
 function defaultArt() {
-	return process.env.POLESTAR_CLIENT_ART || (fs.existsSync(path.join(DEFAULT_ART, 'maps.json')) ? DEFAULT_ART : '');
+	return process.env.SENDAFH_CLIENT_ART || (fs.existsSync(path.join(DEFAULT_ART, 'maps.json')) ? DEFAULT_ART : '');
 }
 
-// The playground's SavedVariables folder: $POLESTAR_PLAY_DATA, else data/play/.
+// The playground's SavedVariables folder: $SENDAFH_PLAY_DATA, else data/play/.
 function playDataDir() {
-	return process.env.POLESTAR_PLAY_DATA ? path.resolve(process.env.POLESTAR_PLAY_DATA) : path.join(ROOT, 'data', 'play');
+	return process.env.SENDAFH_PLAY_DATA ? path.resolve(process.env.SENDAFH_PLAY_DATA) : path.join(ROOT, 'data', 'play');
 }
 
 function parse(argv) {
@@ -37,7 +37,7 @@ function parse(argv) {
 
 // A fresh temp folder for a pack's build in the playground; removed at exit.
 function playPackRoot() {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-play-pack-'));
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-play-pack-'));
 	process.once('exit', () => fs.rmSync(root, { recursive: true, force: true }));
 	return root;
 }
@@ -72,7 +72,7 @@ async function run(argv) {
 		return 2;
 	}
 	if (!fs.existsSync(path.join(ROOT, 'data', 'forever', 'races.json'))) {
-		console.error('data/forever is not built: run node tools/polestar.js data build first');
+		console.error('data/forever is not built: run node tools/sendafh.js data build first');
 		return 1;
 	}
 	const packs = [];
@@ -93,7 +93,7 @@ async function run(argv) {
 		dataDir,
 		log: (m) => console.log(`[play] ${m}`),
 	});
-	console.log(`Polestar playground: ${play.url}  (started in ${Date.now() - t0} ms${opts.art ? `, art from ${opts.art}` : ', no client art'})`);
+	console.log(`SendaFH playground: ${play.url}  (started in ${Date.now() - t0} ms${opts.art ? `, art from ${opts.art}` : ', no client art'})`);
 	console.log(`SavedVariables in ${path.relative(process.cwd(), dataDir) || '.'} (--fresh resets them). Ctrl-C to stop.`);
 	await untilStopped(() => play.close({ save: true }));
 	return 0;
@@ -118,9 +118,9 @@ function untilStopped(stop) {
 }
 
 const usage = [
-	'usage: node tools/polestar.js play [<dir>] [--port 8077] [--art <dir>] [--fresh]',
+	'usage: node tools/sendafh.js play [<dir>] [--port 8077] [--art <dir>] [--fresh]',
 	'',
-	'Starts a local server running the real Polestar, Polestar_Guides and the',
+	'Starts a local server running the real SendaFH, SendaFH_Guides and the',
 	'built data packs against the simulated world, and prints its URL. Click,',
 	'hover, scroll, drag and type in the game screen; the side panel sets the',
 	'character, moves them, plays guide goals and tweaks the look live.',
@@ -128,11 +128,11 @@ const usage = [
 	'linted, built into a temp folder and loaded after our guides.',
 	'',
 	'  --port <n>   port on 127.0.0.1 (default 8077; 0 picks a free one)',
-	'  --art <dir>  local client art (default $POLESTAR_CLIENT_ART, else',
-	'               /tmp/polestar-art when present); served locally only',
+	'  --art <dir>  local client art (default $SENDAFH_CLIENT_ART, else',
+	'               /tmp/sendafh-art when present); served locally only',
 	'  --no-art     draw without client art',
 	'  --fresh      forget the character and SavedVariables (data/play/, or',
-	'               $POLESTAR_PLAY_DATA)',
+	'               $SENDAFH_PLAY_DATA)',
 	PACK_USAGE,
 ].join('\n');
 

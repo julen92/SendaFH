@@ -11,7 +11,7 @@
 //     consecutive located goals of every guide (and across `next`), MIN_PAIR yd apart or more
 //   arrowReport({ nav, frames, pairs, aidsLua, set, reference, stats, log }) -> { json, md }
 //
-// Every pair is planned twice, without and with the aids (Polestar_Travel's
+// Every pair is planned twice, without and with the aids (SendaFH_Travel's
 // Crossings.lua), by an Alliance or Horde character (the guide's faction;
 // neutral guides: Alliance) that knows no flight master and has no
 // Hearthstone, so the routes measure walking (decided here). A walk leg
@@ -276,7 +276,7 @@ function renderMd(j) {
 	const names = { 0: 'Eastern Kingdoms', 1: 'Kalimdor' };
 	L.push('# Arrow aids from the navigation grid');
 	L.push('');
-	L.push(`Nav build ${j.build}${j.seconds !== null ? `; generated and measured in ${Math.round(j.seconds)} s` : ''}. Written by \`node tools/polestar.js nav aids --report\` (tools/lib/nav/aids.js, arrow.js).`);
+	L.push(`Nav build ${j.build}${j.seconds !== null ? `; generated and measured in ${Math.round(j.seconds)} s` : ''}. Written by \`node tools/sendafh.js nav aids --report\` (tools/lib/nav/aids.js, arrow.js).`);
 	L.push('');
 	L.push('## Counts');
 	L.push('');

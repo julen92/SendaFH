@@ -1,6 +1,6 @@
 # The CurseForge listing
 
-Everything the Polestar project on CurseForge needs, in one folder:
+Everything the SendaFH project on CurseForge needs, in one folder:
 
 | File | What it is |
 |---|---|
@@ -18,7 +18,7 @@ README's own, `docs/assets/screenshots/*.png`. CurseForge does not allow
 links to downloads hosted elsewhere, so the description links to the source
 and the docs on GitHub, never to the releases page.
 
-The images are drawn in code: `node tools/polestar.js readme brand` writes
+The images are drawn in code: `node tools/sendafh.js readme brand` writes
 `docs/assets/avatar.svg` and, with `rsvg-convert` (librsvg) installed, every
 PNG here; `readme charts` re-exports the two charts when it redraws them
 (tools/README.md, "Generated files").
@@ -34,8 +34,8 @@ Free, open-source guides for World of Warcraft: Forever: leveling routes for eve
 
 ## Project settings
 
-- [ ] **Name:** Polestar Guides (live at https://www.curseforge.com/wow/addons/polestar-guides)
-- [ ] **Slug:** `polestar-guides`
+- [ ] **Name:** SendaFH Guides (live at https://www.curseforge.com/wow/addons/polestar-guides)
+- [ ] **Slug:** `sendafh-guides`
 - [ ] **Summary:** the text above
 - [ ] **Description:** [description.md](description.md), pasted whole, editor in Markdown mode
 - [ ] **Avatar:** `images/logo-400.png` (CurseForge asks for 400x400 pixels; `images/logo-1024.png` is the large copy)
@@ -48,7 +48,7 @@ Free, open-source guides for World of Warcraft: Forever: leveling routes for eve
 - [ ] **Discord** (if the form has a field for it): https://discord.gg/vMbee6F2e9
 - [ ] **Experimental:** off, so the project syncs to the CurseForge app
 - [ ] **Allow comments:** on
-- [ ] **Relations:** none; Polestar needs no other addon
+- [ ] **Relations:** none; SendaFH needs no other addon
 
 The categories are CurseForge's World of Warcraft addon categories as its
 search page lists them (checked 2026-10-14): Quests & Leveling for the guides,
@@ -60,10 +60,10 @@ indicator.
 
 ### The file
 
-- **File:** `dist/Polestar-<version>.zip`, from `node tools/polestar.js pack`
+- **File:** `dist/SendaFH-<version>.zip`, from `node tools/sendafh.js pack`
   (docs/RELEASING.md). Its addon folders sit at the top level, as CurseForge
   and its app expect.
-- **Display name:** `Polestar <version>`
+- **Display name:** `SendaFH <version>`
 - **Release type:** Release. CurseForge lists a project in its app only once
   it has a Release file, and offers Beta files only to players who opt in;
   the version number (0.x) and the description's "Beta" section say it is a
@@ -71,7 +71,7 @@ indicator.
 - **Game version:** Forever 1.60.1
 - **Changelog:** the version's "For players" section of CHANGELOG.md, in
   Markdown, each list item joined onto one line
-- **Not uploaded:** `Polestar_Recorder-<version>.zip` and `SHA256SUMS` stay on
+- **Not uploaded:** `SendaFH_Recorder-<version>.zip` and `SHA256SUMS` stay on
   the GitHub release.
 
 ### The gallery

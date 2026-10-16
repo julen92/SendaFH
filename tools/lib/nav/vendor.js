@@ -1,12 +1,12 @@
 'use strict';
-// Shortest Path Forever's walking router, vendored into addon/Polestar_Nav
-// (docs/ARCHITECTURE.md, "In-game walking routes (Polestar_Nav)"). Cillian
+// Shortest Path Forever's walking router, vendored into addon/SendaFH_Nav
+// (docs/ARCHITECTURE.md, "In-game walking routes (SendaFH_Nav)"). Cillian
 // Berragan wrote it (https://github.com/cjber/shortest-path-forever,
 // GPL-3.0-or-later) and agreed to Polestar using it. Copies his
 // Routing/PathGrid.lua, Path.lua, PathJobs.lua and the walking maps of the
-// maps Polestar does not pack itself (OWN_MAPS are `nav pack`'s, pack.js)
+// maps SendaFH does not pack itself (OWN_MAPS are `nav pack`'s, pack.js)
 // with one mechanical change: the data global ShortestPathForeverPathData
-// becomes PolestarPathData, so Polestar always reads its own copy of the
+// becomes SendaFHPathData, so SendaFH always reads its own copy of the
 // maps and never Shortest Path Forever's (whose engine evicts decoded entries
 // from its tables mid-search). Each file gains one header line naming its
 // upstream file, commit, copyright and licence and the date of the change
@@ -18,7 +18,7 @@
 // Safety: the checkout must be clean with origin github.com/cjber/
 // shortest-path-forever (upstreamMeta); the output folder must hold an
 // UPSTREAM.json or be new and empty, and only files its UPSTREAM.json listed
-// are ever removed, so Polestar's own files there (API.lua, the packed maps,
+// are ever removed, so SendaFH's own files there (API.lua, the packed maps,
 // Chokepoints.lua, PACK.json) are never touched.
 //
 // Map file names come from upstream's Nav.xml; only Nav<id>[_<part>].lua
@@ -26,8 +26,8 @@
 // outside Nav/.
 //
 //   const { vendor, checkVendored, navXml } = require('./vendor');
-//   vendor('/path/to/shortest-path-forever', 'addon/Polestar_Nav');
-//   checkVendored('addon/Polestar_Nav');   // -> [problem, ...], [] when it matches UPSTREAM.json
+//   vendor('/path/to/shortest-path-forever', 'addon/SendaFH_Nav');
+//   checkVendored('addon/SendaFH_Nav');   // -> [problem, ...], [] when it matches UPSTREAM.json
 
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -36,13 +36,13 @@ const { spawnSync } = require('node:child_process');
 
 const REPO = 'https://github.com/cjber/shortest-path-forever';
 const OLD_GLOBAL = 'ShortestPathForeverPathData';
-const NEW_GLOBAL = 'PolestarPathData';
+const NEW_GLOBAL = 'SendaFHPathData';
 const ROUTING = ['Routing/PathGrid.lua', 'Routing/Path.lua', 'Routing/PathJobs.lua'];
 const NAV_XML = 'Nav/Nav.xml';
-const HEADER = '-- Polestar_Nav: ';
+const HEADER = '-- SendaFH_Nav: ';
 const MAP_NAME = /^Nav\w*\.lua$/;
 const DATE = /^\d{4}-\d\d-\d\d$/;
-// Maps whose walking maps Polestar packs from its own grid (`nav pack`): Eastern Kingdoms and Kalimdor.
+// Maps whose walking maps SendaFH packs from its own grid (`nav pack`): Eastern Kingdoms and Kalimdor.
 const OWN_MAPS = [0, 1];
 const ownMap = (name) => OWN_MAPS.some((m) => new RegExp(`^Nav${m}(_\\d+)?\\.lua$`).test(name));
 
@@ -83,7 +83,7 @@ function navXml(addonDir) {
 	const scripts = [...ours.filter((n) => n !== 'Chokepoints.lua'), ...listed('UPSTREAM.json'), ...ours.filter((n) => n === 'Chokepoints.lua')];
 	return [
 		'<Ui xmlns="http://www.blizzard.com/wow/ui/">',
-		'\t<!-- Written by node tools/polestar.js nav pack and nav vendor: Polestar\'s maps (PACK.json), the vendored maps (UPSTREAM.json), the chokepoints. -->',
+		'\t<!-- Written by node tools/sendafh.js nav pack and nav vendor: SendaFH\'s maps (PACK.json), the vendored maps (UPSTREAM.json), the chokepoints. -->',
 		...scripts.map((n) => `\t<Script file="${n}"/>`),
 		'</Ui>',
 		'',
@@ -91,7 +91,7 @@ function navXml(addonDir) {
 }
 
 function describe(rel, commit, date) {
-	return `${rel} from Shortest Path Forever (${REPO}) at ${commit}, Copyright (C) 2026 Cillian Berragan, GPL-3.0-or-later. Modified for Polestar on ${date} by \`node tools/polestar.js nav vendor\`: the data global is ${NEW_GLOBAL}.`;
+	return `${rel} from Shortest Path Forever (${REPO}) at ${commit}, Copyright (C) 2026 Cillian Berragan, GPL-3.0-or-later. Modified for SendaFH on ${date} by \`node tools/sendafh.js nav vendor\`: the data global is ${NEW_GLOBAL}.`;
 }
 
 // Upstream text (or an already vendored file) -> the vendored file, its
@@ -141,7 +141,7 @@ function upstreamMeta(srcDir) {
 // The files the previous vendoring wrote (its UPSTREAM.json), the only ones a
 // new vendoring may remove; [] for a new or empty folder. Anything else is
 // refused: a folder without UPSTREAM.json that holds files is not a
-// Polestar_Nav folder, and one with a broken UPSTREAM.json cannot say what
+// SendaFH_Nav folder, and one with a broken UPSTREAM.json cannot say what
 // is safe to remove.
 function previousFiles(addonDir) {
 	if (!fs.existsSync(addonDir)) return [];
@@ -149,7 +149,7 @@ function previousFiles(addonDir) {
 	const file = path.join(addonDir, 'UPSTREAM.json');
 	if (!fs.existsSync(file)) {
 		if (fs.readdirSync(addonDir).length === 0) return [];
-		throw new Error(`${addonDir} is not a Polestar_Nav folder (no UPSTREAM.json) and is not empty: give --out an existing Polestar_Nav folder or a new, empty one`);
+		throw new Error(`${addonDir} is not a SendaFH_Nav folder (no UPSTREAM.json) and is not empty: give --out an existing SendaFH_Nav folder or a new, empty one`);
 	}
 	let manifest;
 	try {
@@ -167,7 +167,7 @@ function previousFiles(addonDir) {
 // to the checkout's (upstreamMeta); `date` (YYYY-MM-DD, the notices' date) to
 // today. Removes only files the previous UPSTREAM.json listed (and that are
 // still his: the maps of OWN_MAPS are ours since `nav pack`) that the new
-// commit no longer has; any other file in addonDir (Polestar's own) stays.
+// commit no longer has; any other file in addonDir (SendaFH's own) stays.
 // Writes Nav/Nav.xml from both manifests.
 // -> { commit, version, date, files, removed }.
 function vendor(srcDir, addonDir, meta = upstreamMeta(srcDir), date = new Date().toISOString().slice(0, 10)) {
@@ -205,7 +205,7 @@ function vendor(srcDir, addonDir, meta = upstreamMeta(srcDir), date = new Date()
 function checkVendored(addonDir) {
 	const problems = [];
 	const file = path.join(addonDir, 'UPSTREAM.json');
-	if (!fs.existsSync(file)) return [`${file} is missing: run \`node tools/polestar.js nav vendor <checkout>\``];
+	if (!fs.existsSync(file)) return [`${file} is missing: run \`node tools/sendafh.js nav vendor <checkout>\``];
 	let manifest;
 	try {
 		manifest = JSON.parse(fs.readFileSync(file, 'utf8'));

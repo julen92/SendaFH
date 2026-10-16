@@ -24,7 +24,7 @@ const allItems = () => atlas().instances.flatMap((i) => i.bosses.flatMap((b) => 
 
 // A tmp AddOns folder holding copies of the named fixture folders.
 function partial(names, drop = []) {
-	const dir = tmpdir('polestar-consume-test-');
+	const dir = tmpdir('sendafh-consume-test-');
 	for (const n of names) fs.cpSync(path.join(FIX, n), path.join(dir, n), { recursive: true });
 	for (const f of drop) fs.rmSync(path.join(dir, f));
 	return dir;

@@ -1,11 +1,11 @@
 'use strict';
-// `polestar sim`: route simulation and optimization (docs/SIMULATION.md).
+// `sendafh sim`: route simulation and optimization (docs/SIMULATION.md).
 
 const path = require('node:path');
 const sim = require('../lib/sim');
 const { fmtH, fmtHM, table } = require('../lib/sim/report');
 
-const usage = `usage: node tools/polestar.js sim <command> [options]
+const usage = `usage: node tools/sendafh.js sim <command> [options]
 
   sim world   [--faction F] [--rebuild]               build/cache the world model (data/sim/world-<faction>.json)
   sim calibrate [--fdj DIR]                            fit parameters to quest data and recordings
@@ -13,7 +13,7 @@ const usage = `usage: node tools/polestar.js sim <command> [options]
               [--jobs J] [--anneal A] [--max-paths M]
   sim robust  --faction F [--race R] [--draws K] [--top N]   robustness of the top routes
   sim compare --faction F [--race R] [--guides DIR] [--pack DIR | DIR] [--to 10,20,30] [--with-optional]
-              Polestar's routes vs the best found, same model
+              SendaFH's routes vs the best found, same model
   sim bench   --faction F [--race R]                  bracket table: zones, levels, quests per 10 levels
   sim export  --result <file> --out <dir>             zone-by-zone skeleton guides + visits.json for authors
   sim consensus --faction F [--dungeons] [--evals N]  one 12-60 route shared by the faction's starts (+ exports)
@@ -27,7 +27,7 @@ options:
   --sim <dir>        simulator outputs (default data/sim)
   --fdj <dir>        calibrate: ForeverDungeonJournal folder (default: the installed one)
   --band <levels>    level width of the world's quest packages (default 5; a new width rebuilds the world)
-  --guides <dir>     compare: Polestar guides folder to score (default guides/), e.g. an old copy
+  --guides <dir>     compare: SendaFH guides folder to score (default guides/), e.g. an old copy
   --pack <dir>       compare: also score this guide pack's chain (or name the pack folder
                      as the one argument; default: the nearest pack.json); after our chain
                      up to its first level when it starts above 1;

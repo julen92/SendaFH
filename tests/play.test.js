@@ -1,7 +1,7 @@
 'use strict';
 // The browser playground (tools/play): the hit-testing the page uses, and a
 // scripted session over HTTP against the real addons in a live Lua process.
-// Needs data/forever (node tools/polestar.js data build); skips without it.
+// Needs data/forever (node tools/sendafh.js data build); skips without it.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -39,19 +39,19 @@ async function act(base, action, known = 0) {
 
 test('a scripted session: hub, a guide, a goal, a scheme change, then a clean stop', { skip, timeout: 120000 }, async () => {
 	const { startServer } = require('../tools/play/server');
-	const dataDir = tmpdir('polestar-play-test-');
+	const dataDir = tmpdir('sendafh-play-test-');
 	const play = await startServer({ port: 0, dataDir, artDir: null });
 	try {
 		let f = await act(play.url, { type: 'render' });
 		assert.ok(f.svg.startsWith('<svg'), 'a frame is drawn');
-		assert.ok(f.hits.some((h) => h.n === 'PolestarGuideFrame'), 'the guide window takes the mouse');
+		assert.ok(f.hits.some((h) => h.n === 'SendaFHGuideFrame'), 'the guide window takes the mouse');
 		assert.equal(f.state.player.level, 1);
 		assert.ok(f.timing.total > 0);
 
 		// The hub opens beside the guide window.
 		f = await act(play.url, { type: 'open', what: 'hub' });
 		assert.equal(f.state.hub, true);
-		assert.ok(f.hits.some((h) => h.n === 'PolestarPicker'));
+		assert.ok(f.hits.some((h) => h.n === 'SendaFHPicker'));
 
 		// Pick and load a guide this character can play.
 		const guides = await (await fetch(`${play.url}api/guides`)).json();
@@ -75,7 +75,7 @@ test('a scripted session: hub, a guide, a goal, a scheme change, then a clean st
 		assert.notEqual(f.svg, svgBefore);
 
 		// Hovering a frame from the hit map runs its scripts without errors.
-		const frame = f.hits.find((h) => h.n === 'PolestarGuideFrame');
+		const frame = f.hits.find((h) => h.n === 'SendaFHGuideFrame');
 		const hover = await act(play.url, { type: 'hover', id: frame.id, x: frame.r[0] + 5, y: frame.r[1] + 5 });
 		assert.equal(hover.errors.length, 0);
 
@@ -88,6 +88,6 @@ test('a scripted session: hub, a guide, a goal, a scheme change, then a clean st
 		await play.close({ save: true });
 	}
 	// SavedVariables written on stop.
-	const sv = fs.readFileSync(path.join(dataDir, 'SavedVariables', 'Polestar.lua'), 'utf8');
+	const sv = fs.readFileSync(path.join(dataDir, 'SavedVariables', 'SendaFH.lua'), 'utf8');
 	assert.match(sv, /scheme = "graphite"/);
 });

@@ -1,0 +1,26 @@
+## Interface: 16001
+## Title: SendaFH | Forever Hispano
+## Notes: Adaptación al español de Polestar 0.2.5-test.1. Traducción, diseño y soporte de Forever Hispano.
+## X-SendaFH-Version: 0.5.0-beta.1
+## Author: Polestar authors; adaptación Forever Hispano
+## X-License: GPL-3.0-only
+## X-Website: https://github.com/julen92/SendaFH
+## Version: 0.5.0-beta.1
+## Category: Quests
+## IconTexture: Interface\AddOns\SendaFH\Media\UI\logo
+## OptionalDeps: EllesmereUI, TomTom
+## SavedVariables: SendaFHDB
+## SavedVariablesPerCharacter: SendaFHCharDB
+
+Core\Core.xml
+Theme\Theme.xml
+Nav\Nav.xml
+Quests\Quests.xml
+Gear\Gear.xml
+Maps\Maps.xml
+QoL\QoL.xml
+Lookup\Lookup.xml
+Dungeons\Dungeons.xml
+UI\UI.xml
+Rares\Rares.xml
+Talents\Talents.xml

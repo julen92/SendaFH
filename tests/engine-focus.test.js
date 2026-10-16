@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const WORLD = `
 local w = stub.world
@@ -20,7 +20,7 @@ w.race, w.faction, w.class, w.className, w.level = "Orc", "Horde", "WARRIOR", "W
 // The Crossroads: Thork (3429) twice, Gazrog (3464), Zargh (3489), then a
 // field step, then accept/kill/turn-in at one NPC.
 const GUIDE = `
-Polestar.RegisterGuide({ id = "test/xr", pack = "test", title = "Crossroads", faction = "Horde", minLevel = 10, maxLevel = 20, zone = 1413, steps = {
+SendaFH.RegisterGuide({ id = "test/xr", pack = "test", title = "Crossroads", faction = "Horde", minLevel = 10, maxLevel = 20, zone = 1413, steps = {
 	{ title = "The Crossroads", goals = {
 		{ t = "turnin", quest = 840, title = "Conscript of the Horde", npc = 3429, npcName = "Thork", map = 1413, x = 51.5, y = 30.3 },
 		{ t = "accept", quest = 842, title = "Crossroads Conscription", npc = 3429, npcName = "Thork", map = 1413, x = 51.5, y = 30.3 },
@@ -50,7 +50,7 @@ function run({ before = '', guides = GUIDE, script }) {
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
 			${guides}
-			E = Polestar.Engine
+			E = SendaFH.Engine
 			function flush() stub.advance(0.25) end
 			function groups(i)
 				local v = E.GetStepView(i)
@@ -62,8 +62,8 @@ ${TEST_SOURCE}
 			end
 			stub.login()
 			E.SetGuide("test/xr")
-			Polestar.Set("behavior.autoAccept", false)
-			Polestar.Set("behavior.autoTurnin", false)
+			SendaFH.Set("behavior.autoAccept", false)
+			SendaFH.Set("behavior.autoTurnin", false)
 			${script}`,
 	}).emitted;
 }
@@ -138,8 +138,8 @@ test('the focus move fires STEP_UPDATED and WAYPOINT_CHANGED', () => {
 		before: 'stub.world.complete({ 840 })',
 		script: `
 			local log = {}
-			Polestar.On("STEP_UPDATED", function(i) log[#log + 1] = "U" .. i end)
-			Polestar.On("WAYPOINT_CHANGED", function(wp) log[#log + 1] = "W" .. (wp and wp.goalIndex or "nil") end)
+			SendaFH.On("STEP_UPDATED", function(i) log[#log + 1] = "U" .. i end)
+			SendaFH.On("WAYPOINT_CHANGED", function(wp) log[#log + 1] = "W" .. (wp and wp.goalIndex or "nil") end)
 			stub.world.accept(842, {}); flush()
 			emit(log)
 		`,
@@ -170,7 +170,7 @@ test('skipped and unavailable goals do not hold the focus', () => {
 // Camp Taurajo after the Bristleback camps (04-the-barrens step 31): Mangletooth's
 // chain, then optional item quests, then a note.
 const TAURAJO = `
-	Polestar.RegisterGuide({ id = "test/tj", pack = "test", title = "Taurajo", faction = "Horde", minLevel = 10, maxLevel = 30, steps = {
+	SendaFH.RegisterGuide({ id = "test/tj", pack = "test", title = "Taurajo", faction = "Horde", minLevel = 10, maxLevel = 30, steps = {
 		{ title = "Camp Taurajo", goals = {
 			{ t = "turnin", quest = 878, title = "Tribes at War", npc = 3430, npcName = "Mangletooth", map = 1413, x = 44.8, y = 59.1 },
 			{ t = "accept", quest = 879, title = "Betrayal from Within", npc = 3430, npcName = "Mangletooth", map = 1413, x = 44.8, y = 59.1 },
@@ -218,7 +218,7 @@ test('the waypoint never leaves the focus group: an unlocated focus points nowhe
 
 	const [split] = run({
 		guides: `
-			Polestar.RegisterGuide({ id = "test/sp", pack = "test", title = "Split", faction = "Horde", minLevel = 1, maxLevel = 60, steps = { { goals = {
+			SendaFH.RegisterGuide({ id = "test/sp", pack = "test", title = "Split", faction = "Horde", minLevel = 1, maxLevel = 60, steps = { { goals = {
 				{ t = "turnin", quest = 840, title = "Conscript of the Horde", npc = 3429, npcName = "Thork" },
 				{ t = "accept", quest = 869, title = "Raptor Thieves", npc = 3464, npcName = "Gazrog", map = 1413, x = 51.9, y = 30.8 },
 			} } } })
@@ -232,7 +232,7 @@ test('the waypoint never leaves the focus group: an unlocated focus points nowhe
 
 test('smart candidates group by the chosen NPC', () => {
 	const guides = `
-		Polestar.RegisterGuide({ id = "test/sm", pack = "test", title = "Smart", faction = "Horde", minLevel = 1, maxLevel = 60, steps = { { goals = {
+		SendaFH.RegisterGuide({ id = "test/sm", pack = "test", title = "Smart", faction = "Horde", minLevel = 1, maxLevel = 60, steps = { { goals = {
 			{ t = "train", skill = "First Aid", skillLine = 129, rank = 1, candidates = {
 				{ npc = 3373, npcName = "Arnok", map = 1413, x = 52, y = 31, faction = "H" },
 				{ npc = 5943, npcName = "Rawrk", map = 1413, x = 20, y = 80, faction = "H" },
@@ -269,8 +269,8 @@ test('smart candidates group by the chosen NPC', () => {
 test('GuideFocus gives the live-frame position of the first goal on the guide zone', () => {
 	const [out] = run({
 		guides: GUIDE + `
-			Polestar.RegisterMapFrames({ era = { [1413] = { c = 1, left = 1100, right = -900, top = 1100, bottom = -2900 } } }, "test")
-			Polestar.RegisterGuide({ id = "test/era", pack = "test", title = "Era", faction = "Horde", minLevel = 1, maxLevel = 60, zone = 1413, steps = {
+			SendaFH.RegisterMapFrames({ era = { [1413] = { c = 1, left = 1100, right = -900, top = 1100, bottom = -2900 } } }, "test")
+			SendaFH.RegisterGuide({ id = "test/era", pack = "test", title = "Era", faction = "Horde", minLevel = 1, maxLevel = 60, zone = 1413, steps = {
 				{ goals = { { t = "goto", map = 1411, x = 10, y = 10 }, { t = "goto", map = 1413, x = 50, y = 50, f = "e" } } } } })
 		`,
 		script: `
@@ -285,7 +285,7 @@ test('GuideFocus gives the live-frame position of the first goal on the guide zo
 test('GuideFocus follows the current step of a guide open in a tab, and its start otherwise', () => {
 	const [out] = run({
 		guides: GUIDE + `
-			Polestar.RegisterGuide({ id = "test/away", pack = "test", title = "Away", faction = "Horde", minLevel = 10, maxLevel = 20, zone = 1413, steps = {
+			SendaFH.RegisterGuide({ id = "test/away", pack = "test", title = "Away", faction = "Horde", minLevel = 10, maxLevel = 20, zone = 1413, steps = {
 				{ goals = { { t = "goto", map = 1413, x = 40, y = 60 } } },
 				{ goals = { { t = "goto", map = 1411, x = 10, y = 10 } } },
 			} })

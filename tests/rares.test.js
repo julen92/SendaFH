@@ -13,7 +13,7 @@ const { runAddon } = require('./helpers/lua');
 const { writeCodexPack, sampleCodex } = require('./helpers/codex');
 
 const codex = sampleCodex();
-const FILES = { name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Lookup/Lookup.xml', 'Rares/Rares.xml'] };
+const FILES = { name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Lookup/Lookup.xml', 'Rares/Rares.xml'] };
 const MAPS = Object.entries(codex.frames)
 	.map(([id, f]) => `w.addMap(${id}, { name = ${JSON.stringify(codex.zones[id].name)}, c = ${f.c}, left = ${f.left}, right = ${f.right}, top = ${f.top}, bottom = ${f.bottom} })`)
 	.join('\n');
@@ -35,11 +35,11 @@ w.moveTo(${at.join(', ')})
 w.setLevel(${level})
 ${setup}`,
 		addons: [FILES],
-		saved: settings ? { Polestar: `PolestarDB = { schema = 1, settings = { rares = ${settings} } }` } : undefined,
+		saved: settings ? { SendaFH: `SendaFHDB = { schema = 1, settings = { rares = ${settings} } }` } : undefined,
 		login: true,
-		script: `local R = Polestar.Rares
+		script: `local R = SendaFH.Rares
 local got = {}
-Polestar.On("RARE_SPOTTED", function(a) got[#got + 1] = a end)
+SendaFH.On("RARE_SPOTTED", function(a) got[#got + 1] = a end)
 local function names() local out = {} for i, a in ipairs(got) do out[i] = a.name end return out end
 ${script}`,
 	}).emitted;
@@ -150,7 +150,7 @@ U.unit("nameplate3", { guid = "Player-1-0000BEEF", name = "Someone", level = 10,
 U.unit("nameplate4", { npc = 99, name = "Tamed Rare", level = 10, class = "rare", controlled = true })
 U.unit("nameplate5", { npc = 100, name = "Hidden", level = 10, class = "rare", secret = true })
 for i = 1, 5 do stub.fire("NAME_PLATE_UNIT_ADDED", "nameplate" .. i) end
-Polestar.Set("rares.mouseover", false)
+SendaFH.Set("rares.mouseover", false)
 U.unit("mouseover", { npc = 61, name = "Thuros Lightfingers", level = 11, class = "rare" })
 stub.fire("UPDATE_MOUSEOVER_UNIT")
 local n = 0
@@ -167,7 +167,7 @@ local U = stub.rares
 U.unit("target", { npc = 61, name = "Thuros Lightfingers", level = 11, class = "normal" })
 stub.fire("PLAYER_TARGET_CHANGED")
 local before = #got
-Polestar.Codex.Load()
+SendaFH.Codex.Load()
 stub.advance(4)
 stub.fire("PLAYER_TARGET_CHANGED")
 local a = got[1]
@@ -180,13 +180,13 @@ test('a rare in sight sets its waypoint where it was seen, not at a known spawn 
 	// Thuros's spawns are at 89.4 and 69.6; the player meets it walking at 75, 60.
 	const [out] = run(`
 local U = stub.rares
-Polestar.Codex.Load()
+SendaFH.Codex.Load()
 U.unit("nameplate1", { npc = 61, name = "Thuros Lightfingers", level = 11, class = "rare" })
 stub.fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
 local a = got[1]
 local facts = R.Toast.Facts(a)
-PolestarRareToast.Waypoint:Click()
-local t = Polestar.Nav.GetTarget()
+SendaFHRareToast.Waypoint:Click()
+local t = SendaFH.Nav.GetTarget()
 emit({ map = a.map, x = a.x, y = a.y, spawn = a.spawnYards or false, facts = facts, target = { t.map, t.x, t.y } })`, { at: [1429, 75, 60] });
 	assert.deepEqual(out, { map: 1429, x: 75, y: 60, spawn: false, facts: 'Level 11 Rare  \u00b7  in sight  \u00b7  Elwynn Forest', target: [1429, 75, 60] });
 });
@@ -194,7 +194,7 @@ emit({ map = a.map, x = a.x, y = a.y, spawn = a.spawnYards or false, facts = fac
 test('a vignette without a position: its nearest known spawn, said so, and the live position once the vignette has one', () => {
 	const out = run(`
 local U = stub.rares
-Polestar.Codex.Load()
+SendaFH.Codex.Load()
 -- On the minimap, but no position on the player's map yet.
 U.vignette("V1", { npc = 61, name = "Thuros Lightfingers" })
 stub.fire("VIGNETTE_MINIMAP_UPDATED", "V1", true)
@@ -202,8 +202,8 @@ local a = got[1]
 emit({ map = a.map, x = a.x, f = a.f, spawn = a.spawnYards and math.floor(a.spawnYards + 0.5), inSight = a.inSight or false, facts = R.Toast.Facts(a) })
 -- By the click it has one: the waypoint goes there, not to the spawn.
 U.vignette("V1", { npc = 61, name = "Thuros Lightfingers", map = 1429, x = 80, y = 70 })
-PolestarRareToast.Waypoint:Click()
-local t = Polestar.Nav.GetTarget()
+SendaFHRareToast.Waypoint:Click()
+local t = SendaFH.Nav.GetTarget()
 emit({ t.map, t.x, t.y, t.f or false })`);
 	assert.deepEqual(out[0], { map: 1429, x: 89.4, f: 'e', spawn: 57, inSight: false, facts: 'Level 11 Rare  \u00b7  known spawn 55 yd  \u00b7  Elwynn Forest' });
 	assert.deepEqual(out[1], [1429, 80, 70, false]);
@@ -212,11 +212,11 @@ emit({ t.map, t.x, t.y, t.f or false })`);
 test('a vignette without a position and no spawn on this continent offers no waypoint, never a spawn it cannot measure', () => {
 	const [out] = run(`
 local U = stub.rares
-Polestar.Codex.Load()
+SendaFH.Codex.Load()
 U.vignette("V1", { npc = 61, name = "Thuros Lightfingers" })
 stub.fire("VIGNETTE_MINIMAP_UPDATED", "V1", true)
 local a = got[1]
-emit({ n = #got, map = a.map or false, button = PolestarRareToast.Waypoint:IsShown() })`, { at: [1438, 50, 50] });
+emit({ n = #got, map = a.map or false, button = SendaFHRareToast.Waypoint:IsShown() })`, { at: [1438, 50, 50] });
 	assert.deepEqual(out, { n: 1, map: false, button: false });
 });
 
@@ -296,7 +296,7 @@ U.unit("target", { npc = 61, name = "Thuros Lightfingers", level = 11, class = "
 stub.fire("PLAYER_TARGET_CHANGED")
 emit({ n = #got })
 stub.world.inInstance = false
-Polestar.Set("rares.enabled", false)
+SendaFH.Set("rares.enabled", false)
 stub.advance(4)
 stub.fire("PLAYER_TARGET_CHANGED")
 emit({ n = #got, paths = R.Detect.Paths() })`);
@@ -308,11 +308,11 @@ test('the toast shows the alert: name, facts line, actions; Show rare opens the 
 	const [out] = run(`
 local U = stub.rares
 local opened
-Polestar.On("SHOW_RARES", function(kind, id) opened = { kind, id } end)
-Polestar.Codex.Load()
+SendaFH.On("SHOW_RARES", function(kind, id) opened = { kind, id } end)
+SendaFH.Codex.Load()
 U.vignette("V1", { npc = 61, name = "Thuros Lightfingers", map = 1429, x = 90, y = 78 })
 stub.fire("VIGNETTE_MINIMAP_UPDATED", "V1", true)
-local f = PolestarRareToast
+local f = SendaFHRareToast
 local shown = f:IsShown()
 local facts = R.Toast.Facts(got[1])
 local name = f.Name:GetText()
@@ -329,9 +329,9 @@ emit({ shown = shown, name = name, facts = facts, label = label, opened = opened
 
 test('the treasure toast names what it opens: Show treasure', () => {
 	const [out] = run(`
-Polestar.Codex.Load()
-Polestar.Fire("RARE_SPOTTED", R.AlertOf({ source = "vignette", kind = "treasure", id = 2843, name = "Battered Chest" }, { map = 1429, x = 79.6, y = 55.7 }, true))
-emit({ label = PolestarRareToast.Open.Label:GetText() })`);
+SendaFH.Codex.Load()
+SendaFH.Fire("RARE_SPOTTED", R.AlertOf({ source = "vignette", kind = "treasure", id = 2843, name = "Battered Chest" }, { map = 1429, x = 79.6, y = 55.7 }, true))
+emit({ label = SendaFHRareToast.Open.Label:GetText() })`);
 	assert.equal(out.label, 'Show treasure');
 });
 
@@ -341,10 +341,10 @@ test('signature drop: one the Codex knows only from this rare first, then qualit
 	const [out] = runAddon({
 		stubs: ['stub_world.lua', 'stub_rares.lua'],
 		before: pack.stubLua,
-		addons: [{ name: 'Polestar', files: [...FILES.files.slice(0, -1), 'UI/UI.xml', 'Rares/Rares.xml'] }],
+		addons: [{ name: 'SendaFH', files: [...FILES.files.slice(0, -1), 'UI/UI.xml', 'Rares/Rares.xml'] }],
 		login: true,
-		script: `Polestar.Codex.Load()
-local R, sig = Polestar.Rares, Polestar.UI.RaresSection.Signature
+		script: `SendaFH.Codex.Load()
+local R, sig = SendaFH.Rares, SendaFH.UI.RaresSection.Signature
 local rec = R.Info("rare", 61)
 local real = sig(rec, R.Codex(false))
 -- Fakes: a better green from a quest beats nothing exclusive; an exclusive white beats it.
@@ -410,22 +410,22 @@ emit({ all = sum(all), grey = sum(grey), greyLevel = { R.GreyLevel(5), R.GreyLev
 test('pin layers follow the settings: minimap kinds load the Codex after login, world kinds wait for the world map', () => {
 	const off = run(`
 stub.advance(6)
-emit({ codex = Polestar.Codex.IsLoaded(), rare = Polestar.Pins.GetLayer("rares.rare") ~= nil })`, { settings: '{ worldRares = true, worldTreasures = true }' });
+emit({ codex = SendaFH.Codex.IsLoaded(), rare = SendaFH.Pins.GetLayer("rares.rare") ~= nil })`, { settings: '{ worldRares = true, worldTreasures = true }' });
 	// World-map pins alone wait for the world map: nothing loads at login.
 	assert.deepEqual(off[0], { codex: false, rare: false });
 
 	const on = run(`
 local opts, calls = {}, 0
-local set = Polestar.Pins.SetLayer
-Polestar.Pins.SetLayer = function(name, pins, o) calls = calls + 1; opts[name] = { n = #pins, world = o.world, minimap = o.minimap } return set(name, pins, o) end
+local set = SendaFH.Pins.SetLayer
+SendaFH.Pins.SetLayer = function(name, pins, o) calls = calls + 1; opts[name] = { n = #pins, world = o.world, minimap = o.minimap } return set(name, pins, o) end
 stub.advance(6)
-emit({ codex = Polestar.Codex.IsLoaded(), rare = opts["rares.rare"], treasure = opts["rares.treasure"] })
+emit({ codex = SendaFH.Codex.IsLoaded(), rare = opts["rares.rare"], treasure = opts["rares.treasure"] })
 WorldMapFrame:Show()
 stub.advance(0.1)
 emit({ treasure = opts["rares.treasure"] })
-Polestar.Set("rares.worldTreasures", false)
-emit({ treasure = Polestar.Pins.GetLayer("rares.treasure") ~= nil, rare = opts["rares.rare"] })
-Polestar.Set("rares.ignored", { ["rare:61"] = true })
+SendaFH.Set("rares.worldTreasures", false)
+emit({ treasure = SendaFH.Pins.GetLayer("rares.treasure") ~= nil, rare = opts["rares.rare"] })
+SendaFH.Set("rares.ignored", { ["rare:61"] = true })
 emit({ rare = opts["rares.rare"] })`, { settings: '{ worldRares = true, worldTreasures = true, minimapRares = true }' });
 	assert.equal(on[0].codex, true);
 	// The sample Codex: 1 placed rare (2 spawns), 1 treasure (2 spawns). The
@@ -442,14 +442,14 @@ test('loading the Codex decodes nothing for the pins until a layer is due, and n
 local decoded = 0
 local info = R.Info
 R.Info = function(...) decoded = decoded + 1 return info(...) end
-Polestar.Codex.Load()
+SendaFH.Codex.Load()
 local during = decoded
 stub.advance(1)
 local idle = decoded
 -- A minimap kind turned on: the build starts on the next frame, in batches.
-Polestar.Set("rares.minimapRares", true)
+SendaFH.Set("rares.minimapRares", true)
 local sync = decoded
 stub.advance(0.1)
-emit({ during = during, idle = idle, sync = sync, built = decoded > 0, layer = Polestar.Pins.GetLayer("rares.rare") ~= nil })`);
+emit({ during = during, idle = idle, sync = sync, built = decoded > 0, layer = SendaFH.Pins.GetLayer("rares.rare") ~= nil })`);
 	assert.deepEqual(out, { during: 0, idle: 0, sync: 0, built: true, layer: true });
 });

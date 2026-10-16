@@ -1,5 +1,5 @@
 'use strict';
-// Travel prompts (addon/Polestar/Nav/Prompts.lua), transport alerts
+// Travel prompts (addon/SendaFH/Nav/Prompts.lua), transport alerts
 // (Nav/Alerts.lua) and the flight map's route highlight (QoL/Flight.lua).
 // Prompts and alerts run the real Core/Init.lua + Theme + Nav/Nav.xml against
 // tests/lua/stub_nav.lua with the route, Nav.travel and ns.Transit replaced by
@@ -11,7 +11,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Theme/Theme.xml', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Theme/Theme.xml', 'Nav/Nav.xml'] };
 
 // Secure frames: the client refuses protected changes in combat.
 const SECURE = `
@@ -34,7 +34,7 @@ function FlashClientIcon() flashes = flashes + 1 end
 `;
 
 const PRELUDE = `
-local N = Polestar.Nav
+local N = SendaFH.Nav
 local P = N.prompts
 local nav = stub.nav
 local route = { legs = nil, ci = 1 }
@@ -44,18 +44,18 @@ N.travel.Active = function() return route.legs ~= nil and #route.legs > 1 and ro
 N.travel.SkipLeg = function()
 	skipped = skipped + 1
 	route.ci = route.ci + 1
-	Polestar.Fire("ROUTE_ADVANCED", route.legs, route.ci)
+	SendaFH.Fire("ROUTE_ADVANCED", route.legs, route.ci)
 	return true
 end
 local function setRoute(legs, ci)
 	route.legs, route.ci = legs, ci or 1
-	Polestar.Fire("ROUTE_CHANGED", legs)
+	SendaFH.Fire("ROUTE_CHANGED", legs)
 end
 local function combat(on)
 	stub.inCombat = on
 	stub.fire(on and "PLAYER_REGEN_DISABLED" or "PLAYER_REGEN_ENABLED")
 end
-local function btn() return _G.PolestarTravelButton end
+local function btn() return _G.SendaFHTravelButton end
 local function state()
 	local b = btn()
 	if not b then return { exists = false } end
@@ -88,7 +88,7 @@ test('travel button: a hearth leg gets a secure item button under the arrow, out
 		emit({ rel == UIParent, relPoint })
 		-- the leg ends: hidden and emptied
 		route.ci = 2
-		Polestar.Fire("ROUTE_ADVANCED", route.legs, 2)
+		SendaFH.Fire("ROUTE_ADVANCED", route.legs, 2)
 		emit(state())
 		-- no Hearthstone in the bags: no button
 		nav.items[6948] = 0
@@ -96,7 +96,7 @@ test('travel button: a hearth leg gets a secure item button under the arrow, out
 		emit(state())
 		-- switched off
 		nav.items[6948] = 1
-		Polestar.Set("nav.castPrompt", false)
+		SendaFH.Set("nav.castPrompt", false)
 		setRoute({ HEARTH, WALK })
 		emit(state())
 	`);
@@ -121,11 +121,11 @@ test('travel button (issues 6): never changed in combat; the last request lands 
 		-- the leg ends mid-fight: the button keeps its action until the fight ends
 		combat(true)
 		route.ci = 2
-		Polestar.Fire("ROUTE_ADVANCED", route.legs, 2)
+		SendaFH.Fire("ROUTE_ADVANCED", route.legs, 2)
 		emit({ state(), P.Pending() })
 		-- back to the hearth, still in combat: the last request wins
 		route.ci = 1
-		Polestar.Fire("ROUTE_ADVANCED", route.legs, 1)
+		SendaFH.Fire("ROUTE_ADVANCED", route.legs, 1)
 		combat(false)
 		emit({ state(), P.Pending() })
 	`);
@@ -148,7 +148,7 @@ test('travel button (issues C1): a route cleared or replaced while a change wait
 		combat(true)
 		setRoute({ WALK, { kind = "walk", to = {} } })
 		route.legs = nil
-		Polestar.Fire("ROUTE_CHANGED", nil)
+		SendaFH.Fire("ROUTE_CHANGED", nil)
 		combat(false)
 		emit(state())
 		-- ticks after the cancel stay quiet
@@ -163,7 +163,7 @@ test('travel button (issues C1): a route cleared or replaced while a change wait
 test('travel button: a teleport leg casts its spell when known; an item leg uses its item', () => {
 	const out = runNav(`
 		local known = {}
-		Polestar.Compat.IsSpellKnown = function(id) return known[id] == true end
+		SendaFH.Compat.IsSpellKnown = function(id) return known[id] == true end
 		function C_Spell_name(id) return "Teleport: Darnassus" end
 		GetSpellInfo = function(id) if id == 3565 then return "Teleport: Darnassus" end end
 		local TELE = { kind = "teleport", spell = 3565, label = "Teleport to Darnassus", to = { c = 1, wx = 0, wy = 0 } }
@@ -192,13 +192,13 @@ test('skip leg (issues 11): the hearth and the flight offer a skip; class telepo
 		items[1].onClick(items[1])
 		emit({ skipped, route.ci, state().shown })
 		emit(P.MenuItems()[1].text)
-		SlashCmdList.POLESTAR("skipleg")
+		SlashCmdList.SENDAFH("skipleg")
 		emit({ skipped, route.ci, P.MenuItems() == nil })
 		-- the final walk is the arrow's own target
-		SlashCmdList.POLESTAR("skipleg")
+		SlashCmdList.SENDAFH("skipleg")
 		emit(skipped)
 		-- a skipped Hearthstone leaves teleports alone
-		Polestar.Compat.IsSpellKnown = function(id) return id == 3565 end
+		SendaFH.Compat.IsSpellKnown = function(id) return id == 3565 end
 		setRoute({ { kind = "teleport", spell = 3565, label = "Teleport", to = { c = 1, wx = 0, wy = 0 } }, WALK })
 		emit(state().type1)
 	`);
@@ -236,7 +236,7 @@ test('second review P3: legs that replan when skipped offer "Skip this leg"; wal
 test('alerts (issues C5): 30 s before a timed boat at the dock, 20 s before the next stop on board, once per visit', () => {
 	const out = runNav(`
 		local arrive, riding = nil, nil
-		Polestar.Transit = {
+		SendaFH.Transit = {
 			Now = function() return 1000 end,
 			NextArrival = function(kind, id, now, side) if id == "boat-test" and side == "a" then return arrive, (arrive or 0) + 60, true end end,
 			Riding = function() return riding end,
@@ -276,12 +276,12 @@ test('alerts (issues C5): 30 s before a timed boat at the dock, 20 s before the 
 		-- each part has its own switch
 		riding = nil
 		stub.advance(200)
-		Polestar.Set("nav.alertSound", false)
-		Polestar.Set("nav.alertFlash", false)
+		SendaFH.Set("nav.alertSound", false)
+		SendaFH.Set("nav.alertFlash", false)
 		local before, flashed = #stub.sounds, flashes
 		emit({ check(30), #stub.sounds - before, flashes - flashed })
 		stub.advance(200)
-		Polestar.Set("nav.alerts", false)
+		SendaFH.Set("nav.alerts", false)
 		emit(check(30))
 	`);
 	assert.deepEqual(out[0], [false, false, true, false, false]);
@@ -302,11 +302,11 @@ test('alerts (issues C5): 30 s before a timed boat at the dock, 20 s before the 
 // Flight map (QoL harness)
 // ---------------------------------------------------------------------------
 
-const QOL = { name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'QoL/QoL.xml'] };
+const QOL = { name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Theme/Theme.xml', 'QoL/QoL.xml'] };
 
 const TAXI = `
 local q = stub.qol
-local QoL = Polestar.QoL
+local QoL = SendaFH.QoL
 -- The flight master's own map: node IDs by slot, the hops to each slot, button anchors.
 taxiIDs, taxiHops, types = {}, {}, {}
 function GetTaxiMapID() return 1415 end
@@ -402,7 +402,7 @@ test('flight map (review P3-12): the chat fallback for an unmarkable node is sai
 		q.nav.ci = 1
 		openWithout({ "Stormwind, Elwynn", "Lakeshire, Redridge", "Sentinel Hill, Westfall" }, 3)
 		emit({ QoL.Flight.node, said() })
-		for _ = 1, 3 do Polestar.Fire("ROUTE_CHANGED", q.nav.route) end
+		for _ = 1, 3 do SendaFH.Fire("ROUTE_CHANGED", q.nav.route) end
 		emit(said())
 		stub.fire("TAXIMAP_CLOSED")
 		TaxiFrame:Hide()

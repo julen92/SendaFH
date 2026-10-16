@@ -1,5 +1,5 @@
 'use strict';
-// `node tools/polestar.js planner`: the route planner (tools/planner). Serves
+// `node tools/sendafh.js planner`: the route planner (tools/planner). Serves
 // the page that plays a guide on the real map and edits its .guide source;
 // `planner art` builds the local map art it draws (tools/lib/planner/art);
 // `planner mcp` offers the same commands to an agent over MCP stdio.
@@ -13,9 +13,9 @@ const DEFAULT_PORT = 8078;
 const DEFAULT_ART = path.join(ROOT, 'data', 'local', 'planner', 'art');
 const DEFAULT_NAV = path.join(ROOT, 'data', 'local', 'nav');
 
-const usage = `usage: node tools/polestar.js planner [<pack dir>...] [--port ${DEFAULT_PORT}] [--art <dir>] [--nav <dir>] [--open]
-       node tools/polestar.js planner art [--continents 0,1] [--no-zones] [--force] [--offline] [--concurrency N] [--out <dir>]
-       node tools/polestar.js planner mcp [<pack dir>...] [--port ${DEFAULT_PORT}] [--art <dir>] [--nav <dir>]
+const usage = `usage: node tools/sendafh.js planner [<pack dir>...] [--port ${DEFAULT_PORT}] [--art <dir>] [--nav <dir>] [--open]
+       node tools/sendafh.js planner art [--continents 0,1] [--no-zones] [--force] [--offline] [--concurrency N] [--out <dir>]
+       node tools/sendafh.js planner mcp [<pack dir>...] [--port ${DEFAULT_PORT}] [--art <dir>] [--nav <dir>]
 
 The route planner: a local page (http://127.0.0.1:${DEFAULT_PORT}) that plays a
 guide on the real map, step by step, with the clock, the XP and the quest
@@ -27,7 +27,7 @@ Inspired by Nivek_Gaming (@Nivek_Gaming on X): thank you, Nivek.
   --port <n>          port on 127.0.0.1 (default ${DEFAULT_PORT}; 0 picks a free one)
   --art <dir>         the map art (default data/local/planner/art)
   --nav <dir>         the navigation grid walks are routed on (default data/local/nav;
-                      built by node tools/polestar.js nav build; without it walks are straight lines)
+                      built by node tools/sendafh.js nav build; without it walks are straight lines)
   --data <dir>        reference data (default data/forever/)
   --pack <dir>        one more pack folder
   --open              open the page in the browser
@@ -66,7 +66,7 @@ function packDirs(o, positional) {
 
 function makeWorkspace(o, positional, log) {
 	const dataDir = o.data ? path.resolve(o.data) : DATA;
-	if (!fs.existsSync(path.join(dataDir, 'races.json'))) throw Object.assign(new Error(`${dataDir} holds no reference data: run node tools/polestar.js data build first`), { exit: 1 });
+	if (!fs.existsSync(path.join(dataDir, 'races.json'))) throw Object.assign(new Error(`${dataDir} holds no reference data: run node tools/sendafh.js data build first`), { exit: 1 });
 	const { Workspace } = require('../planner/workspace');
 	const artDir = o.art ? path.resolve(o.art) : DEFAULT_ART;
 	const navDir = o.nav ? path.resolve(o.nav) : DEFAULT_NAV;
@@ -79,7 +79,7 @@ function makeWorkspace(o, positional, log) {
 }
 
 function artNote(artDir) {
-	return fs.existsSync(path.join(artDir, 'index.json')) ? `map art from ${path.relative(process.cwd(), artDir) || '.'}` : 'no map art yet: run `node tools/polestar.js planner art` for the terrain';
+	return fs.existsSync(path.join(artDir, 'index.json')) ? `map art from ${path.relative(process.cwd(), artDir) || '.'}` : 'no map art yet: run `node tools/sendafh.js planner art` for the terrain';
 }
 
 // Resolves after SIGINT/SIGTERM once stop() has finished.
@@ -129,7 +129,7 @@ async function serve(argv) {
 	}
 	ws.lintAll();
 	const guides = [...ws.sources.values()].filter((s) => s.id).length;
-	console.log(`Polestar planner: ${server.url}  (${ws.packs.map((p) => p.id).join(', ')}: ${guides} guides; started in ${Date.now() - t0} ms)`);
+	console.log(`SendaFH planner: ${server.url}  (${ws.packs.map((p) => p.id).join(', ')}: ${guides} guides; started in ${Date.now() - t0} ms)`);
 	console.log(`${artNote(ws.artDir)}. Inspired by Nivek_Gaming (@Nivek_Gaming on X). Ctrl-C to stop.`);
 	if (o.open) openBrowser(server.url);
 	await untilStopped(async () => {
@@ -182,7 +182,7 @@ async function mcp(argv) {
 				if (err.code !== 'EADDRINUSE') throw err;
 				server = await startServer({ port: 0, workspace: ws, log: (m) => log(`[planner] ${m}`) });
 			}
-			log(`polestar planner: ${server.url} (${artNote(ws.artDir)})`);
+			log(`sendafh planner: ${server.url} (${artNote(ws.artDir)})`);
 			return {
 				url: server.url,
 				close: async () => {

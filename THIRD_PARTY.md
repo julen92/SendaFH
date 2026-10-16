@@ -95,3 +95,10 @@ Polestar's own code and guides are GPL-3.0 (see LICENSE). What a release
 
 EllesmereUI is all rights reserved: nothing from it is copied; Polestar only
 calls its public skinning API at runtime.
+
+## SendaFH: additional Spanish free-text names
+
+The supplemental English-to-Spanish aliases used in guide notes come from
+pfQuest (MIT), commit 104f35678ca39ab1fb78b655f815cc7016f5e0c8.
+See locales/esES-name-sources.json and addon/SendaFH/Licenses/pfQuest-MIT.txt.
+The ID-based name packs retain their own Ding/Questie credits and licenses.

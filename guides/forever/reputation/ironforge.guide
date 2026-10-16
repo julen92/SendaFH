@@ -9,7 +9,7 @@ zone Ironforge
 # (Additional Runecloth, repeatable) from quests.json; cloth farm spots are
 # the densest spawn clusters of strong cloth droppers in items.json/npcs.json.
 # Nothing public shows Forever changing the cloth donations; this has NOT been
-# play-tested on Forever yet. Refine it with Polestar_Recorder sessions.
+# play-tested on Forever yet. Refine it with SendaFH_Recorder sessions.
 #
 # The client never flags a repeatable quest as completed, so the Additional
 # Runecloth steps track the Ironforge standing itself (rep 47) instead of

@@ -9,16 +9,16 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { loadPolestarRoutes, requiredEvents } = require('../tools/lib/sim/baselines/polestar');
+const { loadSendaFHRoutes, requiredEvents } = require('../tools/lib/sim/baselines/sendafh');
 const { sources } = require('../tools/lib/sim/compare');
 const { MAX_OPEN } = require('../tools/lib/sim/world');
 
-const FIX = path.join(__dirname, 'fixtures', 'sim', 'polestar');
+const FIX = path.join(__dirname, 'fixtures', 'sim', 'sendafh');
 
 // The sample guides with an optional turn-in (90010) and an optional quest
 // (90020, accept optional) in North.
 function guides() {
-	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-optional-'));
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-optional-'));
 	fs.cpSync(path.join(FIX, 'guides'), dir, { recursive: true });
 	const north = path.join(dir, 'forever', 'horde', '02-north.guide');
 	fs.writeFileSync(north, fs.readFileSync(north, 'utf8').replace('  turnin 90010 "North Task"\n', '  turnin 90010 "North Task" optional\n  accept 90020 optional\n  turnin 90020\n'));
@@ -42,17 +42,17 @@ test('requiredEvents: an optional quest goes whole, another optional goal by its
 
 test('sim compare scores the guides without their optional goals; --with-optional keeps them', () => {
 	const dir = guides();
-	const simDir = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-optional-sim-'));
+	const simDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-optional-sim-'));
 	try {
-		const all = loadPolestarRoutes({ guidesDir: dir, dataDir: path.join(FIX, 'data'), faction: 'Horde', race: 'Orc' }).default.events;
+		const all = loadSendaFHRoutes({ guidesDir: dir, dataDir: path.join(FIX, 'data'), faction: 'Horde', race: 'Orc' }).default.events;
 		assert.ok(quests(all).includes('turnin 90010') && quests(all).includes('accept 90020'));
 		const o = { guidesDir: dir, dataDir: path.join(FIX, 'data'), simDir };
-		const polestar = (opts) => sources({ ...o, ...opts }, 'Horde', 'Orc', { world: null }, { world: null }).list.find((s) => s.id === 'polestar').events;
-		const req = quests(polestar({}));
+		const sendafh = (opts) => sources({ ...o, ...opts }, 'Horde', 'Orc', { world: null }, { world: null }).list.find((s) => s.id === 'sendafh').events;
+		const req = quests(sendafh({}));
 		assert.ok(req.includes('accept 90010'));
 		assert.ok(!req.includes('turnin 90010'));
 		assert.ok(!req.some((x) => x.endsWith(' 90020')));
-		assert.deepEqual(quests(polestar({ withOptional: true })), quests(all));
+		assert.deepEqual(quests(sendafh({ withOptional: true })), quests(all));
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 		fs.rmSync(simDir, { recursive: true, force: true });

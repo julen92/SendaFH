@@ -1,6 +1,6 @@
 'use strict';
 // `maps build`: each zone's level range, computed from data/forever, ->
-// addon/Polestar/Maps/ZoneLevels.lua. Same inputs give byte-identical output.
+// addon/SendaFH/Maps/ZoneLevels.lua. Same inputs give byte-identical output.
 //
 // Heuristic (what a player levelling there actually fights):
 //   1. Samples are spawn points of NPCs that are friendly to neither faction
@@ -153,7 +153,7 @@ function emitLua(levels) {
 }
 
 function readJson(file) {
-	if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/polestar.js data build)`);
+	if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/sendafh.js data build)`);
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 

@@ -56,10 +56,10 @@ end
 return {
   attunes = rows(D.attunes, { "ID", "NAME", "GROUP", "FACTION", "CLASS", "GROUPSIZE", "LEVELS" }),
   steps = rows(D.steps, { "ID_ATTUNE", "ID", "TYPE", "ID_WOWHEAD", "FOLLOWS", "STAGE", "COUNT", "LOCATION", "SIDE", "OR", "OFFSET" }),
-  quests = POLESTAR_pairs(D.quests or {}),
-  rewards = POLESTAR_pairs(D.questRewards or {}),
-  items = POLESTAR_pairs(D.rewardItems or {}),
-  givers = POLESTAR_pairs(D.questGivers or {}),
+  quests = SENDAFH_pairs(D.quests or {}),
+  rewards = SENDAFH_pairs(D.questRewards or {}),
+  items = SENDAFH_pairs(D.rewardItems or {}),
+  givers = SENDAFH_pairs(D.questGivers or {}),
 }`;
 
 const list = (v) => (Array.isArray(v) ? v : []);

@@ -1,12 +1,12 @@
 'use strict';
-// Core plumbing (addon/Polestar/Core/Init.lua): message bus, settings, lifecycle, slash commands.
+// Core plumbing (addon/SendaFH/Core/Init.lua): message bus, settings, lifecycle, slash commands.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { fakeLocale } = require('./helpers/locale');
 
-const CORE = { name: 'Polestar', files: ['Core/Init.lua'] };
+const CORE = { name: 'SendaFH', files: ['Core/Init.lua'] };
 
 test('a handler removed during dispatch does not make the bus skip the next one', () => {
 	const [calls] = runAddon({
@@ -14,10 +14,10 @@ test('a handler removed during dispatch does not make the bus skip the next one'
 		script: `
 			local calls = {}
 			local a
-			a = Polestar.On("X", function() calls[#calls + 1] = "a"; Polestar.Off(a) end)
-			Polestar.On("X", function() calls[#calls + 1] = "b" end)
-			Polestar.Fire("X")
-			Polestar.Fire("X")
+			a = SendaFH.On("X", function() calls[#calls + 1] = "a"; SendaFH.Off(a) end)
+			SendaFH.On("X", function() calls[#calls + 1] = "b" end)
+			SendaFH.Fire("X")
+			SendaFH.Fire("X")
 			emit(calls)`,
 	}).emitted;
 	assert.deepEqual(calls, ['a', 'b', 'b']);
@@ -29,9 +29,9 @@ test('one failing handler does not stop the others', () => {
 		script: `
 			local errors, calls = {}, {}
 			geterrorhandler = function() return function(e) errors[#errors + 1] = tostring(e) end end
-			Polestar.On("X", function() error("boom") end)
-			Polestar.On("X", function(v) calls[#calls + 1] = v end)
-			Polestar.Fire("X", 7)
+			SendaFH.On("X", function() error("boom") end)
+			SendaFH.On("X", function(v) calls[#calls + 1] = v end)
+			SendaFH.Fire("X", 7)
 			emit({ errors = #errors, calls = calls })`,
 	}).emitted;
 	assert.deepEqual(out, { errors: 1, calls: [7] });
@@ -41,14 +41,14 @@ test('settings fall back to defaults, store only non-default values, and announc
 	const [out] = runAddon({
 		addons: [CORE],
 		script: `
-			Polestar.RegisterDefaults("ui", { scale = 1, locked = false })
+			SendaFH.RegisterDefaults("ui", { scale = 1, locked = false })
 			local seen = {}
-			Polestar.On("SETTING_CHANGED", function(p, v) seen[#seen + 1] = p .. "=" .. tostring(v) end)
-			local before = Polestar.Get("ui.scale")
-			Polestar.Set("ui.scale", 1.25)
-			local stored = PolestarDB.settings.ui.scale
-			Polestar.Set("ui.scale", 1)
-			emit({ before = before, stored = stored, cleared = PolestarDB.settings.ui.scale == nil, now = Polestar.Get("ui.scale"), seen = seen })`,
+			SendaFH.On("SETTING_CHANGED", function(p, v) seen[#seen + 1] = p .. "=" .. tostring(v) end)
+			local before = SendaFH.Get("ui.scale")
+			SendaFH.Set("ui.scale", 1.25)
+			local stored = SendaFHDB.settings.ui.scale
+			SendaFH.Set("ui.scale", 1)
+			emit({ before = before, stored = stored, cleared = SendaFHDB.settings.ui.scale == nil, now = SendaFH.Get("ui.scale"), seen = seen })`,
 	}).emitted;
 	assert.deepEqual(out, { before: 1, stored: 1.25, cleared: true, now: 1, seen: ['ui.scale=1.25', 'ui.scale=1'] });
 });
@@ -57,12 +57,12 @@ test('settings survive SavedVariables coming back nil after a cold restart', () 
 	const [out] = runAddon({
 		addons: [CORE],
 		script: `
-			Polestar.RegisterDefaults("nav", { arrow = true })
-			Polestar.Set("nav.arrow", false)
-			PolestarDB = nil      -- the client failed to restore the file
-			PolestarCharDB = nil
-			local state = Polestar.CharState()
-			emit({ arrow = Polestar.Get("nav.arrow"), manual = type(state.manual), flags = type(state.flags) })`,
+			SendaFH.RegisterDefaults("nav", { arrow = true })
+			SendaFH.Set("nav.arrow", false)
+			SendaFHDB = nil      -- the client failed to restore the file
+			SendaFHCharDB = nil
+			local state = SendaFH.CharState()
+			emit({ arrow = SendaFH.Get("nav.arrow"), manual = type(state.manual), flags = type(state.flags) })`,
 	}).emitted;
 	assert.deepEqual(out, { arrow: true, manual: 'table', flags: 'table' });
 });
@@ -70,10 +70,10 @@ test('settings survive SavedVariables coming back nil after a cold restart', () 
 test('restored SavedVariables are used once ADDON_LOADED fires', () => {
 	const [out] = runAddon({
 		addons: [CORE],
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { ui = { scale = 0.9 } } }' },
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { ui = { scale = 0.9 } } }' },
 		script: `
-			Polestar.RegisterDefaults("ui", { scale = 1 })
-			emit(Polestar.Get("ui.scale"))`,
+			SendaFH.RegisterDefaults("ui", { scale = 1 })
+			emit(SendaFH.Get("ui.scale"))`,
 	}).emitted;
 	assert.equal(out, 0.9);
 });
@@ -83,13 +83,13 @@ test('init and login callbacks run in order, and late registrations run at once'
 		before: `__order = {}`,
 		addons: [
 			{
-				name: 'Polestar',
+				name: 'SendaFH',
 				files: ['Core/Init.lua'],
 			},
 		],
 		login: true,
 		script: `
-			Polestar.OnLogin(function() __order[#__order + 1] = "late-login" end)
+			SendaFH.OnLogin(function() __order[#__order + 1] = "late-login" end)
 			emit(__order)`,
 	}).emitted;
 	assert.deepEqual(out, ['late-login']);
@@ -103,7 +103,7 @@ test('init and login callbacks run in order, and late registrations run at once'
 				if not chunk then return nil, err end
 				return function(...)
 					chunk(...)
-					local ns = Polestar
+					local ns = SendaFH
 					ns.OnInit(function() __order[#__order + 1] = "init1" end)
 					ns.OnLogin(function() __order[#__order + 1] = "login1" end)
 					ns.OnInit(function() __order[#__order + 1] = "init2" end)
@@ -124,19 +124,19 @@ test('slash command: bare toggles the frame, names dispatch with the rest of the
 		addons: [CORE],
 		script: `
 			local got = {}
-			Polestar.On("TOGGLE_FRAME", function() got[#got + 1] = "toggle" end)
-			Polestar.RegisterCommand("Goto", function(rest) got[#got + 1] = "goto:" .. rest end, "help text")
-			SlashCmdList.POLESTAR("")
-			SlashCmdList.POLESTAR("  goto   12 extra  ")
+			SendaFH.On("TOGGLE_FRAME", function() got[#got + 1] = "toggle" end)
+			SendaFH.RegisterCommand("Goto", function(rest) got[#got + 1] = "goto:" .. rest end, "help text")
+			SlashCmdList.SENDAFH("")
+			SlashCmdList.SENDAFH("  goto   12 extra  ")
 			local before = #stub.messages
-			SlashCmdList.POLESTAR("nope")
+			SlashCmdList.SENDAFH("nope")
 			local printed = table.concat(stub.messages, "\\n", before + 1)
-			emit({ got = got, mentionsUnknown = printed:find("nope", 1, true) ~= nil, listsGoto = printed:find("/polestar goto", 1, true) ~= nil })`,
+			emit({ got = got, mentionsUnknown = printed:find("nope", 1, true) ~= nil, listsGoto = printed:find("/sendafh goto", 1, true) ~= nil })`,
 	}).emitted;
 	assert.deepEqual(out, { got: ['toggle', 'goto:12 extra'], mentionsUnknown: true, listsGoto: true });
 });
 
-test('/polestar help prints each line in the client language, Core\'s own commands too', () => {
+test('/sendafh help prints each line in the client language, Core\'s own commands too', () => {
 	const [out] = runAddon({
 		stubs: ['stub_world.lua'],
 		before: fakeLocale('itIT', {
@@ -146,12 +146,12 @@ test('/polestar help prints each line in the client language, Core\'s own comman
 			'Toggle debug output': 'Debug-Ausgabe umschalten',
 			'Look at the step before': 'Vorherigen Schritt ansehen',
 		}),
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml'] }],
 		script: `
-			SlashCmdList.POLESTAR("help")
+			SlashCmdList.SENDAFH("help")
 			local lines = {}
 			for _, m in ipairs(stub.messages) do
-				local name, help = m:match("/polestar (%S+)  |cff8a8f98(.*)|r$")
+				local name, help = m:match("/sendafh (%S+)  |cff8a8f98(.*)|r$")
 				if name then lines[name] = help end
 			end
 			emit({ title = stub.messages[1]:find("Befehle", 1, true) ~= nil, show = lines.show, options = lines.options, debug = lines.debug, prev = lines.prev, hide = lines.hide })`,
@@ -170,7 +170,7 @@ test('LC: a word with two meanings has a key per meaning, English while untransl
 	const run = (strings) => runAddon({
 		before: fakeLocale('itIT', strings),
 		addons: [CORE],
-		script: `emit({ button = Polestar.L["Back"], chest = Polestar.LC("boss", "Chest") })`,
+		script: `emit({ button = SendaFH.L["Back"], chest = SendaFH.LC("boss", "Chest") })`,
 	}).emitted[0];
 	assert.deepEqual(run({ Back: 'Indietro', 'boss: Chest': 'Forziere' }), { button: 'Indietro', chest: 'Forziere' });
 	assert.deepEqual(run({ Back: 'Indietro' }), { button: 'Indietro', chest: 'Chest' });
@@ -185,9 +185,9 @@ test('registering an event the client does not know returns false instead of err
 				if ev == "NOT_A_FOREVER_EVENT" then error("Attempt to register unknown event") end
 				return real(self, ev)
 			end
-			local ok1 = Polestar.RegisterEvent("NOT_A_FOREVER_EVENT", function() end)
+			local ok1 = SendaFH.RegisterEvent("NOT_A_FOREVER_EVENT", function() end)
 			local hits = 0
-			local ok2 = Polestar.RegisterEvent("QUEST_ACCEPTED", function(_, id) hits = hits + id end)
+			local ok2 = SendaFH.RegisterEvent("QUEST_ACCEPTED", function(_, id) hits = hits + id end)
 			stub.fire("QUEST_ACCEPTED", 5)
 			emit({ ok1 = ok1, ok2 = ok2, hits = hits })`,
 	}).emitted;
@@ -220,11 +220,11 @@ test('FormatDistance: yards or metres, rounding, kilometres from 1000 m, and the
 	const [out] = runAddon({
 		addons: [CORE],
 		script: `
-			local F = Polestar.FormatDistance
-			Polestar.RegisterDefaults("nav", { distanceUnit = "yards" })
+			local F = SendaFH.FormatDistance
+			SendaFH.RegisterDefaults("nav", { distanceUnit = "yards" })
 			local rares = { round = 5, compact = true }
 			local yd = { F(120.4), F(0.6), F(1500), F(83, rares), F(998, rares), F(1500, rares) }
-			Polestar.Set("nav.distanceUnit", "metres")
+			SendaFH.Set("nav.distanceUnit", "metres")
 			local m = { F(120.4), F(0.6), F(1093), F(1094), F(1500), F(83, rares), F(1092, rares), F(1500, rares) }
 			emit({ yd = yd, m = m })`,
 	}).emitted;

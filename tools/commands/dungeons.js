@@ -1,5 +1,5 @@
 'use strict';
-// node tools/polestar.js dungeons build
+// node tools/sendafh.js dungeons build
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -9,7 +9,7 @@ const { loadData } = require('../lib/dsl/data');
 
 const { DATA } = require('../lib/paths');
 
-const usage = `usage: node tools/polestar.js dungeons build [options]
+const usage = `usage: node tools/sendafh.js dungeons build [options]
 
 Reads the installed DungeonJournal addon (ForeverDungeonJournal) and writes
 data/forever/dungeons.json: dungeons with levels, entrance and bosses, quests

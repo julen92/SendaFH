@@ -45,7 +45,7 @@ const PRELUDE = String.raw`
 local AL_VERSION = 1
 local function nameOf(prefix, id) return "{" .. prefix .. ":" .. tostring(id) .. "}" end
 local function locale() return setmetatable({}, { __index = function(_, k) return k end }) end
-POLESTAR_band = function(a, b)
+SENDAFH_band = function(a, b)
   local r, bitv = 0, 1
   a, b = math.floor(a or 0), math.floor(b or 0)
   while a > 0 and b > 0 do
@@ -54,7 +54,7 @@ POLESTAR_band = function(a, b)
   end
   return r
 end
-POLESTAR_AL = { stores = {}, order = {}, droprates = {} }
+SENDAFH_AL = { stores = {}, order = {}, droprates = {} }
 local Store = {}
 function Store:AddDifficulty(dif, uniqueName)
   local meta = rawget(self, "__al")
@@ -96,9 +96,9 @@ local storeMt = {
 local Droprate = {}
 function Droprate:AddData(d)
   if type(d) ~= "table" then return end
-  for npc, items in pairs(d) do POLESTAR_AL.droprates[npc] = items end
+  for npc, items in pairs(d) do SENDAFH_AL.droprates[npc] = items end
 end
-function Droprate:GetData(npc, item) local d = POLESTAR_AL.droprates[npc] return d and d[item] end
+function Droprate:GetData(npc, item) local d = SENDAFH_AL.droprates[npc] return d and d[item] end
 local ContentPhase = {}
 function ContentPhase:GetActivePhase() return 6 end
 function ContentPhase:IsActive() return true end
@@ -119,12 +119,12 @@ AtlasLoot = {
 }
 function AtlasLoot.ItemDB:Add(addonName)
   local name = tostring(addonName)
-  if not POLESTAR_AL.stores[name] then
+  if not SENDAFH_AL.stores[name] then
     local store = { __al = { order = {}, diffs = {}, diffIndex = {}, ctypes = {}, ctypeIndex = {}, ttypes = {}, extras = {} } }
-    POLESTAR_AL.stores[name] = setmetatable(store, storeMt)
-    POLESTAR_AL.order[#POLESTAR_AL.order + 1] = name
+    SENDAFH_AL.stores[name] = setmetatable(store, storeMt)
+    SENDAFH_AL.order[#SENDAFH_AL.order + 1] = name
   end
-  return POLESTAR_AL.stores[name]
+  return SENDAFH_AL.stores[name]
 end
 function AtlasLoot.ReturnForGameVersion(classic) return classic end
 function AtlasLoot:GetGameVersion() return AL_VERSION end
@@ -141,7 +141,7 @@ function AtlasLoot:GetGameVersionDataTable()
   local data = setmetatable({}, { __newindex = function(_, _, v) for k, x in pairs(v) do use[k] = x end end })
   return use, data
 end
-POLESTAR_NS.IS_CLASSIC = true
+SENDAFH_NS.IS_CLASSIC = true
 ATLASLOOT_IT_FILTERIGNORE, ATLASLOOT_IT_HORDE, ATLASLOOT_IT_ALLIANCE, ATLASLOOT_IT_AMOUNT1, ATLASLOOT_IT_AMOUNT2 = 900, 901, 902, 903, 904
 for _, k in ipairs({ "COLLECTION", "DUNGEON", "FACTION", "PERMRECEVENTS", "PRIMPROFESSION", "PVP", "RAID", "RAID40", "RAID20",
   "REMOVED", "SEASONALEVENTS", "SECPROFESSION", "WORLD_BOSS", "COLLECTIONS", "CLASSPROFESSION", "UNKNOWN", "HORDE", "ALLIANCE" }) do
@@ -153,7 +153,7 @@ RAID_CLASS_COLORS = setmetatable({}, { __index = function() return { colorStr = 
 WOW_PROJECT_ID, WOW_PROJECT_CLASSIC, WOW_PROJECT_MAINLINE = 2, 2, 1
 function UnitFactionGroup() return "Alliance", "Alliance" end
 function GetFactionInfoByID(id) return nameOf("faction", id) end
-function CreateFrame() return POLESTAR_STUB end
+function CreateFrame() return SENDAFH_STUB end
 function hooksecurefunc() end
 C_Map = { GetAreaInfo = function(id) return nameOf("area", id) end }
 C_Spell = { GetSpellTexture = function() return 0 end, GetSpellName = function(id) return nameOf("spell", id) end }
@@ -199,8 +199,8 @@ local function dumpBoss(boss, extras)
   end
   return out
 end
-function POLESTAR_dumpStore(name)
-  local store = POLESTAR_AL.stores[name]
+function SENDAFH_dumpStore(name)
+  local store = SENDAFH_AL.stores[name]
   if not store then return nil end
   local meta = rawget(store, "__al")
   local contents = {}
@@ -224,9 +224,9 @@ function POLESTAR_dumpStore(name)
   end
   return { contents = contents, diffs = meta.diffs, ttypes = meta.ttypes }
 end
-function POLESTAR_dumpDroprates()
+function SENDAFH_dumpDroprates()
   local out = {}
-  for npc, items in pairs(POLESTAR_AL.droprates) do
+  for npc, items in pairs(SENDAFH_AL.droprates) do
     if type(items) == "table" then
       local row = {}
       for item, rate in pairs(items) do if type(rate) == "number" then row[tostring(item)] = rate end end
@@ -542,18 +542,18 @@ function collectFactions(stores, factions) {
 }
 
 const EXPR_STORES = (names) => `return {
-  stores = { ${names.map((n) => `[${JSON.stringify(n)}] = POLESTAR_dumpStore(${JSON.stringify(n)})`).join(', ')} },
-  droprates = POLESTAR_dumpDroprates(),
-  extra = POLESTAR_extra and POLESTAR_extra() or nil,
+  stores = { ${names.map((n) => `[${JSON.stringify(n)}] = SENDAFH_dumpStore(${JSON.stringify(n)})`).join(', ')} },
+  droprates = SENDAFH_dumpDroprates(),
+  extra = SENDAFH_extra and SENDAFH_extra() or nil,
 }`;
 
 // Lua for each module's extra facts from core data files.
 const EXTRA = {
-	Crafting: `function POLESTAR_extra()
+	Crafting: `function SENDAFH_extra()
   local P = AtlasLoot.Data.Profession
   local out = {}
   if not P or not P.GetProfessionData then return out end
-  for _, store in pairs(POLESTAR_AL.stores) do
+  for _, store in pairs(SENDAFH_AL.stores) do
     local meta = rawget(store, "__al")
     for _, key in ipairs(meta.order) do
       local c = rawget(store, key)
@@ -578,11 +578,11 @@ const EXTRA = {
   return out
 end`,
 	// GetPvPRankIconForItem -> PVP_RANK[rank][3], icons 136766.. for ranks 1..
-	PvP: `function POLESTAR_extra()
+	PvP: `function SENDAFH_extra()
   local R = AtlasLoot.Data.Requirements
   local out = {}
   if not R or not R.GetPvPRankIconForItem then return out end
-  for _, store in pairs(POLESTAR_AL.stores) do
+  for _, store in pairs(SENDAFH_AL.stores) do
     local meta = rawget(store, "__al")
     for _, key in ipairs(meta.order) do
       local c = rawget(store, key)
@@ -612,7 +612,7 @@ end`,
 end`,
 };
 
-const FOREVER_STORE = 'POLESTAR_forever';
+const FOREVER_STORE = 'SENDAFH_forever';
 
 // An empty Lua table reaches JSON as {}: lists back to arrays.
 const list = (v) => (Array.isArray(v) ? v : []);
@@ -653,9 +653,9 @@ function readModule(dir, coreDir, module, opts) {
 			// data.lua's LTNX icon without defining it; Requirements needs
 			// bit.band, which the sandbox withholds.
 			rewrite: (src, file) => {
-				let out = `local _G = POLESTAR_G; ${src}`;
+				let out = `local _G = SENDAFH_G; ${src}`;
 				if (extra.includes(file)) out = `local LTNX = ""; ${out.replace(/ItemDB:Add\(\s*addonname/g, `ItemDB:Add("${FOREVER_STORE}"`)}`;
-				if (path.basename(file) === 'Requirements.lua') out = out.replace(/\bbit\.band\b/g, 'POLESTAR_band');
+				if (path.basename(file) === 'Requirements.lua') out = out.replace(/\bbit\.band\b/g, 'SENDAFH_band');
 				return out;
 			},
 			expr: EXPR_STORES([folder, FOREVER_STORE]),

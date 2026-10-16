@@ -1,6 +1,6 @@
 'use strict';
-// Polestar.Theme (colour schemes, custom colours, legibility, the
-// EllesmereUI path), Polestar.Anim, and the textures the UI shows.
+// SendaFH.Theme (colour schemes, custom colours, legibility, the
+// EllesmereUI path), SendaFH.Anim, and the textures the UI shows.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,8 +14,8 @@ function run(script, { before = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before,
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `uistub.install()\nstub.login()\nlocal T, W = Polestar.Theme, Polestar.Widgets\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `uistub.install()\nstub.login()\nlocal T, W = SendaFH.Theme, SendaFH.Widgets\n${script}`,
 	}).emitted;
 }
 
@@ -48,7 +48,7 @@ test('every colour scheme keeps the text ladder legible on every ground (7:1 pri
 	const [out] = run(`
 		local out = {}
 		for _, key in ipairs(T.SCHEME_ORDER) do
-			Polestar.Set("ui.scheme", key)
+			SendaFH.Set("ui.scheme", key)
 			out[key] = T.Palette()
 		end
 		emit(out)`);
@@ -68,8 +68,8 @@ test('item quality and quest difficulty colours, lifted, read at 4.5:1 on a sele
 		}
 		local out = {}
 		for _, key in ipairs(T.SCHEME_ORDER) do
-			Polestar.Set("ui.scheme", key)
-			local o = { ground = T.LightestGround(), panel = T.Palette().panel, lifted = {}, epic = { Polestar.UI.Lookup.QualityColor(4) } }
+			SendaFH.Set("ui.scheme", key)
+			local o = { ground = T.LightestGround(), panel = T.Palette().panel, lifted = {}, epic = { SendaFH.UI.Lookup.QualityColor(4) } }
 			for i, c in ipairs(OUTSIDE) do o.lifted[i] = { T.Legible(c[1], c[2], c[3]) } end
 			out[key] = o
 		end
@@ -88,7 +88,7 @@ test('item quality and quest difficulty colours, lifted, read at 4.5:1 on a sele
 test('Dusk is the default and visibly lighter than Night; Night keeps the original palette exactly', () => {
 	const [out] = run(`
 		local dusk = T.Palette()
-		Polestar.Set("ui.scheme", "night")
+		SendaFH.Set("ui.scheme", "night")
 		emit({ key = dusk.scheme, dusk = dusk, night = T.Palette() })`);
 	assert.equal(out.key, 'dusk');
 	for (const g of ['bg', 'panel', 'panelAlt', 'sidebar', 'footer', 'sky']) {
@@ -111,18 +111,18 @@ test('custom ground colour and brightness repaint live and can never make text i
 		local sky = T.Band(UIParent)
 		local before = { tex:GetVertexColor() }
 		local skyBefore = { sky:GetVertexColor() }
-		Polestar.Set("ui.bgColor", { 0.2, 0.05, 0.1 })
+		SendaFH.Set("ui.bgColor", { 0.2, 0.05, 0.1 })
 		local custom = { tex:GetVertexColor() }
 		local skyCustom = { sky:GetVertexColor() }
-		Polestar.Set("ui.brightness", 0.5)
+		SendaFH.Set("ui.brightness", 0.5)
 		local lifted = T.Palette()
-		Polestar.Set("ui.bgColor", { 1, 1, 1 })
-		Polestar.Set("ui.brightness", 1)
+		SendaFH.Set("ui.bgColor", { 1, 1, 1 })
+		SendaFH.Set("ui.brightness", 1)
 		local white = T.Palette()
-		Polestar.Set("ui.bgColor", nil)
-		Polestar.Set("ui.brightness", -1)
+		SendaFH.Set("ui.bgColor", nil)
+		SendaFH.Set("ui.brightness", -1)
 		local low = T.Palette()
-		Polestar.Set("ui.brightness", nil)
+		SendaFH.Set("ui.brightness", nil)
 		emit({ before = before, custom = custom, skyBefore = skyBefore, skyCustom = skyCustom, lifted = lifted, white = white, low = low,
 			back = { tex:GetVertexColor() }, legible = T.Legibility(white) })`);
 	assert.notDeepEqual(out.custom, out.before);
@@ -136,7 +136,7 @@ test('custom ground colour and brightness repaint live and can never make text i
 	assert.deepEqual(out.back.slice(0, 3), out.before.slice(0, 3), 'right-click reset (nil) returns to the scheme');
 });
 
-test('house style: the game\'s font by default and Inter on request, Polestar gold, a user accent that repaints what follows it', () => {
+test('house style: the game\'s font by default and Inter on request, SendaFH gold, a user accent that repaints what follows it', () => {
 	const [out] = run(`
 		local fs = UIParent:CreateFontString()
 		T.Font(fs, "title")
@@ -145,21 +145,21 @@ test('house style: the game\'s font by default and Inter on request, Polestar go
 		local fired = 0
 		T.OnChanged(function() fired = fired + 1 end)
 		local d = { T.Accent() }
-		Polestar.Set("ui.accent", { 1, 0.5, 0 })
+		SendaFH.Set("ui.accent", { 1, 0.5, 0 })
 		local tr, tg, tb = tex:GetVertexColor()
-		Polestar.Set("ui.font", "inter")
+		SendaFH.Set("ui.font", "inter")
 		local inter = { fs:GetFont() }
-		Polestar.Set("ui.bgOpacity", 0.5)
-		local bgAlpha = select(4, PolestarGuideFrame.psSkin.bg:GetVertexColor())
+		SendaFH.Set("ui.bgOpacity", 0.5)
+		local bgAlpha = select(4, SendaFHGuideFrame.psSkin.bg:GetVertexColor())
 		T.SetOutline(fs, true)
 		local outlined = select(3, fs:GetFont())
 		emit({ before = before, inter = inter, default = d, tex = { tr, tg, tb }, fired = fired, eui = T.IsEllesmere(),
-			border = PolestarGuideFrame.psBorder ~= nil, shadow = PolestarGuideFrame.psShadow:IsShown(), bgAlpha = bgAlpha,
+			border = SendaFHGuideFrame.psBorder ~= nil, shadow = SendaFHGuideFrame.psShadow:IsShown(), bgAlpha = bgAlpha,
 			outlined = outlined, media = T.Media("check"), verb = T.VerbIcon("kill"),
 			band = { T.BandCoords(720, 112) }, schemes = T.SchemeChoices() })`);
 	assert.deepEqual(out.before, ['Fonts\\FRIZQT__.TTF', 15, ''], 'the game\'s own font by default');
-	assert.deepEqual(out.inter, ['Interface\\AddOns\\Polestar\\Media\\Fonts\\Inter-SemiBold.ttf', 15, ''], 'ui.font = inter re-fonts live');
-	assert.deepEqual(round(out.default), [0.9, 0.73, 0.4], 'Polestar gold');
+	assert.deepEqual(out.inter, ['Interface\\AddOns\\SendaFH\\Media\\Fonts\\Inter-SemiBold.ttf', 15, ''], 'ui.font = inter re-fonts live');
+	assert.deepEqual(round(out.default), [0.9, 0.73, 0.4], 'SendaFH gold');
 	assert.deepEqual(out.tex, [1, 0.5, 0]);
 	assert.ok(out.fired >= 1);
 	assert.equal(out.eui, false);
@@ -167,18 +167,18 @@ test('house style: the game\'s font by default and Inter on request, Polestar go
 	assert.equal(out.shadow, true);
 	assert.equal(out.bgAlpha, 0.5);
 	assert.equal(out.outlined, 'OUTLINE');
-	assert.equal(out.media, 'Interface\\AddOns\\Polestar\\Media\\UI\\check');
-	assert.equal(out.verb, 'Interface\\AddOns\\Polestar\\Media\\UI\\icon-kill');
+	assert.equal(out.media, 'Interface\\AddOns\\SendaFH\\Media\\UI\\check');
+	assert.equal(out.verb, 'Interface\\AddOns\\SendaFH\\Media\\UI\\icon-kill');
 	assert.deepEqual(round(out.band), [0, 0.703, 0, 0.875], 'the band is cropped to the header, never stretched');
 	assert.deepEqual(out.schemes.map((c) => c.value), ['dusk', 'night', 'graphite'], 'EllesmereUI is offered only when installed');
 });
 
 test('settings from before schemes: a stored gold accent was the old default; any other stays the user\'s own', () => {
-	const ui = (accent) => `PolestarDB = { schema = 1, settings = { ui = { accent = ${accent} } } }`;
-	const [gold] = run(`emit({ accent = Polestar.Get("ui.accent"), live = { T.Accent() } })`, { before: ui('{ 0.9, 0.73, 0.4 }') });
+	const ui = (accent) => `SendaFHDB = { schema = 1, settings = { ui = { accent = ${accent} } } }`;
+	const [gold] = run(`emit({ accent = SendaFH.Get("ui.accent"), live = { T.Accent() } })`, { before: ui('{ 0.9, 0.73, 0.4 }') });
 	assert.equal(gold.accent, false);
 	assert.deepEqual(round(gold.live), [0.9, 0.73, 0.4]);
-	const [own] = run(`emit({ accent = Polestar.Get("ui.accent"), live = { T.Accent() } })`, { before: ui('{ 0.2, 0.6, 1 }') });
+	const [own] = run(`emit({ accent = SendaFH.Get("ui.accent"), live = { T.Accent() } })`, { before: ui('{ 0.2, 0.6, 1 }') });
 	assert.deepEqual(own.accent, [0.2, 0.6, 1]);
 	assert.deepEqual(round(own.live), [0.2, 0.6, 1]);
 });
@@ -187,7 +187,7 @@ test('EllesmereUI: an optional scheme and follow toggles, never a lock', () => {
 	const [out] = run(`
 		local fs = UIParent:CreateFontString()
 		T.Font(fs, "body")
-		local GF = Polestar.UI.GuideFrame
+		local GF = SendaFH.UI.GuideFrame
 		uistub.setGuide(uistub.elwynn, 3)
 		local function fill() local r, g, b = GF.parts.line.Fill:GetVertexColor() return { r, g, b } end
 		local before = fill()
@@ -197,41 +197,41 @@ test('EllesmereUI: an optional scheme and follow toggles, never a lock', () => {
 		local after = fill()
 		local followFont = { fs:GetFont() }
 		local schemes = T.SchemeChoices()
-		Polestar.Set("ui.scheme", "ellesmere")
+		SendaFH.Set("ui.scheme", "ellesmere")
 		local euiGround = { T.Color("bg") }
 		local euiPal = T.Palette()
-		Polestar.UI.ShowOptions("appearance")
-		local look = Polestar.UI.Options.Controls("appearance")
+		SendaFH.UI.ShowOptions("appearance")
+		local look = SendaFH.UI.Options.Controls("appearance")
 		local swatch = look["ui.accent"]
 		local note = swatch.Note:GetText()
 		swatch:Click("LeftButton")
 		local opened = ColorPickerFrame.info ~= nil
 		ColorPickerFrame.GetColorRGB = function() return 0.1, 0.8, 0.3 end
 		ColorPickerFrame.info.swatchFunc()
-		local picked = { accent = { T.Accent() }, match = Polestar.Get("ui.matchAccent"), fill = fill() }
+		local picked = { accent = { T.Accent() }, match = SendaFH.Get("ui.matchAccent"), fill = fill() }
 		ColorPickerFrame.info.cancelFunc()
-		local cancelled = { accent = Polestar.Get("ui.accent"), match = Polestar.Get("ui.matchAccent") }
-		Polestar.Set("ui.accent", { 1, 0, 0 })
-		local own = Polestar.Get("ui.matchAccent")
+		local cancelled = { accent = SendaFH.Get("ui.accent"), match = SendaFH.Get("ui.matchAccent") }
+		SendaFH.Set("ui.accent", { 1, 0, 0 })
+		local own = SendaFH.Get("ui.matchAccent")
 		look["ui.matchAccent"]:Click()
-		local rematched = { accent = Polestar.Get("ui.accent"), live = { T.Accent() } }
+		local rematched = { accent = SendaFH.Get("ui.accent"), live = { T.Accent() } }
 		local font = look["ui.font"]
 		local fontLabel = font.Button.Label:GetText()
 		font.Button:Click()
 		local items = {}
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() then items[#items + 1] = r.Text:GetText() end end
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Inter" then r:Click() end end
-		local inter = { match = Polestar.Get("ui.matchFont"), font = { fs:GetFont() }, label = font.Button.Label:GetText() }
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() then items[#items + 1] = r.Text:GetText() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Inter" then r:Click() end end
+		local inter = { match = SendaFH.Get("ui.matchFont"), font = { fs:GetFont() }, label = font.Button.Label:GetText() }
 		look["ui.matchFont"]:Click()
 		emit({ registered = stub.skinRegistered, eui = T.IsEllesmere(), skinned = #stub.skinned,
-			shellArt = PolestarGuideFrame.euiSkin or false, houseBg = PolestarGuideFrame.psSkin.bg:IsShown(),
+			shellArt = SendaFHGuideFrame.euiSkin or false, houseBg = SendaFHGuideFrame.psSkin.bg:IsShown(),
 			band = GF.parts.band:IsShown(), followFont = followFont, before = before, after = after, fired = fired,
 			schemes = schemes, euiGround = euiGround, euiPal = euiPal, note = note, opened = opened, enabled = swatch:IsEnabled(),
 			picked = picked, cancelled = cancelled, own = own, rematched = rematched, fontLabel = fontLabel, items = items, inter = inter,
 			refollow = { fs:GetFont() } })`, { before: 'stub.withEllesmere()' });
-	assert.equal(out.registered, 'Polestar');
+	assert.equal(out.registered, 'SendaFH');
 	assert.equal(out.eui, true);
-	assert.equal(out.skinned, 0, 'no EllesmereUI primitive replaces Polestar art');
+	assert.equal(out.skinned, 0, 'no EllesmereUI primitive replaces SendaFH art');
 	assert.equal(out.shellArt, false);
 	assert.equal(out.houseBg, true);
 	assert.equal(out.band, true);
@@ -256,7 +256,7 @@ test('EllesmereUI: an optional scheme and follow toggles, never a lock', () => {
 	assert.equal(out.fontLabel, 'Game font');
 	assert.deepEqual(out.items, ['Game font', 'Inter', 'EllesmereUI']);
 	assert.equal(out.inter.match, false, 'choosing another font turns following off');
-	assert.deepEqual(out.inter.font, ['Interface\\AddOns\\Polestar\\Media\\Fonts\\Inter-Medium.ttf', 13, '']);
+	assert.deepEqual(out.inter.font, ['Interface\\AddOns\\SendaFH\\Media\\Fonts\\Inter-Medium.ttf', 13, '']);
 	assert.equal(out.inter.label, 'Inter');
 	assert.deepEqual(out.refollow, ['Interface\\AddOns\\EllesmereUI\\media\\fonts\\Expressway.ttf', 13, '']);
 });
@@ -269,15 +269,15 @@ test('class colour accent: follows the class, lifted to read, and takes turns wi
 	const [out] = run(`
 		UnitClass = function() return "Shaman", "SHAMAN", 7 end
 		local raw = RAID_CLASS_COLORS.SHAMAN
-		Polestar.Set("ui.classAccent", true)
+		SendaFH.Set("ui.classAccent", true)
 		local shaman = { T.Accent() }
 		local pal = T.Palette()
 		local panel = pal.panel
-		local follows = { class = T.FollowsClassAccent(), eui = T.FollowsEllesmereAccent(), match = Polestar.Get("ui.matchAccent") }
-		Polestar.Set("ui.accent", { 1, 0.5, 0 })
-		local own = { class = Polestar.Get("ui.classAccent"), accent = { T.Accent() } }
-		Polestar.Set("ui.classAccent", true)
-		local back = { accent = Polestar.Get("ui.accent"), live = { T.Accent() } }
+		local follows = { class = T.FollowsClassAccent(), eui = T.FollowsEllesmereAccent(), match = SendaFH.Get("ui.matchAccent") }
+		SendaFH.Set("ui.accent", { 1, 0.5, 0 })
+		local own = { class = SendaFH.Get("ui.classAccent"), accent = { T.Accent() } }
+		SendaFH.Set("ui.classAccent", true)
+		local back = { accent = SendaFH.Get("ui.accent"), live = { T.Accent() } }
 		emit({ raw = { raw.r, raw.g, raw.b }, shaman = shaman, panel = { panel[1], panel[2], panel[3] }, follows = follows, own = own, back = back })`,
 		{ before: 'stub.withEllesmere()' });
 	assert.ok(contrast(out.raw, out.panel) < 4.5, 'raw shaman blue does not read on the panel');
@@ -291,7 +291,7 @@ test('class colour accent: follows the class, lifted to read, and takes turns wi
 
 test('Anim: OnUpdate exists only while a tween runs; retargeting reuses the record', () => {
 	const [out] = run(`
-		local A = Polestar.Anim
+		local A = SendaFH.Anim
 		local f = CreateFrame("Frame")
 		A.To(f, "alpha", 0, 1, 0.2, "out")
 		local running = A.Active()
@@ -303,7 +303,7 @@ test('Anim: OnUpdate exists only while a tween runs; retargeting reuses the reco
 		local done = false
 		A.To(f, "width", 10, 100, 0.2, "out", function() done = true end)
 		stub.advance(0.5)
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("ui.reduceMotion", true)
 		A.To(f, "width", 0, 50, 0.2)
 		local snapped = f:GetWidth()
 		emit({ running = running, mid = mid, reused = reused, done = done, final = f:GetAlpha(), width = snapped, active = A.Active() })`);
@@ -320,7 +320,7 @@ test('Anim: OnUpdate exists only while a tween runs; retargeting reuses the reco
 test('every texture the UI shows, and every goal verb icon, exists as a valid TGA', () => {
 	const verbs = ['accept', 'turnin', 'complete', 'kill', 'collect', 'goto', 'talk', 'interact', 'use', 'sethome', 'hearth', 'getfp', 'fly', 'train', 'buy', 'vendor', 'level', 'note', 'skill', 'learn', 'craft', 'rep', 'explore', 'achieve'];
 	const [paths] = run(`
-		local GF, UI = Polestar.UI.GuideFrame, Polestar.UI
+		local GF, UI = SendaFH.UI.GuideFrame, SendaFH.UI
 		local seen = {}
 		local function collect()
 			for _, f in ipairs(stub.frames) do
@@ -333,12 +333,12 @@ test('every texture the UI shows, and every goal verb icon, exists as a valid TG
 		uistub.openTabs({ { uistub.elwynn, 3 }, { uistub.tailoring, 2 }, { uistub.stormwindRep, 2 } }, 1); collect()
 		uistub.setStep(4); collect()
 		uistub.setStep(8); collect()
-		Polestar.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall"); collect()
+		SendaFH.Fire("GUIDE_OUTLEVELED", uistub.elwynn, "forever/alliance/02-westfall"); collect()
 		GF.menuButton:Click(); collect()
-		Polestar.Set("ui.compact", true); collect()
-		Polestar.Set("ui.style", "transparent"); collect()
+		SendaFH.Set("ui.compact", true); collect()
+		SendaFH.Set("ui.style", "transparent"); collect()
 		uistub.complete(); collect()
-		Polestar.Engine.SetGuide(nil); collect()
+		SendaFH.Engine.SetGuide(nil); collect()
 		UI.ShowPicker(); collect()
 		for _, p in ipairs(UI.Options.Pages()) do
 			UI.ShowOptions(p.key); collect()
@@ -349,14 +349,14 @@ test('every texture the UI shows, and every goal verb icon, exists as a valid TG
 		for p in pairs(seen) do out[#out + 1] = p end
 		table.sort(out)
 		emit(out)`);
-	const prefix = 'Interface\\AddOns\\Polestar\\Media\\UI\\';
+	const prefix = 'Interface\\AddOns\\SendaFH\\Media\\UI\\';
 	const ours = paths.filter((p) => p.startsWith(prefix)).map((p) => p.slice(prefix.length));
 	assert.deepEqual(paths.filter((p) => !p.startsWith(prefix)), [], 'the UI only uses its own textures');
 	for (const v of verbs) assert.ok(ours.includes(`icon-${v}`));
 	for (const n of ['emblem', 'wordmark', 'band', 'watermark']) assert.ok(ours.includes(n), `${n} is used`);
 	const missing = [];
 	for (const n of ours) {
-		const file = path.join(ADDONS, 'Polestar', 'Media', 'UI', `${n}.tga`);
+		const file = path.join(ADDONS, 'SendaFH', 'Media', 'UI', `${n}.tga`);
 		if (!fs.existsSync(file)) {
 			missing.push(n);
 			continue;
@@ -383,7 +383,7 @@ test('a primary button label has no drop shadow, a secondary one keeps it, acros
 		local secondary = W.Button(parent, "Load guide")
 		local function alpha(b) local _, _, _, a = b.Label:GetShadowColor() return a end
 		local out = { primary = alpha(primary), secondary = alpha(secondary) }
-		Polestar.Set("ui.scheme", "night")
+		SendaFH.Set("ui.scheme", "night")
 		out.primaryAfterScheme, out.secondaryAfterScheme = alpha(primary), alpha(secondary)
 		primary.psPrimary, secondary.psPrimary = false, true
 		W.RepaintButton(primary); W.RepaintButton(secondary)

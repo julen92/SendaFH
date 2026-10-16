@@ -27,7 +27,7 @@ async function scene() {
 	s.box(398, -1, -1, 402, 250, 10).box(398, 262, -1, 402, ADT + 1, 10).box(398, 250, 4, 402, 262, 10);
 	const geom = s.geom();
 	for (let cy = 0; cy < 16; cy++) for (let cx = 0; cx < 16; cx++) geom.areas[cy * 16 + cx] = cx >= 12 ? 2 : 1;
-	const dir = tmpdir('polestar-choke-');
+	const dir = tmpdir('sendafh-choke-');
 	await buildGrid({ outDir: dir, workers: 0, continents: [{ c: 0, name: 'test', tiles: [{ col: 32, row: 32 }] }], geometryJob: () => ({ geom }) });
 	return { s, nav: openNav({ dir }) };
 }
@@ -68,7 +68,7 @@ test('chokepoints: a bridge over a river and a gate through a wall, from the gri
 		assert.equal(e.zone, 'Test Vale');
 	}
 	const lua = chokepointsLua({ 0: list }, 'test');
-	assert.match(lua, /^PolestarNavChokepoints = PolestarNavChokepoints or \{\}$/m);
+	assert.match(lua, /^SendaFHNavChokepoints = SendaFHNavChokepoints or \{\}$/m);
 	assert.match(lua, /kind = "bridge", name = "Test Vale", zone = "Test Vale", sides = \{ \{ wx = /);
 	assert.match(lua, new RegExp(`liftEnd = "bottom", pair = ${list.indexOf(top) + 1}`), 'pair is a 1-based Lua index');
 });

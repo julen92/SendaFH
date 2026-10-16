@@ -219,7 +219,7 @@ test('header fields compile to the guide schema with defaults', () => {
 		version: 4,
 	});
 	const d = plain(compile(guideText(['step S', '  level 2'])).guides[0]);
-	assert.deepEqual([d.category, d.author, d.version, d.pack, d.zone, d.zoneName], ['Leveling', 'Polestar', 1, 'guides', 1429, 'Elwynn Forest']);
+	assert.deepEqual([d.category, d.author, d.version, d.pack, d.zone, d.zoneName], ['Leveling', 'SendaFH', 1, 'guides', 1429, 'Elwynn Forest']);
 });
 
 test('step titles, tips and only conditions compile onto the step', () => {

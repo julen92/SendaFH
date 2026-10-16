@@ -1,12 +1,12 @@
 'use strict';
-// `node tools/polestar.js nav`: terrain navigation from the Forever client's
+// `node tools/sendafh.js nav`: terrain navigation from the Forever client's
 // own geometry (docs/ARCHITECTURE.md, "Navigation grid").
 // `nav build` builds the grid under data/local/nav (tools/lib/nav/grid);
 // `nav path` routes between two map points on it (tools/lib/nav/path.js);
 // `nav aids` generates the arrow's crossings, open borders and approach
 // chains from it and measures them (tools/lib/nav/aids.js, arrow.js).
-// `nav pack` writes Polestar's walking maps of Eastern Kingdoms and Kalimdor
-// from the grid into addon/Polestar_Nav in Shortest Path Forever's format
+// `nav pack` writes SendaFH's walking maps of Eastern Kingdoms and Kalimdor
+// from the grid into addon/SendaFH_Nav in Shortest Path Forever's format
 // (tools/lib/nav/pack.js, chokepoints.js); `nav vendor` / `nav check` copy
 // his walking router and his other maps there and hold them to UPSTREAM.json
 // and PACK.json (tools/lib/nav/vendor.js; docs/ARCHITECTURE.md, "In-game
@@ -18,14 +18,14 @@ const { parseArgs } = require('../lib/cli');
 const { ROOT, DATA, SOURCES } = require('../lib/paths');
 
 const DEFAULT_DIR = path.join(ROOT, 'data', 'local', 'nav');
-const NAV_ADDON = path.join(ROOT, 'addon', 'Polestar_Nav');
+const NAV_ADDON = path.join(ROOT, 'addon', 'SendaFH_Nav');
 
-const usage = `usage: node tools/polestar.js nav build [--continents 0,1] [--force] [--offline] [--workers N] [--out <dir>] [--product <p>]
-       node tools/polestar.js nav path <map> <x>,<y> <map> <x>,<y> [--class C] [--level N] [--frame era|forever] [--json] [--dir <dir>]
-       node tools/polestar.js nav aids [--out <file>] [--lua <file>] [--report] [--continents 0,1] [--workers N] [--reference <file>] [--dir <dir>]
-       node tools/polestar.js nav pack [--cells N] [--date <YYYY-MM-DD>] [--dir <grid dir>] [--out <dir>] | nav pack --check [--out <dir>]
-       node tools/polestar.js nav vendor <shortest-path-forever checkout> [--out <dir>] [--date <YYYY-MM-DD>]
-       node tools/polestar.js nav check [--out <dir>]
+const usage = `usage: node tools/sendafh.js nav build [--continents 0,1] [--force] [--offline] [--workers N] [--out <dir>] [--product <p>]
+       node tools/sendafh.js nav path <map> <x>,<y> <map> <x>,<y> [--class C] [--level N] [--frame era|forever] [--json] [--dir <dir>]
+       node tools/sendafh.js nav aids [--out <file>] [--lua <file>] [--report] [--continents 0,1] [--workers N] [--reference <file>] [--dir <dir>]
+       node tools/sendafh.js nav pack [--cells N] [--date <YYYY-MM-DD>] [--dir <grid dir>] [--out <dir>] | nav pack --check [--out <dir>]
+       node tools/sendafh.js nav vendor <shortest-path-forever checkout> [--out <dir>] [--date <YYYY-MM-DD>]
+       node tools/sendafh.js nav check [--out <dir>]
 
 build   the navigation grid of every continent map-frames.json names (or
         --continents): client geometry per ADT tile through the CASC cache
@@ -42,21 +42,21 @@ aids    the arrow's aids from the grid (tools/lib/nav/aids.js): zone
         crossings, open borders and approach chains in the crossings schema,
         validated, written to data/local/nav/aids.json (--out). --lua writes
         them as a Crossings.lua for a local test (never into
-        addon/Polestar_Travel); to build a test copy of the data addon:
-        node tools/polestar.js travel build --offline --crossings data/local/nav/aids.json --travel-addon <test folder> --json <test folder>/travel.json --lua <test folder>/TravelData.lua
+        addon/SendaFH_Travel); to build a test copy of the data addon:
+        node tools/sendafh.js travel build --offline --crossings data/local/nav/aids.json --travel-addon <test folder> --json <test folder>/travel.json --lua <test folder>/TravelData.lua
         Pockets are tested in --workers threads (default: up to 6).
         --report also plans every consecutive pair of located goals in our
         guides with the addon's planner without and with the aids and writes
         aids-report.json and aids-report.md next to --out, comparing with the
         reference crossings file (--reference, default
         data/local/crossings.json; read only).
-pack    Polestar's walking maps of maps 0 (Eastern Kingdoms) and 1
+pack    SendaFH's walking maps of maps 0 (Eastern Kingdoms) and 1
         (Kalimdor) from the grid (--dir, default data/local/nav; it must be
         the current grid version) in Shortest Path Forever's walking-map format
         (tools/lib/nav/pack.js, a port of his gen_nav.py and pack_nav.py), with
         Chokepoints.lua (lifts, bridges, gates, tunnels, cave and building
         mouths, passes; tools/lib/nav/chokepoints.js), into
-        addon/Polestar_Nav (--out): Nav/Nav0*.lua, Nav/Nav1*.lua,
+        addon/SendaFH_Nav (--out): Nav/Nav0*.lua, Nav/Nav1*.lua,
         Nav/Chokepoints.lua, PACK.json (grid build, cells, date, sizes, sha256
         of every file) and Nav/Nav.xml. --cells cuts each ADT tile into N x N
         cells (default 128, 4.17 yd); --date dates the generated headers
@@ -64,14 +64,14 @@ pack    Polestar's walking maps of maps 0 (Eastern Kingdoms) and 1
         --check only compares the folder with PACK.json.
 vendor  copies Shortest Path Forever's walking router (Routing/PathGrid.lua,
         Routing/Path.lua, Routing/PathJobs.lua) and his walking maps of the
-        maps Polestar does not pack (Nav/Nav2991*.lua, Zephras Isle) from a
+        maps SendaFH does not pack (Nav/Nav2991*.lua, Zephras Isle) from a
         clean git checkout whose origin is
         https://github.com/cjber/shortest-path-forever (https or ssh; any
         uncommitted or untracked change, or another origin, is refused)
-        into addon/Polestar_Nav (--out: a folder with an UPSTREAM.json, or a
+        into addon/SendaFH_Nav (--out: a folder with an UPSTREAM.json, or a
         new, empty one), by Cillian Berragan,
         GPL-3.0-or-later. The only change is mechanical: the data global
-        ShortestPathForeverPathData becomes PolestarPathData (Polestar always
+        ShortestPathForeverPathData becomes SendaFHPathData (SendaFH always
         reads its own copy of the maps), and each file gets a header line
         naming its upstream file, commit, his copyright and licence and the
         date of the change (GPLv3 section 5a; --date, default today). Only
@@ -79,7 +79,7 @@ vendor  copies Shortest Path Forever's walking router (Routing/PathGrid.lua,
         stops the copy. Writes UPSTREAM.json (repo, commit, version, vendored
         date, sha256 of every vendored file) and Nav/Nav.xml. Files the
         previous UPSTREAM.json listed that the new commit no longer has are
-        removed; no other file in the folder is touched (Polestar's packed
+        removed; no other file in the folder is touched (SendaFH's packed
         maps stay). Update CREDITS.md's commit line by hand.
 check   the vendored files match UPSTREAM.json and the transform, the packed
         maps PACK.json, and Nav/Nav.xml lists both.`;
@@ -115,7 +115,7 @@ async function build(argv) {
 }
 
 function readJson(file) {
-	if (!fs.existsSync(file)) throw Object.assign(new Error(`${file} not found (node tools/polestar.js data build)`), { exit: 1 });
+	if (!fs.existsSync(file)) throw Object.assign(new Error(`${file} not found (node tools/sendafh.js data build)`), { exit: 1 });
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
@@ -147,7 +147,7 @@ async function route(argv) {
 	const { openNav } = require('../lib/nav/path');
 	const { profileFor } = require('../lib/nav/move');
 	const nav = openNav({ dir: o.dir ? path.resolve(o.dir) : DEFAULT_DIR });
-	if (!nav.available) throw Object.assign(new Error('no navigation grid: run `node tools/polestar.js nav build`'), { exit: 1 });
+	if (!nav.available) throw Object.assign(new Error('no navigation grid: run `node tools/sendafh.js nav build`'), { exit: 1 });
 	const profile = profileFor({ cls: o.class || null, level });
 	const t0 = process.hrtime.bigint();
 	const r = nav.route(wa, wb, profile);
@@ -177,7 +177,7 @@ async function route(argv) {
 	return 0;
 }
 
-// The aids as a Crossings.lua (Polestar_Travel's format) for a local test.
+// The aids as a Crossings.lua (SendaFH_Travel's format) for a local test.
 function aidsLua(set, frames, build) {
 	const { crossingsLua } = require('../lib/travel/crossings');
 	const { header } = require('../lib/generated');
@@ -185,7 +185,7 @@ function aidsLua(set, frames, build) {
 		header('lua', 'nav aids --lua <file>', `the navigation grid (data/local/nav, client build ${build})`),
 		`-- ${set.crossings.length} crossing(s), ${set.open.length} open-ground pair(s), ${set.chains.length} approach chain(s). Local test only: never committed or packaged.`,
 		'',
-		'local N = Polestar and Polestar.Nav',
+		'local N = SendaFH and SendaFH.Nav',
 		'if not (N and N.RegisterCrossings) then return end',
 		'',
 		...crossingsLua(set, frames, { complete: true }),
@@ -212,7 +212,7 @@ async function aids(argv) {
 	const log = (m) => console.error(`[${((Date.now() - t0) / 1000).toFixed(0)} s] ${m}`);
 	const { openNav } = require('../lib/nav/path');
 	const nav = openNav({ dir: o.dir ? path.resolve(o.dir) : DEFAULT_DIR, cacheTiles: 160 });
-	if (!nav.available) throw Object.assign(new Error('no navigation grid: run `node tools/polestar.js nav build`'), { exit: 1 });
+	if (!nav.available) throw Object.assign(new Error('no navigation grid: run `node tools/sendafh.js nav build`'), { exit: 1 });
 	const { Frames } = require('../lib/travel/geo');
 	const { Geo } = require('../lib/planner/geo');
 	const mapFrames = readJson(path.join(DATA, 'map-frames.json'));
@@ -249,7 +249,7 @@ async function aids(argv) {
 	}
 	if (!o.report) return 0;
 	const os = require('node:os');
-	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'polestar-aids-'));
+	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sendafh-aids-'));
 	try {
 		const crossingsLuaFile = luaOut || path.join(tmp, 'Crossings.lua');
 		if (!luaOut) fs.writeFileSync(crossingsLuaFile, lua);
@@ -326,7 +326,7 @@ function packPlaces(dir) {
 	const optional = (file) => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null);
 	const wago = path.join(SOURCES, 'wago');
 	const builds = fs.existsSync(wago) ? fs.readdirSync(wago).filter((b) => fs.existsSync(path.join(wago, b, 'AreaTable.csv'))) : [];
-	if (!builds.length) throw Object.assign(new Error(`no AreaTable.csv under ${wago} (node tools/polestar.js data build)`), { exit: 1 });
+	if (!builds.length) throw Object.assign(new Error(`no AreaTable.csv under ${wago} (node tools/sendafh.js data build)`), { exit: 1 });
 	builds.sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 	return {
 		aids: optional(path.join(dir, 'aids.json')),
@@ -353,10 +353,10 @@ async function packCmd(argv) {
 	if (!Number.isInteger(cells) || cells < 8 || cells > 256) throw usageError('--cells needs a whole number from 8 to 256');
 	if (o.date !== undefined && !/^\d{4}-\d\d-\d\d$/.test(String(o.date))) throw usageError('--date needs YYYY-MM-DD');
 	const dir = o.dir ? path.resolve(o.dir) : DEFAULT_DIR;
-	if (!fs.existsSync(path.join(dir, 'index.json'))) throw Object.assign(new Error('no navigation grid: run `node tools/polestar.js nav build`'), { exit: 1 });
+	if (!fs.existsSync(path.join(dir, 'index.json'))) throw Object.assign(new Error('no navigation grid: run `node tools/sendafh.js nav build`'), { exit: 1 });
 	const { VERSION } = require('../lib/nav/grid/format');
 	const version = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8')).version;
-	if (version !== VERSION) throw Object.assign(new Error(`${dir} is grid version ${version}, this code reads ${VERSION}: rebuild it with \`node tools/polestar.js nav build\``), { exit: 1 });
+	if (version !== VERSION) throw Object.assign(new Error(`${dir} is grid version ${version}, this code reads ${VERSION}: rebuild it with \`node tools/sendafh.js nav build\``), { exit: 1 });
 	const files = await packNav({ dir, cells, continents: OWN_MAPS, places: packPlaces(dir), date: o.date, log: (m) => console.error(m) });
 	const { written, removed } = shipPack(files, out);
 	const bytes = [...files.values()].reduce((s, c) => s + Buffer.byteLength(c), 0);
@@ -390,4 +390,4 @@ async function run(argv) {
 	}
 }
 
-module.exports = { name: 'nav', summary: "Terrain navigation from the client geometry (build the grid, route between map points) and Shortest Path Forever's vendored walking router (Polestar_Nav)", usage, run };
+module.exports = { name: 'nav', summary: "Terrain navigation from the client geometry (build the grid, route between map points) and Shortest Path Forever's vendored walking router (SendaFH_Nav)", usage, run };

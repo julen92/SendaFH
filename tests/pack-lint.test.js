@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { DATA_DIR } = require('./helpers/dsl');
 const { tmpdir } = require('./helpers/tmp');
-const { polestar } = require('./helpers/cli');
+const { sendafh } = require('./helpers/cli');
 const { findPackDir, resolvePack } = require('../tools/lib/pack/locate');
 const { OFFICIAL_DIR } = require('../tools/lib/dsl/project');
 
@@ -17,7 +17,7 @@ const PACKS = path.join(__dirname, 'fixtures', 'packs');
 const JOE = path.join(PACKS, 'joe');
 const CONTEXT = path.join(PACKS, 'context');
 
-const run = (args, cwd) => polestar(args, { cwd });
+const run = (args, cwd) => sendafh(args, { cwd });
 
 // lint/compile on a pack with the fixture data and the context fixture.
 function packCmd(cmd, dir, ...extra) {
@@ -137,7 +137,7 @@ test('another pack without reference data stops with one error; the hint names -
 	const none = run(['lint', '--pack', JOE, '--data', empty, '--context', CONTEXT, '--context-data', empty]);
 	assert.equal(none.status, 1, none.stderr);
 	assert.equal(none.stderr.split('\n').filter((l) => /error:/.test(l)).length, 1, none.stderr);
-	assert.match(none.stderr, /hint: run `node tools\/polestar\.js data build`, or pass --data <dir>, and --context-data <dir> for our guides read as context;/);
+	assert.match(none.stderr, /hint: run `node tools\/sendafh\.js data build`, or pass --data <dir>, and --context-data <dir> for our guides read as context;/);
 	const ctx = run(['lint', '--pack', JOE, '--data', empty, '--context', CONTEXT, '--context-data', DATA_DIR]);
 	assert.equal(ctx.status, 1, ctx.stderr);
 	assert.doesNotMatch(ctx.stderr, /--context-data/);
@@ -177,9 +177,9 @@ test('without --pack, lint and compile use the nearest pack.json; compile writes
 	assert.match(lint.stdout, /lint ok: 2 files, 2 guides/);
 	const compile = run(['compile', ...args], cwd);
 	assert.equal(compile.status, 0, compile.stderr);
-	const out = path.join(dir, 'dist', 'PolestarPack_Joe');
-	assert.deepEqual(fs.readdirSync(out).sort(), ['Guides.lua', 'LICENSE-DATA.txt', 'PolestarPack_Joe.toc', 'MapFrames.lua', 'Pack.lua'].sort());
-	assert.match(fs.readFileSync(path.join(out, 'PolestarPack_Joe.toc'), 'utf8'), /^## X-Polestar-Pack: joe$/m);
+	const out = path.join(dir, 'dist', 'SendaFHPack_Joe');
+	assert.deepEqual(fs.readdirSync(out).sort(), ['Guides.lua', 'LICENSE-DATA.txt', 'SendaFHPack_Joe.toc', 'MapFrames.lua', 'Pack.lua'].sort());
+	assert.match(fs.readFileSync(path.join(out, 'SendaFHPack_Joe.toc'), 'utf8'), /^## X-Polestar-Pack: joe$/m);
 	const lua = fs.readFileSync(path.join(out, 'Guides.lua'), 'utf8');
 	assert.match(lua, /id = "joe\/a"/);
 	assert.doesNotMatch(lua, /id = "forever\//, 'nothing of the context is emitted');
@@ -188,7 +188,7 @@ test('without --pack, lint and compile use the nearest pack.json; compile writes
 	// --out still wins.
 	const other = path.join(tmpdir(), 'out');
 	assert.equal(run(['compile', ...args, '--out', other], cwd).status, 0);
-	assert.ok(fs.existsSync(path.join(other, 'PolestarPack_Joe.toc')));
+	assert.ok(fs.existsSync(path.join(other, 'SendaFHPack_Joe.toc')));
 });
 
 test('an invalid pack.json fails lint with its diagnostic', () => {
@@ -211,7 +211,7 @@ test('lint, compile and pack take the pack folder as their one argument; two fol
 	assert.equal(lint.status, 0, lint.stderr);
 	assert.match(lint.stdout, /lint ok: 2 files, 2 guides/);
 	// Our own build and release folders are left alone.
-	const ours = path.join(__dirname, '..', 'addon', 'Polestar_Guides', 'Guides.lua');
+	const ours = path.join(__dirname, '..', 'addon', 'SendaFH_Guides', 'Guides.lua');
 	const oursBefore = fs.existsSync(ours) ? fs.statSync(ours).mtimeMs : null;
 	const repoDist = path.join(__dirname, '..', 'dist');
 	const distBefore = fs.existsSync(repoDist) ? fs.readdirSync(repoDist).sort() : null;
@@ -219,7 +219,7 @@ test('lint, compile and pack take the pack folder as their one argument; two fol
 	assert.equal(compile.status, 0, compile.stderr);
 	const pack = run(['pack', dir, ...ctx], elsewhere);
 	assert.equal(pack.status, 0, pack.stderr);
-	assert.deepEqual(fs.readdirSync(path.join(dir, 'dist')).sort(), ['PolestarPack_Joe', 'PolestarPack_Joe-1.2.0.zip']);
+	assert.deepEqual(fs.readdirSync(path.join(dir, 'dist')).sort(), ['SendaFHPack_Joe', 'SendaFHPack_Joe-1.2.0.zip']);
 	assert.equal(fs.existsSync(ours) ? fs.statSync(ours).mtimeMs : null, oursBefore);
 	assert.deepEqual(fs.existsSync(repoDist) ? fs.readdirSync(repoDist).sort() : null, distBefore);
 	assert.deepEqual(fs.readdirSync(elsewhere), []);

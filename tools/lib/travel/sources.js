@@ -67,7 +67,7 @@ function cachedBuilds(cacheRoot, spec) {
 }
 
 async function fetchText(fetchImpl, url) {
-	const res = await fetchImpl(url, { headers: { 'user-agent': 'polestar-travel-build' } });
+	const res = await fetchImpl(url, { headers: { 'user-agent': 'sendafh-travel-build' } });
 	if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 	return res.text();
 }

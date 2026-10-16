@@ -9,20 +9,20 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 
-const NAV = { name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
+const NAV = { name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] };
 
 const MM_SPACING = 40; // yards between minimap dots
 const MM_LIMIT = (70 - 2.5) / 0.35; // yards from the player a 5 px dot may sit at, view radius 200 on a 140 px minimap
 const worldSpacing = (yardsAcross) => Math.max(15, yardsAcross / 60);
 
 const PRELUDE = `
-local N, Pins, nav = Polestar.Nav, Polestar.Pins, stub.nav
+local N, Pins, nav = SendaFH.Nav, SendaFH.Pins, stub.nav
 local function target(wx, wy, label)
 	local m, x, y = nav.mapPoint(wx, wy)
 	N.SetTarget(m, x, y, label or "Target")
 end
 local function known(...)
-	local flags = Polestar.CharState().flags
+	local flags = SendaFH.CharState().flags
 	flags.taxi = {}
 	for _, id in ipairs({ ... }) do flags.taxi[id] = true end
 end
@@ -132,8 +132,8 @@ test('placement: a dot every spacing counted back from the end, continuous over 
 
 test('minimap: dots 40 yd apart inside the visible disc or square, honouring rotation and the indoor zoom', () => {
 	const [out] = run(`
-		Polestar.Set("nav.travel", false)
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("nav.travel", false)
+		SendaFH.Set("ui.reduceMotion", true)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -900)                                   -- 900 yd east
@@ -178,8 +178,8 @@ test('minimap: dots 40 yd apart inside the visible disc or square, honouring rot
 
 test('world map: spacing scales with the viewed map (60 to its width, at least 15 yd), clipped to the map', () => {
 	const [out] = run(`
-		Polestar.Set("nav.travel", false)
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("nav.travel", false)
+		SendaFH.Set("ui.reduceMotion", true)
 		nav.maps[9002] = { c = 0, top = 200, bottom = -200, left = 200, right = -200, name = "Tinyshire" }
 		nav.place(0, 0)
 		target(0, -900)
@@ -209,7 +209,7 @@ test('world map: spacing scales with the viewed map (60 to its width, at least 1
 
 test('a flight route: dots run from the player along every leg on both surfaces', () => {
 	const [out] = run(`
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("ui.reduceMotion", true)
 		nav.viewRadius = 200
 		known(1, 2)
 		nav.place(0, 600)
@@ -228,7 +228,7 @@ test('a flight route: dots run from the player along every leg on both surfaces'
 
 test('no dots across a continent change or along a Hearthstone jump', () => {
 	const [boat, hearth] = run(`
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("ui.reduceMotion", true)
 		nav.place(0, 0, 1)                                -- Farland, continent 1
 		target(-800, 100, "Docks quest")
 		local r = { route = route(), runs = runsOf() }
@@ -257,8 +257,8 @@ test('no dots across a continent change or along a Hearthstone jump', () => {
 
 test('counts are capped: 40 on the minimap, 300 on the world map', () => {
 	const [out] = run(`
-		Polestar.Set("nav.travel", false)
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("nav.travel", false)
+		SendaFH.Set("ui.reduceMotion", true)
 		nav.viewRadius = 3000
 		nav.place(0, 1000)
 		target(0, -1000)                                  -- 2000 yd in view: 50 dots
@@ -268,10 +268,10 @@ test('counts are capped: 40 on the minimap, 300 on the world map', () => {
 			legs[i] = { kind = "walk", label = "Leg " .. i, to = { c = 0, wx = i % 2 == 0 and 900 or -900, wy = 900 - i * 60 } }
 		end
 		N.GetRoute = function() return legs, 1 end
-		Polestar.Fire("ROUTE_CHANGED", legs)
+		SendaFH.Fire("ROUTE_CHANGED", legs)
 		nav.showWorldMap(9000)
 		r.world = #Pins.GetTrailFrames("world")
-		r.pool = WorldMapFrame.pinPools.PolestarPinsTrailTemplate:GetNumActive()
+		r.pool = WorldMapFrame.pinPools.SendaFHPinsTrailTemplate:GetNumActive()
 		emit(r)`);
 	assert.equal(out.mm, 40);
 	assert.equal(out.world, 300);
@@ -280,7 +280,7 @@ test('counts are capped: 40 on the minimap, 300 on the world map', () => {
 
 test('the dots crawl toward the target while shown, and hold still with reduced motion', () => {
 	const [out] = run(`
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -900)
@@ -297,7 +297,7 @@ test('the dots crawl toward the target while shown, and hold still with reduced 
 		Minimap:Show()
 		stub.advance(0.3)
 		r.shown = Pins.trailDriver:IsShown()
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("ui.reduceMotion", true)
 		r.s0 = xs()
 		stub.advance(1)
 		r.s1 = xs()
@@ -325,7 +325,7 @@ test('the dots crawl toward the target while shown, and hold still with reduced 
 
 test('nav.trailDots, nav.worldPins and nav.minimapPins switch the trail; no target, no trail', () => {
 	const [out] = run(`
-		Polestar.Set("nav.travel", false)
+		SendaFH.Set("nav.travel", false)
 		nav.viewRadius = 200
 		nav.place(0, 0)
 		target(0, -900)
@@ -335,20 +335,20 @@ test('nav.trailDots, nav.worldPins and nav.minimapPins switch the trail; no targ
 		stub.advance(0.1)
 		r.on = counts()
 		r.driverOn = Pins.trailDriver:IsShown()
-		Polestar.Set("nav.trailDots", false)
+		SendaFH.Set("nav.trailDots", false)
 		r.off = counts()
 		r.gone = Pins.GetTrail() == nil
 		stub.advance(0.2)
 		r.driver = Pins.trailDriver:IsShown()
-		Polestar.Set("ui.reduceMotion", true)            -- phase 0.5 from here: 4 minimap dots
-		Polestar.Set("nav.trailDots", true)
+		SendaFH.Set("ui.reduceMotion", true)            -- phase 0.5 from here: 4 minimap dots
+		SendaFH.Set("nav.trailDots", true)
 		r.back = counts()
-		Polestar.Set("nav.minimapPins", false)
+		SendaFH.Set("nav.minimapPins", false)
 		r.noMinimap = counts()
-		Polestar.Set("nav.minimapPins", true)
-		Polestar.Set("nav.worldPins", false)
+		SendaFH.Set("nav.minimapPins", true)
+		SendaFH.Set("nav.worldPins", false)
 		r.noWorld = counts()
-		Polestar.Set("nav.worldPins", true)
+		SendaFH.Set("nav.worldPins", true)
 		N.ReleaseTarget()
 		r.noTarget = counts()
 		emit(r)`);
@@ -365,20 +365,20 @@ test('nav.trailDots, nav.worldPins and nav.minimapPins switch the trail; no targ
 
 test('the trail follows the route as its legs advance (ROUTE_ADVANCED)', () => {
 	const [out] = run(`
-		Polestar.Set("ui.reduceMotion", true)
+		SendaFH.Set("ui.reduceMotion", true)
 		nav.viewRadius = 200
 		known(1, 2)
 		nav.place(0, 600)
 		target(0, -780)
 		local advanced = 0
-		Polestar.On("ROUTE_ADVANCED", function() advanced = advanced + 1 end)
+		SendaFH.On("ROUTE_ADVANCED", function() advanced = advanced + 1 end)
 		local before = Pins.GetTrail()
 		nav.place(0, 785)                                 -- at the flight master: the walk is done
 		stub.advance(0.2)
 		local r = { advanced = advanced, republished = Pins.GetTrail() ~= before, route = route(), runs = runsOf() }
 		local legs = N.GetRoute()                         -- on to the last leg: straight to the target
 		N.GetRoute = function() return legs, 3 end
-		Polestar.Fire("ROUTE_ADVANCED", legs, 3)
+		SendaFH.Fire("ROUTE_ADVANCED", legs, 3)
 		r.last = { runs = runsOf(), mm = mmDots() }
 		emit(r)`);
 	assert.ok(out.advanced >= 1);

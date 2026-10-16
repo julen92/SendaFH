@@ -1,25 +1,25 @@
 'use strict';
-// addon/Polestar/Gear/SpecData.lua: the generated half of Gear's spec data.
+// addon/SendaFH/Gear/SpecData.lua: the generated half of Gear's spec data.
 //
 //   Gear.WEIGHT_BANDS[CLASS][spec] = { { upTo, weights, source, label, note }, ... }
-//       Stat weights per level band. Polestar's authored leveling weights
+//       Stat weights per level band. SendaFH's authored leveling weights
 //       (Gear/Weights.lua, solo questing: survival and regeneration count)
 //       blended with wowsims' simulated weights where a sim exists for the
 //       band (MIT). See BANDS for the levels and the blend.
 //   Gear.RACIALS[raceID] = { weaponCrit = { pct, subclasses }, statMult }
 //       from ForeverLevelingBiS's Racials.lua (MIT; Forever's own trait text).
 //
-// Only MIT material and Polestar's own numbers go in here.
+// Only MIT material and SendaFH's own numbers go in here.
 
 const { luaToJson } = require('../lua');
 const path = require('node:path');
 const { header } = require('../generated');
 
 const { ROOT } = require('../paths');
-const WEIGHTS_LUA = path.join(ROOT, 'addon', 'Polestar', 'Gear', 'Weights.lua');
+const WEIGHTS_LUA = path.join(ROOT, 'addon', 'SendaFH', 'Gear', 'Weights.lua');
 
 // Level bands and the sim level each one blends with. `alpha` is the share
-// of Polestar's leveling weights: half while levelling (solo play needs the
+// of SendaFH's leveling weights: half while levelling (solo play needs the
 // stamina and spirit raid sims value at nothing), a quarter at 60 (dungeon
 // and raid gear, where the sim knows best).
 const BANDS = [
@@ -45,7 +45,7 @@ function authoredWeights() {
 		prelude: 'local ns = { Gear = {} }; __ns = ns',
 		files: [],
 		expr: `local chunk = assert(loadfile(${JSON.stringify(WEIGHTS_LUA)}))
-chunk("Polestar", __ns)
+chunk("SendaFH", __ns)
 return { weights = __ns.Gear.WEIGHTS, classes = __ns.Gear.CLASSES }`,
 	});
 }
@@ -103,7 +103,7 @@ function weightBands(wowsims, authored = authoredWeights()) {
 						upTo: band.upTo,
 						weights: w,
 						source: `wowsims:${sim.repo}@${sim.commit.slice(0, 9)}:${sim.file}`,
-						label: `Polestar leveling ${Math.round(band.alpha * 100)}% + wowsims ${phase} ${Math.round((1 - band.alpha) * 100)}%`,
+						label: `SendaFH leveling ${Math.round(band.alpha * 100)}% + wowsims ${phase} ${Math.round((1 - band.alpha) * 100)}%`,
 						note: sim.runeInfluenced
 							? 'Simulated with Season of Discovery runes; Forever has none, so the sim share is directional.'
 							: 'Simulated for Classic Era; Forever may have retuned the class.',
@@ -114,7 +114,7 @@ function weightBands(wowsims, authored = authoredWeights()) {
 					const sorted = Object.keys(base).sort();
 					const w2 = {};
 					for (const k of sorted) w2[k] = base[k];
-					rec = { upTo: band.upTo, weights: w2, source: 'polestar', label: 'Polestar leveling', note: 'Authored from Classic stat formulas; no sim for this band.' };
+					rec = { upTo: band.upTo, weights: w2, source: 'sendafh', label: 'SendaFH leveling', note: 'Authored from Classic stat formulas; no sim for this band.' };
 					counts.authoredOnly++;
 				}
 				const prev = list[list.length - 1];
@@ -156,8 +156,8 @@ function lua(v, indent = '') {
 // -> SpecData.lua text
 function emitSpecData({ bands, racials: rac, wowsimsMeta, flbMeta }) {
 	const L = [
-		header('lua', 'gear build', "Polestar's leveling weights, wowsims and ForeverLevelingBiS"),
-		'-- Stat weight bands: Polestar\'s leveling weights (Weights.lua) blended with wowsims',
+		header('lua', 'gear build', "SendaFH's leveling weights, wowsims and ForeverLevelingBiS"),
+		'-- Stat weight bands: SendaFH\'s leveling weights (Weights.lua) blended with wowsims',
 		`-- simulations (MIT, https://github.com/wowsims; ${wowsimsMeta ? 'see each band\'s source' : 'not available'}).`,
 		`-- Racial gear traits: ForeverLevelingBiS ${flbMeta ? flbMeta.version : '?'} by Thunder (MIT), Racials.lua.`,
 		'-- See THIRD_PARTY.md.',

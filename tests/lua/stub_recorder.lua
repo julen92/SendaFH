@@ -711,4 +711,4 @@ end
 
 -- Recording is opt-in. Recorder tests record unless they restore their own
 -- DB (`saved` replaces this before ADDON_LOADED).
-PolestarRecorderDB = { enabled = true }
+SendaFHRecorderDB = { enabled = true }

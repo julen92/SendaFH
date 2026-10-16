@@ -3,7 +3,7 @@
 // world database (GPL-3.0; https://github.com/cmangos/classic-db), pinned to
 // the commit Shortest Path Forever by Cillian Berragan reads (his
 // tools/gen_transit.py, GPL-3.0-or-later, adapted with permission):
-// Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for Polestar, 2026-10-15.
+// Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for SendaFH, 2026-10-15.
 //
 //   gameobject              where each lift car and tram train is spawned
 //                           (its TransportAnimation is relative to the spawn)
@@ -166,7 +166,7 @@ const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 // The pinned dump, read up to maxBytes, checked against its hash, written atomically.
 async function fetchDump({ fetchImpl, file, log, url, hash, maxBytes }) {
 	log(`fetching ${url}`);
-	const res = await fetchImpl(url, { headers: { 'user-agent': 'polestar-travel-build' } });
+	const res = await fetchImpl(url, { headers: { 'user-agent': 'sendafh-travel-build' } });
 	if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 	const declared = Number(res.headers && res.headers.get && res.headers.get('content-length'));
 	if (declared > maxBytes) throw new Error(`GET ${url}: ${declared} bytes, over the ${maxBytes}-byte limit`);

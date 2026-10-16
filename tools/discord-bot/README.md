@@ -1,6 +1,6 @@
 # The bug bot
 
-Files every post in the Polestar Discord's #bugs forum as a GitHub issue,
+Files every post in the SendaFH Discord's #bugs forum as a GitHub issue,
 and tells the player in their thread when the issue is fixed, dropped or
 shipped. Node 24, no npm dependencies, no database.
 
@@ -21,14 +21,14 @@ sequenceDiagram
 
 | What happens | Who does it | What the player sees |
 |---|---|---|
-| A new post | the bot, at once | "Tracked as fitzforge/polestar#N", tag **Tracked** |
+| A new post | the bot, at once | "Tracked as fitzforge/sendafh#N", tag **Tracked** |
 | The reporter writes again in the thread (text, screenshots, a new report) | the bot | nothing; it becomes a comment on the issue. Other people's replies stay on Discord |
 | The reporter edits the post's first message | the bot | nothing; the issue body is written again |
-| Issue closed as **completed** (button, or `Fixes #N` in a commit) | `discord-issue-sync.yml` | ping: "This is fixed and will ship in the next Polestar update", tag **Fixed**, thread locked |
+| Issue closed as **completed** (button, or `Fixes #N` in a commit) | `discord-issue-sync.yml` | ping: "This is fixed and will ship in the next SendaFH update", tag **Fixed**, thread locked |
 | Issue closed as **not planned** | the same | ping: "We've decided not to change this one" (or, from `/close`, "No change is needed here", "We couldn't reproduce this one", "We're closing this one without a fix for now"), quoting your last comment on the issue as the reason; tag **Won't fix**, locked |
 | Issue closed as **duplicate** | the same | ping: "already reported, tracked in #M" (from a `Duplicate of #M` comment); tag **Duplicate**, locked |
 | Issue reopened | the same | "We've reopened this", tag **Tracked**, unlocked |
-| A release published | `discord-release-notify.yml` | ping: "The fix is out in **Polestar 0.2.x**", for every issue closed as completed since the full release before; the issue gets `released:v0.2.x` so it is never told twice. A pre-release (a test build) tells no one and is never "the release before" |
+| A release published | `discord-release-notify.yml` | ping: "The fix is out in **SendaFH 0.2.x**", for every issue closed as completed since the full release before; the issue gets `released:v0.2.x` so it is never told twice. A pre-release (a test build) tells no one and is never "the release before" |
 
 ## What an issue holds
 
@@ -57,7 +57,7 @@ other issues or carry HTML. Say so in the #bugs guidelines, for example:
 ### 1. Discord
 
 1. In the [Developer Portal](https://discord.com/developers/applications),
-   New Application, "Polestar Bot". Under **Bot**: Reset Token (that is
+   New Application, "SendaFH Bot". Under **Bot**: Reset Token (that is
    `DISCORD_TOKEN`), turn off Public Bot, and turn on **Message Content
    Intent**.
 2. Invite it, with your application id in place of `APP_ID`:
@@ -76,13 +76,13 @@ other issues or carry HTML. Say so in the #bugs guidelines, for example:
 ### 2. GitHub
 
 1. A [fine-grained token](https://github.com/settings/personal-access-tokens/new),
-   repository `fitzforge/polestar` only, permissions **Issues: Read and
+   repository `fitzforge/sendafh` only, permissions **Issues: Read and
    write** and **Contents: Read and write** (the screenshots branch). That is
    the bot's `GITHUB_TOKEN`.
 
    Contents write on this repository can push to any branch, `main`
    included, and `main` has no protection. To keep that out of the bot's
-   hands, make a public `fitzforge/polestar-bug-media` repository, give the
+   hands, make a public `fitzforge/sendafh-bug-media` repository, give the
    bot a second token with Contents on that one alone, and set `MEDIA_REPO`
    and `MEDIA_TOKEN`; the first token then needs Issues only.
 2. In the repository's Settings, Secrets and variables, Actions: the secret
@@ -96,8 +96,8 @@ On any Linux host with Docker, apart from whatever else runs there (its own
 Compose project and network, no ports, read-only, 256 MB):
 
 ```sh
-git clone --depth 1 --filter=blob:none --sparse https://github.com/fitzforge/polestar.git ~/polestar-bot
-cd ~/polestar-bot && git sparse-checkout set tools/discord-bot
+git clone --depth 1 --filter=blob:none --sparse https://github.com/fitzforge/polestar.git ~/sendafh-bot
+cd ~/sendafh-bot && git sparse-checkout set tools/discord-bot
 cd tools/discord-bot && cp .env.example .env && chmod 600 .env
 $EDITOR .env                       # the tokens and the forum id
 docker compose up -d --build
@@ -108,7 +108,7 @@ docker compose logs -f             # "connected as ...", "backfill: N open posts
 open post made after it (all open posts when it is empty), skipping locked
 ones and ones already carrying a status tag.
 
-Update: `git -C ~/polestar-bot pull && docker compose up -d --build` in
+Update: `git -C ~/sendafh-bot pull && docker compose up -d --build` in
 `tools/discord-bot`.
 
 After a change to how posts are read, `docker compose run --rm bot node
@@ -128,7 +128,7 @@ the thread, as when it is closed there. Only you see the bot's answer.
 
 | Command | The issue | The reporter is told |
 |---|---|---|
-| `/close reason:Fixed` | closed as completed | "This is fixed and will ship in the next Polestar update", **Fixed** |
+| `/close reason:Fixed` | closed as completed | "This is fixed and will ship in the next SendaFH update", **Fixed** |
 | `/close reason:Won't fix` | not planned, `resolution:wontfix` | "We've decided not to change this one", **Won't fix** |
 | `/close reason:No action needed` | not planned, `resolution:no-action` | "No change is needed here", **Won't fix** |
 | `/close reason:Can't reproduce` | not planned, `resolution:cannot-reproduce` | "We couldn't reproduce this one", **Won't fix** |
@@ -153,7 +153,7 @@ GitHub. To run the bot or `notify.js` against something else,
 |---|---|
 | `bot.js` | The service: settings, the gateway, the sync |
 | `notify.js` | The Actions' entry: `issue` (closed, reopened) and `release` |
-| `lib/report.js` | The addon's report (`addon/Polestar/UI/Report.lua`) read back into fields |
+| `lib/report.js` | The addon's report (`addon/SendaFH/UI/Report.lua`) read back into fields |
 | `lib/issue.js` | Issue title, body, labels and comments; the marker; making player text inert |
 | `lib/sync.js` | Posts, follow-ups and edits to issues; the index and the backfill |
 | `lib/notify.js` | Close, reopen and release messages, tags and locks |

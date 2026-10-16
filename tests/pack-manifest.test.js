@@ -28,7 +28,7 @@ function one(diags, severity, text) {
 }
 
 function writePack(content) {
-	const dir = tmpdir('polestar-manifest-');
+	const dir = tmpdir('sendafh-manifest-');
 	fs.writeFileSync(path.join(dir, 'pack.json'), content);
 	return dir;
 }
@@ -37,7 +37,7 @@ test('a complete manifest has no diagnostics and a default folder from its title
 	assert.deepEqual(check(GOOD), []);
 	const { manifest, diags } = readManifest(writePack(JSON.stringify(GOOD, null, '\t')));
 	assert.deepEqual(diags, []);
-	assert.equal(manifest.folder, 'PolestarPack_JoesRoutes');
+	assert.equal(manifest.folder, 'SendaFHPack_JoesRoutes');
 	assert.equal(manifest.id, 'joe');
 	assert.equal(manifest.license, 'CC-BY-4.0');
 });
@@ -45,7 +45,7 @@ test('a complete manifest has no diagnostics and a default folder from its title
 test('a title without letters or digits takes the folder from the id', () => {
 	const { manifest, diags } = readManifest(writePack(JSON.stringify({ ...GOOD, id: 'joe-routes', title: '!!!' })));
 	assert.deepEqual(diags, []);
-	assert.equal(manifest.folder, 'PolestarPack_JoeRoutes');
+	assert.equal(manifest.folder, 'SendaFHPack_JoeRoutes');
 });
 
 test('each required field missing is one error naming it', () => {
@@ -58,13 +58,13 @@ test('each required field missing is one error naming it', () => {
 
 test('malformed and reserved pack ids are errors; ours may use guides', () => {
 	for (const id of ['Joe', 'j', 'a'.repeat(33), '-x']) one(check({ ...GOOD, id }), 'error', 'id');
-	for (const id of ['guides', 'forever', 'lookup', 'draft', 'polestar']) one(check({ ...GOOD, id }), 'error', 'reserved');
+	for (const id of ['guides', 'forever', 'lookup', 'draft', 'sendafh']) one(check({ ...GOOD, id }), 'error', 'reserved');
 	assert.deepEqual(check({ ...GOOD, id: 'guides' }, { official: true }), []);
 });
 
 test('folder names must be plain and may not look like our addons', () => {
-	for (const folder of ['../evil', 'a/b', 'Polestar', 'Polestar_Guides', 'Polestar_Anything']) one(check({ ...GOOD, folder }), 'error', 'folder');
-	assert.deepEqual(check({ ...GOOD, id: 'guides', folder: 'Polestar_Guides' }, { official: true }), []);
+	for (const folder of ['../evil', 'a/b', 'SendaFH', 'SendaFH_Guides', 'SendaFH_Anything']) one(check({ ...GOOD, folder }), 'error', 'folder');
+	assert.deepEqual(check({ ...GOOD, id: 'guides', folder: 'SendaFH_Guides' }, { official: true }), []);
 	assert.deepEqual(check({ ...GOOD, folder: 'MyPack-1' }), []);
 	const { manifest } = readManifest(writePack(JSON.stringify({ ...GOOD, folder: 'MyPack-1' })));
 	assert.equal(manifest.folder, 'MyPack-1');
@@ -87,11 +87,11 @@ test('control characters are refused in every string field', () => {
 	}
 });
 
-test('the default folder is PolestarPack_ and the title in CamelCase, cut to the 64 characters a folder may have', () => {
-	// 64 characters, one word: PolestarPack_ and it would be 77.
+test('the default folder is SendaFHPack_ and the title in CamelCase, cut to the 64 characters a folder may have', () => {
+	// 64 characters, one word: SendaFHPack_ and it would be 77.
 	const title = `Long${'r'.repeat(60)}`;
 	const { manifest } = readManifest(writePack(JSON.stringify({ ...GOOD, title })));
-	assert.equal(manifest.folder, `PolestarPack_Long${'r'.repeat(47)}`);
+	assert.equal(manifest.folder, `SendaFHPack_Long${'r'.repeat(47)}`);
 	assert.equal(manifest.folder.length, 64);
 	assert.deepEqual(check({ ...GOOD, folder: manifest.folder }), []);
 });

@@ -49,7 +49,7 @@ function parseFc(html) {
 }
 
 async function get(fetchImpl, url) {
-	const res = await fetchImpl(url, { headers: { 'user-agent': 'Mozilla/5.0 (polestar-data-build)' } });
+	const res = await fetchImpl(url, { headers: { 'user-agent': 'Mozilla/5.0 (sendafh-data-build)' } });
 	if (res.status === 404) return null;
 	if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 	return res.text();

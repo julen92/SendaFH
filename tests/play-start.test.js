@@ -13,7 +13,7 @@ const { tmpdir } = require('./helpers/tmp');
 const ROOT = path.join(__dirname, '..');
 
 test('a Lua session that never gets ready is stopped and leaves no program file; the process exits', { skip: needs('races.json') || (process.platform === 'win32' && 'needs a shell script') }, () => {
-	const dir = tmpdir('polestar-play-start-');
+	const dir = tmpdir('sendafh-play-start-');
 	// Passes the version check, then hangs without answering.
 	const lua = path.join(dir, 'lua');
 	fs.writeFileSync(lua, '#!/bin/sh\nif [ "$1" = "-e" ]; then printf "Lua 5.1"; exit 0; fi\nexec sleep 60\n', { mode: 0o755 });
@@ -22,7 +22,7 @@ const fs = require('node:fs'); const os = require('node:os');
 const { Session } = require(${JSON.stringify(path.join(ROOT, 'tools', 'play', 'session'))});
 const s = new Session({ dataDir: ${JSON.stringify(path.join(dir, 'data'))}, timeoutMs: 300 });
 s.start().then(() => console.log('started'), (err) => {
-	const left = fs.readdirSync(os.tmpdir()).filter((f) => f.startsWith('polestar-play-' + process.pid + '-'));
+	const left = fs.readdirSync(os.tmpdir()).filter((f) => f.startsWith('sendafh-play-' + process.pid + '-'));
 	console.log(JSON.stringify({ error: err.message, proc: !!s.proc, left }));
 });`;
 	const r = spawnSync(process.execPath, ['-e', script], { env: { ...process.env, LUA: lua }, encoding: 'utf8', timeout: 20000 });
@@ -36,7 +36,7 @@ s.start().then(() => console.log('started'), (err) => {
 
 test('GET /api/version moves when a rebuild restarts the session, so the page can redraw on its own; a restart that fails leaves it alone', { skip: needs('races.json'), timeout: 120000 }, async () => {
 	const { startServer } = require('../tools/play/server');
-	const play = await startServer({ port: 0, dataDir: tmpdir('polestar-play-version-'), artDir: null });
+	const play = await startServer({ port: 0, dataDir: tmpdir('sendafh-play-version-'), artDir: null });
 	try {
 		const get = async (p) => (await fetch(`${play.url}api/${p}`)).json();
 		const version = async () => (await get('version')).version;
@@ -48,7 +48,7 @@ test('GET /api/version moves when a rebuild restarts the session, so the page ca
 		assert.notEqual(after, before);
 		// A pack whose Lua fails while loading: the restart fails, and the
 		// page must not be sent into redrawing (which would restart again).
-		const broken = path.join(tmpdir('polestar-play-broken-'), 'Broken');
+		const broken = path.join(tmpdir('sendafh-play-broken-'), 'Broken');
 		fs.mkdirSync(broken);
 		fs.writeFileSync(path.join(broken, 'Broken.toc'), '## Interface: 16001\nBad.lua\n');
 		fs.writeFileSync(path.join(broken, 'Bad.lua'), 'error("broken pack")\n');

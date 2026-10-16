@@ -59,7 +59,7 @@ let fileB;
 let tile;
 
 test.before(async () => {
-	const tmp = tmpdir('polestar-planner-');
+	const tmp = tmpdir('sendafh-planner-');
 	dir = path.join(tmp, 'mini');
 	fs.cpSync(MINI, dir, { recursive: true });
 	fileB = path.join(dir, 'guides', 'b.guide');
@@ -301,7 +301,7 @@ test('a conflicting undo entry can be dropped; a deleted guide is reverted by wr
 
 test('edit_insert_world writes the point in the zone in effect where it lands', async () => {
 	// Stormwind City's map lies inside Elwynn Forest's, as in the game.
-	const tmp = tmpdir('polestar-planner-zones-');
+	const tmp = tmpdir('sendafh-planner-zones-');
 	const data = path.join(tmp, 'data');
 	fs.cpSync(DATA_DIR, data, { recursive: true });
 	const frames = JSON.parse(fs.readFileSync(path.join(data, 'map-frames.json'), 'utf8'));
@@ -335,7 +335,7 @@ test('edit_insert_world writes the point in the zone in effect where it lands', 
 test('walks are routed on the navigation grid in workers, cached on disk, and the grid\'s overlays are served', { timeout: 120000 }, async () => {
 	const { Scene } = require('./helpers/navscene');
 	const { buildGrid } = require('../tools/lib/nav/grid/build');
-	const tmp = tmpdir('polestar-planner-nav-');
+	const tmp = tmpdir('sendafh-planner-nav-');
 	// The fixture's Elwynn Forest (continent 1415) holds tile 32_32: flat
 	// ground with a wall from the north edge to y = 300 between the two gotos.
 	const scene = new Scene({ c: 1415, col: 32, row: 32 });
@@ -425,7 +425,7 @@ test('walks are routed on the navigation grid in workers, cached on disk, and th
 
 // One MCP session: send each message, read one answer per request.
 function mcpSession(port) {
-	const child = spawn(process.execPath, [path.join(ROOT, 'tools', 'polestar.js'), 'planner', 'mcp', '--port', String(port)], { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] });
+	const child = spawn(process.execPath, [path.join(ROOT, 'tools', 'sendafh.js'), 'planner', 'mcp', '--port', String(port)], { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] });
 	let buf = '';
 	const waiting = [];
 	const answers = [];
@@ -457,7 +457,7 @@ test('MCP over stdio proxies to the running planner', { timeout: 30000 }, async 
 		const init = await s.request({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'test', version: '1' } } });
 		assert.equal(init.id, 1);
 		assert.equal(init.result.protocolVersion, '2025-03-26');
-		assert.equal(init.result.serverInfo.name, 'polestar-planner');
+		assert.equal(init.result.serverInfo.name, 'sendafh-planner');
 		assert.deepEqual(init.result.capabilities, { tools: { listChanged: false } });
 		s.notify({ jsonrpc: '2.0', method: 'notifications/initialized' });
 

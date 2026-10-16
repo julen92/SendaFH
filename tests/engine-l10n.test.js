@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const ADDON = { name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml'] };
+const ADDON = { name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml'] };
 
 // What each client calls the places: AreaTable areas (Duskwood 10, Elwynn
 // Forest 12, Darkshire 42, Goldshire 87, Stormwind City 1519), the taxi nodes
@@ -73,7 +73,7 @@ w.bindLocation = AREAS[87]
 
 // As compile writes it for "Darkshire" (docs/GUIDE_FORMAT.md, "Places by ID").
 const DARKSHIRE = `
-Polestar.RegisterGuide({ id = "test/darkshire", pack = "test", title = "Darkshire", faction = "Alliance", minLevel = 1, maxLevel = 60, steps = {
+SendaFH.RegisterGuide({ id = "test/darkshire", pack = "test", title = "Darkshire", faction = "Alliance", minLevel = 1, maxLevel = 60, steps = {
 	{ goals = { { t = "sethome", npc = 6790, npcName = "Innkeeper Trelayne", location = "Darkshire", area = 42 } } },
 	{ goals = { { t = "getfp", npc = 2409, npcName = "Felicia Maline", location = "Darkshire", node = 12, area = 42 } } },
 	{ goals = { { t = "fly", location = "Stormwind City", area = 1519 } } },
@@ -87,9 +87,9 @@ function run(locale, { guide = DARKSHIRE, id = 'test/darkshire', before = '', fl
 		stubs: ['stub_world.lua'],
 		before: client(locale) + before,
 		addons: [ADDON],
-		saved: { Polestar: `PolestarCharDB = { schema = 1, guide = "${id}", flags = { ${flags} } }` },
+		saved: { SendaFH: `SendaFHCharDB = { schema = 1, guide = "${id}", flags = { ${flags} } }` },
 		script: `${TEST_PACK}\n${TEST_SOURCE}\n${guide}
-E = Polestar.Engine
+E = SendaFH.Engine
 function flush() stub.advance(0.25) end
 stub.login()
 stub.fire("QUEST_LOG_UPDATE"); stub.advance(0.6)
@@ -108,7 +108,7 @@ const WALK = `
 	openTaxi(2409, { 12, 2 }); closeTaxi(); flush(); trail[#trail + 1] = E.GetStepIndex()
 	w.setZone(AREAS[1519], TRADE); flush(); trail[#trail + 1] = E.GetStepIndex()
 	w.setZone(AREAS[10], AREAS[42]); flush(); trail[#trail + 1] = E.GetStepIndex()
-	local f = PolestarCharDB.flags
+	local f = SendaFHCharDB.flags
 	emit({ texts = texts, trail = trail, inn = f.inn, node12 = f.taxi and f.taxi[12] or false })
 `;
 
@@ -132,14 +132,14 @@ test('the same guide on an English client completes as before, with or without C
 	}
 });
 
-test('#83: bound at Darkshire before the step, a French client passes the sethome, whether or not Polestar saw the bind', () => {
+test('#83: bound at Darkshire before the step, a French client passes the sethome, whether or not SendaFH saw the bind', () => {
 	const script = `
-		local inn = Polestar.Nav.BoundInn()
+		local inn = SendaFH.Nav.BoundInn()
 		emit({ step = E.GetStepIndex(), bound = inn and inn.npc or false })`;
-	// Polestar saw the bind: Travel learned the innkeeper then (flags.inn).
+	// SendaFH saw the bind: Travel learned the innkeeper then (flags.inn).
 	const [learned] = run('frFR', { before: 'w.bindLocation = AREAS[42]', flags: 'inn = { ["sombre-comté"] = 6790 }', script });
 	assert.deepEqual(learned, { step: 2, bound: 6790 });
-	// Bound before Polestar was installed: the inn whose area the client names so.
+	// Bound before SendaFH was installed: the inn whose area the client names so.
 	const [unseen] = run('frFR', { before: 'w.bindLocation = AREAS[42]', script });
 	assert.deepEqual(unseen, { step: 2, bound: 6790 });
 	// A bind Travel paired with the wrong innkeeper (bound away from it, as a
@@ -169,7 +169,7 @@ test('bound at another inn, or at a flight master where Darkshire is not yet kno
 
 test('a goal the compiler left without an ID keeps matching by its English name: sethome by its inn, hearth and getfp by name', () => {
 	const GUIDE = `
-Polestar.RegisterGuide({ id = "test/names", pack = "test", title = "Names", faction = "Alliance", minLevel = 1, maxLevel = 60, steps = {
+SendaFH.RegisterGuide({ id = "test/names", pack = "test", title = "Names", faction = "Alliance", minLevel = 1, maxLevel = 60, steps = {
 	{ goals = { { t = "sethome", location = "Darkshire" } } },
 	{ goals = { { t = "hearth", location = "Darkshire" } } },
 	{ goals = { { t = "getfp", location = "Darkshire" } } },

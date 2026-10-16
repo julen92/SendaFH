@@ -1,16 +1,16 @@
 'use strict';
 // `travel build`: the flight network, transports, inns, learned walking
 // paths and zone crossings -> data/forever/travel.json (full detail, with
-// sources and warnings) and addon/Polestar/Nav/TravelData.lua (what the
+// sources and warnings) and addon/SendaFH/Nav/TravelData.lua (what the
 // in-game planner needs, with the timetables, walk-in portals and class
 // teleports Nav/Transit.lua reads: tools/lib/travel/timetable.js); the
-// flights' tracks -> addon/Polestar/Maps/FlightPaths.lua (what the map's
+// flights' tracks -> addon/SendaFH/Maps/FlightPaths.lua (what the map's
 // route lines draw).
 // Crossings: the shipped crossings file (tools/lib/travel/crossings.json, from
 // `travel import`: Carbonite's zone connections, GPL-3.0) goes into
 // TravelData.lua as the full crossing data; the optional local crossings
 // file (data/local/crossings.json) goes into the local data addon
-// Polestar_Travel, never into TravelData.lua, and adds to it in game.
+// SendaFH_Travel, never into TravelData.lua, and adds to it in game.
 // Same inputs give byte-identical outputs.
 
 const fs = require('node:fs');
@@ -33,7 +33,7 @@ const PATH_CHUNK = 1000; // records per Lua function (keeps each under Lua 5.1's
 const SHIPPED_CROSSINGS = path.join(__dirname, 'crossings.json'); // committed, from `travel import`
 
 function readJson(file) {
-	if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/polestar.js data build)`);
+	if (!fs.existsSync(file)) throw new Error(`missing ${file} (run: node tools/sendafh.js data build)`);
 	return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
@@ -69,7 +69,7 @@ function emitLua(t) {
 	lines.push(`-- ${t.transitBuild || 'none'}), CMaNGOS classic-db ${t.cmangosRev ? t.cmangosRev.slice(0, 7) : 'none'} (spawns, areatrigger_teleport,`);
 	lines.push('-- spell_target_position, sniffed transport periods) and the CMaNGOS transport model, after');
 	lines.push('-- Shortest Path Forever by Cillian Berragan (GPL-3.0-or-later, used with permission).');
-	lines.push('-- Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for Polestar, 2026-10-15.');
+	lines.push('-- Portions Copyright (C) 2026 Cillian Berragan (Shortest Path Forever, GPL-3.0-or-later); adapted for SendaFH, 2026-10-15.');
 	lines.push('');
 	lines.push('local ADDON, ns = ...');
 	lines.push('local N = ns.Nav');
@@ -201,7 +201,7 @@ function emitFlightLua(build, legs) {
 // shippedFile: the shipped crossings file (default SHIPPED_CROSSINGS,
 // committed); absent -> no shipped crossings. crossingsFile: the optional
 // local crossings file (default data/local/crossings.json next to dataDir);
-// absent -> no Polestar_Travel output.
+// absent -> no SendaFH_Travel output.
 async function buildTravel({
 	dataDir = DATA,
 	recordingsDir = path.join(ROOT, 'data', 'recordings'),
@@ -328,7 +328,7 @@ async function buildTravel({
 	return { travel: result, lua, flightLua, warnings, travelAddon: local ? emitTravelAddon(local, frames, live) : null, localCounts };
 }
 
-// travelAddonDir: where Polestar_Travel goes (written only when the build read a local crossings file).
+// travelAddonDir: where SendaFH_Travel goes (written only when the build read a local crossings file).
 // flightOut: FlightPaths.lua (skipped when not given).
 function writeTravel({ travel, lua, flightLua, travelAddon }, { jsonOut, luaOut, flightOut, travelAddonDir }) {
 	fs.mkdirSync(path.dirname(jsonOut), { recursive: true });

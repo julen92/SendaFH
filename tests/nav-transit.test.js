@@ -1,5 +1,5 @@
 'use strict';
-// Transport timing (addon/Polestar/Nav/Transit.lua) and its generator
+// Transport timing (addon/SendaFH/Nav/Transit.lua) and its generator
 // (tools/lib/travel/timetable.js, cmangos.js), after Shortest Path Forever by
 // Cillian Berragan: departure maths (phase, wrap, boarding), untimed "about"
 // waits, sightings and the ride observer correcting a drifted one, the
@@ -27,11 +27,11 @@ const FIX = path.join(__dirname, 'fixtures', 'travel');
 
 // --- the addon ---------------------------------------------------------------
 
-const TRANSIT = { name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Nav/Transit.lua'] };
+const TRANSIT = { name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Nav/Transit.lua'] };
 
 // A boat loop of 100 s: docked at A 0-20 s, at B 50-70 s; and a lift.
 const DATA = `
-local T = Polestar.Transit
+local T = SendaFH.Transit
 T.Register({
 	routes = {
 		r = { kind = "boat", period = 100000, fit = { samples = 10, span = 15000, speed = 12 },
@@ -58,7 +58,7 @@ local function nowMs() return T.Now() * 1000 end
 local function at(p, source) return { epoch = nowMs() - p, seen = math.floor(T.Now()), source = source or "you" } end
 local function round(v) return v and math.floor(v * 10 + 0.5) / 10 end
 -- The sighting held for a route (the store is per realm; there is one here).
-local function held(id) for _, s in pairs(Polestar.DB().transit or {}) do return s[id] end end
+local function held(id) for _, s in pairs(SendaFH.DB().transit or {}) do return s[id] end end
 `;
 
 function lua(script, opts = {}) {
@@ -105,7 +105,7 @@ test('departure maths: docked, too late to board, arriving, wrapping past phase 
 
 test('sightings: a recent own ride is not replaced by another player\'s, a newer own one is, stale ones expire', () => {
 	const [first, kept, replaced, stale] = lua(`
-		local s = Polestar.DB().transit
+		local s = SendaFH.DB().transit
 		T.Sighted("r", { epoch = nowMs() - 1000, seen = math.floor(T.Now()) - 100, source = "player" })
 		emit(T.Sighted("r", at(10000, "you")))
 		emit(T.Sighted("r", { epoch = nowMs() - 30000, seen = math.floor(T.Now()) + 1, source = "player" }))
@@ -166,7 +166,7 @@ test('C5: a ride is timed when the client reports its height as 0, along a track
 		addons: [TRANSIT],
 		login: true,
 		script: `
-			local T = Polestar.Transit
+			local T = SendaFH.Transit
 			T.Register({
 				routes = {
 					zep = { kind = "zeppelin", period = 100000, fit = { samples = 10, span = 15000, speed = 12 },
@@ -186,7 +186,7 @@ test('C5: a ride is timed when the client reports its height as 0, along a track
 			end
 			stub.advance(25)
 			local s
-			for _, realm in pairs(Polestar.DB().transit or {}) do s = realm.zep end
+			for _, realm in pairs(SendaFH.DB().transit or {}) do s = realm.zep end
 			emit(s and s.source or false)
 		`,
 	}).emitted;
@@ -213,7 +213,7 @@ test('lifts: found near a crossing, listed, untimed "about" captions then timed,
 
 test('sync: shared sightings are validated (unknown, future, stale, out-of-loop dropped), a whisper is ignored, a guild query gets your own', () => {
 	const [round1, decoded, whisperIgnored, guild, reply] = lua(`
-		Polestar.Set("nav.shareTransit", true) -- off by default: players opt in
+		SendaFH.Set("nav.shareTransit", true) -- off by default: players opt in
 		local now = T.Now()
 		local s = { epoch = nowMs() - 12345, seen = math.floor(now) }
 		local text = T.encode("r", s)
@@ -229,13 +229,13 @@ test('sync: shared sightings are validated (unknown, future, stale, out-of-loop 
 		local got = {}
 		for id in pairs(T.decode(msg, now)) do got[#got + 1] = id end
 		emit(got)
-		stub.fire("CHAT_MSG_ADDON", "PolestarT1", "Slift:" .. math.floor(now) .. ":16000", "WHISPER", "Stranger-Realm")
+		stub.fire("CHAT_MSG_ADDON", "SendaFHT1", "Slift:" .. math.floor(now) .. ":16000", "WHISPER", "Stranger-Realm")
 		emit(held("lift") == nil)
-		stub.fire("CHAT_MSG_ADDON", "PolestarT1", "Slift:" .. math.floor(now) .. ":16000", "GUILD", "Friend")
+		stub.fire("CHAT_MSG_ADDON", "SendaFHT1", "Slift:" .. math.floor(now) .. ":16000", "GUILD", "Friend")
 		local held = held("lift")
 		emit({ held.source, T.Caption("lift", "lift-x", T.Now(), "bottom") })
 		T.Sighted("r", at(10000, "you"))
-		stub.fire("CHAT_MSG_ADDON", "PolestarT1", "Q", "GUILD", "Friend")
+		stub.fire("CHAT_MSG_ADDON", "SendaFHT1", "Q", "GUILD", "Friend")
 		local before = #SENT
 		stub.advance(13) -- the reply waits 2-12 s
 		local last = SENT[#SENT]
@@ -246,7 +246,7 @@ test('sync: shared sightings are validated (unknown, future, stale, out-of-loop 
 	assert.deepEqual(decoded, ['r']);
 	assert.equal(whisperIgnored, true);
 	assert.deepEqual(guild, ['player', 'Lift here, leaves in 0:04']);
-	assert.deepEqual([reply[0], reply[2]], ['PolestarT1', 'GUILD']);
+	assert.deepEqual([reply[0], reply[2]], ['SendaFHT1', 'GUILD']);
 	assert.equal(reply[3], 0, 'security L4: no reply at once');
 	assert.match(reply[1], /^Sr:\d+:10000$/, 'only your own sightings answer a query; the guildmate\'s lift is not echoed');
 });
@@ -271,7 +271,7 @@ test('class teleports: known spells with their reagents, cooldowns counted, the 
 		COOL[556] = { GetTime(), 900 }
 		COOL[3567] = { GetTime(), 1.5 } -- the global cooldown does not count
 		emit(names(T.Teleports(T.Now())))
-		Polestar.Set("nav.teleports", false)
+		SendaFH.Set("nav.teleports", false)
 		emit(#T.Teleports(T.Now()))
 	`);
 	assert.deepEqual(none, [['Teleport: Moonglade', 0, 1450, false], ['Astral Recall', 0, false, true]], 'no Rune of Teleportation: no city teleport');
@@ -286,10 +286,10 @@ test('C5: UnitPosition is read in one place (Core/Compat.lua)', () => {
 		for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
 			const p = path.join(dir, e.name);
 			if (e.isDirectory()) walk(p);
-			else if (e.name.endsWith('.lua') && p !== path.join(ROOT, 'addon', 'Polestar', 'Core', 'Compat.lua') && /\bUnitPosition\b/.test(fs.readFileSync(p, 'utf8'))) offenders.push(path.relative(ROOT, p));
+			else if (e.name.endsWith('.lua') && p !== path.join(ROOT, 'addon', 'SendaFH', 'Core', 'Compat.lua') && /\bUnitPosition\b/.test(fs.readFileSync(p, 'utf8'))) offenders.push(path.relative(ROOT, p));
 		}
 	};
-	walk(path.join(ROOT, 'addon', 'Polestar'));
+	walk(path.join(ROOT, 'addon', 'SendaFH'));
 	assert.deepEqual(offenders, []);
 });
 
@@ -397,7 +397,7 @@ test('lift tracks, portals and teleports from TransportAnimation, classic-db and
 });
 
 test('`travel build` with timetable sources: Transit data in TravelData.lua, loaded by the addon, byte-identical on every run', async () => {
-	const dir = tmpdir('polestar-transit-');
+	const dir = tmpdir('sendafh-transit-');
 	try {
 		const sources = path.join(dir, 'sources');
 		fs.cpSync(path.join(FIX, 'sources'), sources, { recursive: true });
@@ -424,11 +424,11 @@ test('`travel build` with timetable sources: Transit data in TravelData.lua, loa
 		fs.writeFileSync(file, one.lua);
 		const [lifts, ferry] = runAddon({
 			stubs: ['stub_nav.lua'],
-			addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
+			addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
 			script: `
 				local chunk = assert(loadfile(${JSON.stringify(file)}))
-				chunk("Polestar", Polestar)
-				local T = Polestar.Transit
+				chunk("SendaFH", SendaFH)
+				local T = SendaFH.Transit
 				emit(T.Lifts())
 				emit({ T.NextDeparture("boat", "boat-feathermoon", T.Now(), "a") })
 			`,
@@ -452,7 +452,7 @@ test('the model reproduces every period CMaNGOS classic-db sniffed (local client
 
 // --- review fixes ---------------------------------------------------------------
 
-const TRAVEL_DATA = path.join(ROOT, 'addon', 'Polestar', 'Nav', 'TravelData.lua');
+const TRAVEL_DATA = path.join(ROOT, 'addon', 'SendaFH', 'Nav', 'TravelData.lua');
 
 test('review P0-1: the committed TravelData.lua\'s timetables index stops from 1; a sighting on every loop times every service', () => {
 	const text = fs.readFileSync(TRAVEL_DATA, 'utf8');
@@ -461,10 +461,10 @@ test('review P0-1: the committed TravelData.lua\'s timetables index stops from 1
 	assert.ok(routeIds.includes('path-285') && serviceIds.includes('zeppelin-orgrimmar-gromgol'));
 	const [zep, all, cars] = runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
 		login: true,
 		script: `
-			local T = Polestar.Transit
+			local T = SendaFH.Transit
 			local now = T.Now()
 			T.Sighted("path-285", { epoch = now * 1000 - 1000, seen = math.floor(now), source = "you" })
 			local w, r, timed = T.NextDeparture("zeppelin", "zeppelin-orgrimmar-gromgol", now, "a")
@@ -498,7 +498,7 @@ test('review P2-2: FlightPaths.lua and TravelData.lua are built from the same Cl
 		return m && m[1];
 	};
 	const travel = build(TRAVEL_DATA);
-	const flights = build(path.join(ROOT, 'addon', 'Polestar', 'Maps', 'FlightPaths.lua'));
+	const flights = build(path.join(ROOT, 'addon', 'SendaFH', 'Maps', 'FlightPaths.lua'));
 	assert.ok(travel && /^1\.15\./.test(travel), `TravelData.lua build ${travel}`);
 	assert.equal(flights, travel);
 });
@@ -506,7 +506,7 @@ test('review P2-2: FlightPaths.lua and TravelData.lua are built from the same Cl
 // Two cars on one lift loop, 20 yd apart: car 1 at x = 0 starts at the top,
 // car 2 at x = 20 at the bottom; each rides 10 s and rests 5 s at each end.
 const TWO_CARS = `
-local T = Polestar.Transit
+local T = SendaFH.Transit
 T.Register({
 	routes = {
 		duo = { kind = "lift", period = 30000, fit = { samples = 5, span = 4000, speed = 8 },
@@ -546,15 +546,15 @@ test('review P3-14: riding one car of a two-car lift, the next stop is that car\
 });
 
 const SHARE = `${DATA}
-Polestar.Set("nav.shareTransit", true)
+SendaFH.Set("nav.shareTransit", true)
 FIRED = {}
-Polestar.On("NAV_TRANSIT", function(changed, own)
+SendaFH.On("NAV_TRANSIT", function(changed, own)
 	local ids = {}
 	for id in pairs(changed or {}) do ids[#ids + 1] = id end
 	table.sort(ids)
 	FIRED[#FIRED + 1] = { table.concat(ids, ","), own or false }
 end)
-local function msg(text, chatType, sender) stub.fire("CHAT_MSG_ADDON", "PolestarT1", text, chatType or "GUILD", sender or "Friend") end
+local function msg(text, chatType, sender) stub.fire("CHAT_MSG_ADDON", "SendaFHT1", text, chatType or "GUILD", sender or "Friend") end
 `;
 const SHARE_STUBS = 'SENT = {}; C_ChatInfo = { RegisterAddonMessagePrefix = function() return true end, SendAddonMessage = function(...) SENT[#SENT + 1] = { ... } end }; GetNormalizedRealmName = function() return "TestRealm" end';
 
@@ -625,7 +625,7 @@ test('security L4: a query is answered after a random wait, and not when another
 });
 
 test('review P3-16, security L9: the CMaNGOS dump is pinned by hash and size; a corrupt cached copy is fetched again', async () => {
-	const dir = tmpdir('polestar-cmangos-');
+	const dir = tmpdir('sendafh-cmangos-');
 	try {
 		const spawn = (guid, entry) => `(${guid},${entry},1,1,10,20,30,0.5,0,0,0,0,0,0)`;
 		const sql = [
@@ -643,7 +643,7 @@ test('review P3-16, security L9: the CMaNGOS dump is pinned by hash and size; a 
 		const db = await loadClassicDb({ sourcesDir: dir, fetchImpl, hash });
 		assert.equal(fetched, 1, 'the corrupt copy was replaced');
 		assert.deepEqual(db.positions[3567], { map: 1, x: 1, y: 2, z: 3 });
-		const other = tmpdir('polestar-cmangos-');
+		const other = tmpdir('sendafh-cmangos-');
 		try {
 			await assert.rejects(loadClassicDb({ sourcesDir: other, fetchImpl, hash: 'f'.repeat(64) }), /sha256/);
 			await assert.rejects(loadClassicDb({ sourcesDir: other, fetchImpl, hash, maxBytes: 10 }), /byte limit/);
@@ -657,7 +657,7 @@ test('review P3-16, security L9: the CMaNGOS dump is pinned by hash and size; a 
 });
 
 test('security L10: only digits-and-dots builds name a cache folder; a carriage return is escaped in generated Lua', async () => {
-	const dir = tmpdir('polestar-builds-');
+	const dir = tmpdir('sendafh-builds-');
 	try {
 		const fetchImpl = async () => new Response(JSON.stringify({ wow_classic_beta: [{ version: '1.60.1/../../escape' }] }));
 		await assert.rejects(loadTravelTables({ sourcesDir: dir, fetchImpl, product: 'transit' }), /no wow_classic_beta/);
@@ -672,7 +672,7 @@ test('security L10: only digits-and-dots builds name a cache folder; a carriage 
 test('second review L10b: wago.js takes only digits-and-dots builds from wago.tools; crossings Lua escapes a carriage return', async () => {
 	const { pickBuild } = require('../tools/lib/data/wago');
 	const { crossingsLua } = require('../tools/lib/travel/crossings');
-	const dir = tmpdir('polestar-wago-');
+	const dir = tmpdir('sendafh-wago-');
 	try {
 		const listing = (versions) => async () => new Response(JSON.stringify({ wow_classic_beta: versions.map((version) => ({ version })) }));
 		const picked = await pickBuild({ sourcesDir: dir, product: 'forever', fetchImpl: listing(['1.60.0', '1.60.1/../../escape']) });

@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const WORLD = `
 local w = stub.world
@@ -22,7 +22,7 @@ w.addAchievement(9002, "Legacy: Elwynn", { { "A", 1 }, { "B", 1 }, { "C", 1 } })
 const GUIDE = `
 ${TEST_PACK}
 ${TEST_SOURCE}
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
 	id = "test/alchemy", pack = "test", title = "Alchemy 1-60", category = "Professions", minLevel = 5, maxLevel = 60,
 	steps = {
 		{ goals = { { t = "skill", skill = "Alchemy", skillLine = 171, level = 50 } } },
@@ -46,12 +46,12 @@ function run({ before = '', script }) {
 		addons: [CORE],
 		script: `${GUIDE}
 			stub.login()
-			E = Polestar.Engine
+			E = SendaFH.Engine
 			E.SetGuide("test/alchemy")
 			function flush() stub.advance(0.25) end
 			LOG = {}
-			Polestar.On("STEP_CHANGED", function(i) LOG[#LOG + 1] = "C" .. tostring(i) end)
-			Polestar.On("STEP_UPDATED", function(i) LOG[#LOG + 1] = "U" .. tostring(i) end)
+			SendaFH.On("STEP_CHANGED", function(i) LOG[#LOG + 1] = "C" .. tostring(i) end)
+			SendaFH.On("STEP_UPDATED", function(i) LOG[#LOG + 1] = "U" .. tostring(i) end)
 			function goal(i) local v = E.GetStepView(i).goals[1]; return v end
 			function brief(g) return { status = g.status, text = g.text, verb = g.verb, subject = g.subject, kind = g.subjectKind,
 				detail = g.detail or false, progress = g.progress or false, manual = g.manual } end
@@ -186,7 +186,7 @@ test('explore completes on arrival (polled only while active) and stays done aft
 			w.moveTo(1429, 20, 80)
 			stub.advance(1)
 			emit({ before = before, arrived = arrived, after = E.GetStepIndex(), s6 = E.GetStepView(6).status, tickers = tickers(),
-				latched = PolestarCharDB.manual["test/alchemy"]["6:1"] })
+				latched = SendaFHCharDB.manual["test/alchemy"]["6:1"] })
 		`,
 	});
 	assert.deepEqual(out, {
@@ -206,7 +206,7 @@ test('RegisterGuide accepts the new verbs and rejects malformed ones', () => {
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
 			local function try(goal)
-				local ok, err = Polestar.RegisterGuide({ id = "test/v", pack = "test", title = "V", steps = { { goals = { goal } } } })
+				local ok, err = SendaFH.RegisterGuide({ id = "test/v", pack = "test", title = "V", steps = { { goals = { goal } } } })
 				return ok and "ok" or err
 			end
 			emit({
@@ -245,12 +245,12 @@ test('Suggest only picks leveling guides; other categories are left to the playe
 		addons: [CORE],
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
-			local function g(id, cat) Polestar.RegisterGuide({ id = "test/" .. id, pack = "test", title = id, category = cat, minLevel = 1, maxLevel = 60,
+			local function g(id, cat) SendaFH.RegisterGuide({ id = "test/" .. id, pack = "test", title = id, category = cat, minLevel = 1, maxLevel = 60,
 				steps = { { goals = { { t = "level", level = 60 } } } } }) end
 			g("prof", "Professions"); g("legacy", "Legacy")
-			local none = Polestar.Guides.Suggest()
+			local none = SendaFH.Guides.Suggest()
 			g("lvl", nil)
-			emit({ none = none or false, pick = Polestar.Guides.Suggest() })
+			emit({ none = none or false, pick = SendaFH.Guides.Suggest() })
 		`,
 	}).emitted;
 	assert.deepEqual(out, { none: false, pick: 'test/lvl' });

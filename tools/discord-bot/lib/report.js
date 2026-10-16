@@ -1,6 +1,6 @@
 'use strict';
 // A #bugs forum post read back into the parts of the report the addon wrote
-// (addon/Polestar/UI/Report.lua, R.Text): the player's words, then the
+// (addon/SendaFH/UI/Report.lua, R.Text): the player's words, then the
 // details in a code block, one line each, parts joined by " · ".
 //
 // The labels in the report are translated (L["Guide: %s (%s)"], ...), so
@@ -18,7 +18,7 @@ const POSITION = /map (\d+) @(-?[\d.]+),(-?[\d.]+)/;
 const ERROR_LINE = /^\s+(\d+)x (.*)$/;
 const FENCE = /(^|\n)(`{3,})[^\n`]*\n([\s\S]*?)\n?\2(?=\n|$)/g;
 
-// Is this the report's first line: "Polestar 0.2.3 Beta · client 1.60.1 (70425) · enUS"?
+// Is this the report's first line: "SendaFH 0.2.3 Beta · client 1.60.1 (70425) · enUS"?
 function isVersionsLine(line) {
 	const parts = line.split(SEP);
 	return parts.length >= 3 && LOCALE.test(parts[parts.length - 1].trim()) && VERSION.test(parts[0].trim());

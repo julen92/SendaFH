@@ -1,5 +1,5 @@
 'use strict';
-// The player's own word over the guide (addon/Polestar/Core/Engine.lua):
+// The player's own word over the guide (addon/SendaFH/Core/Engine.lua):
 // › and ‹ look ahead and back without changing anything, Skip is the only
 // way a step is skipped (and Unskip undoes it), every goal ticks done and
 // back, optional goals skip with one click, all of it saved and honoured by a
@@ -11,7 +11,7 @@ const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 const { luaValue } = require('../tools/lib/playtest');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 // Elwynn: 3000 x 2000 yards, so 1% is 30 yd across and 20 yd down.
 const WORLD = `
@@ -23,7 +23,7 @@ w.titles[783] = "A Threat Within"; w.titles[7] = "Kobold Camp Cleanup"
 
 // A Northshire-shaped route for a Warrior: step 5 is Mage-only.
 const ROUTE = `
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
 	id = "test/route", pack = "test", title = "Route", minLevel = 1, maxLevel = 10,
 	steps = {
 		{ title = "Deputy Willem", goals = {
@@ -52,7 +52,7 @@ Polestar.RegisterGuide({
 `;
 
 const HELPERS = `
-E = Polestar.Engine
+E = SendaFH.Engine
 function flush() stub.advance(0.25) end
 -- A table's keys, sorted and joined ("1:1,3"; "" for none).
 function keys(t)
@@ -68,17 +68,17 @@ function run({ guides = ROUTE, before = '', saved, script }) {
 		stubs: ['stub_world.lua'],
 		before: WORLD + before,
 		addons: [CORE],
-		saved: saved ? { Polestar: saved } : undefined,
+		saved: saved ? { SendaFH: saved } : undefined,
 		script: `${TEST_PACK}
 ${TEST_SOURCE}\n${guides}\n${HELPERS}\nstub.login()\nstub.fire("QUEST_LOG_UPDATE"); stub.advance(0.6)\n${script}`,
 	}).emitted;
 }
 
 // SavedVariables as the client writes them at a reload: the script ends with
-// stub.fire("PLAYER_LOGOUT") and emits PolestarCharDB; this turns it back
+// stub.fire("PLAYER_LOGOUT") and emits SendaFHCharDB; this turns it back
 // into the chunk the next session loads.
 function reloadOf(charDB) {
-	return `PolestarCharDB = ${luaValue(charDB)}`;
+	return `SendaFHCharDB = ${luaValue(charDB)}`;
 }
 
 const AT_CAMP = `w.complete({ 783 }); w.onQuest(7, { 10 })`; // the kobolds are the live step (3)
@@ -86,7 +86,7 @@ const AT_CAMP = `w.complete({ 783 }); w.onQuest(7, { 10 })`; // the kobolds are 
 test('› looks ahead and ‹ back without skipping anything; Skip skips the step shown and Unskip undoes it', () => {
 	const [out] = run({
 		before: AT_CAMP,
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/route" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/route" }',
 		script: `
 			local trail = {}
 			local function mark(label) trail[#trail + 1] = label .. "=" .. tostring(E.GetStepIndex()) .. "/" .. tostring(E.GetLiveStep()) end
@@ -97,13 +97,13 @@ test('› looks ahead and ‹ back without skipping anything; Skip skips the ste
 			E.Next(); flush(); mark("end")
 			E.Prev(); flush(); mark("prev")
 			E.Prev(); flush(); mark("prev")
-			local untouched = keys(PolestarCharDB.skipped["test/route"])
+			local untouched = keys(SendaFHCharDB.skipped["test/route"])
 			E.Skip(); flush(); mark("skip")
-			local skipped = keys(PolestarCharDB.skipped["test/route"])
+			local skipped = keys(SendaFHCharDB.skipped["test/route"])
 			local view3 = E.GetStepView(3)
 			local undone = E.Unskip(3); flush(); mark("unskip")
 			emit({ trail = trail, ahead = ahead, untouched = untouched, skipped = skipped, skippedView = { view3.status, view3.skipped },
-				undone = undone, after = keys(PolestarCharDB.skipped["test/route"]) })
+				undone = undone, after = keys(SendaFHCharDB.skipped["test/route"]) })
 		`,
 	});
 	assert.deepEqual(out.trail, ['start=3/3', 'next=4/3', 'next=6/3', 'end=6/3', 'prev=4/3', 'prev=3/3', 'skip=4/4', 'unskip=3/3']);
@@ -117,7 +117,7 @@ test('› looks ahead and ‹ back without skipping anything; Skip skips the ste
 
 test('looking ahead at an accept: taking the quest moves on to its objective step even while the log has not filled in the objectives yet (regression: Barak Kodobane passed for the Kolkar Leaders turn-in)', () => {
 	const guides = `
-		Polestar.RegisterGuide({ id = "test/kolkar", pack = "test", title = "Kolkar", minLevel = 1, maxLevel = 30, steps = {
+		SendaFH.RegisterGuide({ id = "test/kolkar", pack = "test", title = "Kolkar", minLevel = 1, maxLevel = 30, steps = {
 			{ title = "Sergra", goals = { { t = "accept", quest = 3261, title = "Jorn Skyseer", npc = 3338 } } },
 			{ title = "Regthar", goals = { { t = "accept", quest = 850, title = "Kolkar Leaders", npc = 3389 } } },
 			{ title = "Barak", goals = { { t = "collect", item = 5022, itemName = "Barak's Head", count = 1, quest = 850, oi = 1 } } },
@@ -125,10 +125,10 @@ test('looking ahead at an accept: taking the quest moves on to its objective ste
 		} })`;
 	const [out] = run({
 		guides,
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/kolkar" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/kolkar" }',
 		script: `
 			local w = stub.world
-			Polestar.Set("behavior.autoAccept", false)
+			SendaFH.Set("behavior.autoAccept", false)
 			E.Goto(2); flush()
 			local r = { looking = E.GetStepIndex() }
 			w.accept(850, {}); flush() -- in the log, its objectives not there yet
@@ -147,11 +147,11 @@ test('looking ahead at an accept: taking the quest moves on to its objective ste
 test('Skip while looking ahead skips the step shown and moves on from it, leaving the live step alone', () => {
 	const [out] = run({
 		before: AT_CAMP,
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/route" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/route" }',
 		script: `
 			E.Next(); flush()
 			E.Skip(); flush()
-			emit({ at = E.GetStepIndex(), live = E.GetLiveStep(), skipped = keys(PolestarCharDB.skipped["test/route"]) })
+			emit({ at = E.GetStepIndex(), live = E.GetLiveStep(), skipped = keys(SendaFHCharDB.skipped["test/route"]) })
 		`,
 	});
 	assert.deepEqual(out, { at: 6, live: 3, skipped: '4' });
@@ -162,15 +162,15 @@ test('a reload keeps the position: a skipped step stays skipped even with its qu
 	// some kills done; the route went on to training.
 	const [out] = run({
 		before: `w.complete({ 783 }); w.onQuest(7, { { required = 10, fulfilled = 4 } })`,
-		saved: 'PolestarCharDB = { schema = 1, tabs = { "test/route" }, activeTab = 1, skipped = { ["test/route"] = { [3] = true } } }',
-		script: `emit({ at = E.GetStepIndex(), skipped = keys(PolestarCharDB.skipped["test/route"]) })`,
+		saved: 'SendaFHCharDB = { schema = 1, tabs = { "test/route" }, activeTab = 1, skipped = { ["test/route"] = { [3] = true } } }',
+		script: `emit({ at = E.GetStepIndex(), skipped = keys(SendaFHCharDB.skipped["test/route"]) })`,
 	});
 	assert.deepEqual(out, { at: 4, skipped: '3' });
 });
 
 test('a reload keeps the position: quests their giver did not offer stay passed until a level or a turn-in', () => {
 	const GUIDE = `
-		Polestar.RegisterGuide({ id = "test/xr", pack = "test", title = "Crossroads", minLevel = 10, maxLevel = 20, steps = {
+		SendaFH.RegisterGuide({ id = "test/xr", pack = "test", title = "Crossroads", minLevel = 10, maxLevel = 20, steps = {
 			{ title = "Thork", goals = {
 				{ t = "accept", quest = 870, title = "The Forgotten Pools", npc = 3429, npcName = "Thork", map = 1429, x = 51, y = 30 },
 				{ t = "accept", quest = 869, title = "Raptor Thieves", npc = 3464, npcName = "Gazrog", map = 1429, x = 52, y = 30 },
@@ -183,14 +183,14 @@ test('a reload keeps the position: quests their giver did not offer stay passed 
 	const [first] = run({
 		guides: GUIDE,
 		before,
-		saved: 'PolestarDB = { schema = 1, settings = { behavior = { autoAccept = false } } }; PolestarCharDB = { schema = 1, guide = "test/xr" }',
+		saved: 'SendaFHDB = { schema = 1, settings = { behavior = { autoAccept = false } } }; SendaFHCharDB = { schema = 1, guide = "test/xr" }',
 		script: `
 			local w = stub.world
 			w.gossip(3429, { available = {} }); w.close(); flush()
 			w.gossip(3464, { available = { { questID = 869 } } }); w.close(); w.accept(869, { 12 }); flush()
 			local at = E.GetStepIndex()
 			stub.fire("PLAYER_LOGOUT")
-			emit({ at = at, db = PolestarCharDB })
+			emit({ at = at, db = SendaFHCharDB })
 		`,
 	});
 	assert.equal(first.at, 2);
@@ -203,7 +203,7 @@ test('a reload keeps the position: quests their giver did not offer stay passed 
 
 test('a pack update that moves steps keeps check-offs, skips and the place the player was looking at', () => {
 	const v1 = `
-		Polestar.RegisterGuide({ id = "test/mv", pack = "test", title = "Moves", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/mv", pack = "test", title = "Moves", minLevel = 1, maxLevel = 60, steps = {
 			{ goals = { { t = "accept", quest = 901, title = "One", npc = 1 } } },
 			{ goals = { { t = "accept", quest = 902, title = "Two", npc = 2 } } },
 			{ goals = { { t = "accept", quest = 903, title = "Three", npc = 3 } } },
@@ -215,21 +215,21 @@ test('a pack update that moves steps keeps check-offs, skips and the place the p
 	const v2 = v1.replace('steps = {', 'steps = {\n\t\t\t{ goals = { { t = "level", level = 1 } } },');
 	const [first] = run({
 		guides: v1,
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/mv" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/mv" }',
 		script: `
 			E.ToggleGoal(1, 1); flush()
 			E.Skip(); flush()
 			E.Next(); flush()
 			local at = { E.GetStepIndex(), E.GetLiveStep() }
 			stub.fire("PLAYER_LOGOUT")
-			emit({ at = at, db = PolestarCharDB })
+			emit({ at = at, db = SendaFHCharDB })
 		`,
 	});
 	assert.deepEqual(first.at, [4, 3]);
 	const [updated] = run({
 		guides: v2,
 		saved: reloadOf(first.db),
-		script: `emit({ at = { E.GetStepIndex(), E.GetLiveStep() }, manual = keys(PolestarCharDB.manual["test/mv"]), skipped = keys(PolestarCharDB.skipped["test/mv"]) })`,
+		script: `emit({ at = { E.GetStepIndex(), E.GetLiveStep() }, manual = keys(SendaFHCharDB.manual["test/mv"]), skipped = keys(SendaFHCharDB.skipped["test/mv"]) })`,
 	});
 	assert.deepEqual(updated, { at: [5, 4], manual: '2:1', skipped: '3' });
 });
@@ -237,8 +237,8 @@ test('a pack update that moves steps keeps check-offs, skips and the place the p
 test('a look-ahead survives a reload, and a step left behind by the guide releases it', () => {
 	const [first] = run({
 		before: AT_CAMP,
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/route" }',
-		script: `E.Next(); E.Next(); flush(); stub.fire("PLAYER_LOGOUT"); emit({ at = E.GetStepIndex(), db = PolestarCharDB })`,
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/route" }',
+		script: `E.Next(); E.Next(); flush(); stub.fire("PLAYER_LOGOUT"); emit({ at = E.GetStepIndex(), db = SendaFHCharDB })`,
 	});
 	assert.equal(first.at, 6);
 	const [reload] = run({ before: AT_CAMP, saved: reloadOf(first.db), script: 'emit({ E.GetStepIndex(), E.GetLiveStep() })' });
@@ -259,7 +259,7 @@ test('a look-ahead survives a reload, and a step left behind by the guide releas
 test('every goal ticks done and back; ticks are saved, place the guide after a reload and count in its progress', () => {
 	const [first] = run({
 		before: AT_CAMP,
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/route" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/route" }',
 		script: `
 			local r = {}
 			local d0 = E.GetProgress()
@@ -268,9 +268,9 @@ test('every goal ticks done and back; ticks are saved, place the guide after a r
 			r.view = { v.goals[2].status, v.goals[2].ticked, v.goals[1].status }
 			r.at = E.GetStepIndex()
 			r.progress = E.GetProgress() - d0
-			r.saved = PolestarCharDB.manual["test/route"]["3:2"]
+			r.saved = SendaFHCharDB.manual["test/route"]["3:2"]
 			stub.fire("PLAYER_LOGOUT")
-			r.db = PolestarCharDB
+			r.db = SendaFHCharDB
 			emit(r)
 		`,
 	});
@@ -285,7 +285,7 @@ test('every goal ticks done and back; ticks are saved, place the guide after a r
 		script: `
 			local at = E.GetStepIndex()
 			E.ToggleGoal(3, 2); flush()
-			emit({ at = at, untick = E.GetStepIndex(), saved = keys(PolestarCharDB.manual["test/route"]) })
+			emit({ at = at, untick = E.GetStepIndex(), saved = keys(SendaFHCharDB.manual["test/route"]) })
 		`,
 	});
 	// The camp's Go to stays latched: the route passed it.
@@ -294,7 +294,7 @@ test('every goal ticks done and back; ticks are saved, place the guide after a r
 
 test('an accept ticked without taking the quest drops its later goals; taking it brings them back', () => {
 	const [out] = run({
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/route" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/route" }',
 		script: `
 			local r = {}
 			E.ToggleGoal(1, 1); flush()
@@ -310,7 +310,7 @@ test('an accept ticked without taking the quest drops its later goals; taking it
 
 test('optional goals skip with one click, are saved, and come back with another', () => {
 	const GUIDE = `
-		Polestar.RegisterGuide({ id = "test/og", pack = "test", title = "Optional", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/og", pack = "test", title = "Optional", minLevel = 1, maxLevel = 60, steps = {
 			{ title = "Field", goals = {
 				{ t = "collect", item = 10621, itemName = "Runed Scroll", count = 1, optional = true, map = 1429, x = 20, y = 20 },
 				{ t = "kill", target = "Kobold Vermin", count = 10, quest = 7, oi = 1, map = 1429, x = 30, y = 30 },
@@ -321,17 +321,17 @@ test('optional goals skip with one click, are saved, and come back with another'
 	const [out] = run({
 		guides: GUIDE,
 		before: 'w.onQuest(7, { 10 })',
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/og" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/og" }',
 		script: `
 			local r = {}
 			r.blocking = E.SkipGoal(1, 2)
 			r.ok = E.SkipGoal(1, 1); flush()
 			local g = E.GetStepView(1).goals[1]
 			r.skipped = { g.status, g.dismissed }
-			r.saved = keys(PolestarCharDB.skipped["test/og"])
+			r.saved = keys(SendaFHCharDB.skipped["test/og"])
 			E.SkipGoal(1, 1); flush()
 			r.back = E.GetStepView(1).goals[1].status
-			r.after = keys(PolestarCharDB.skipped["test/og"])
+			r.after = keys(SendaFHCharDB.skipped["test/og"])
 			emit(r)
 		`,
 	});
@@ -341,7 +341,7 @@ test('optional goals skip with one click, are saved, and come back with another'
 // The Field of Giants (04-the-barrens): the step's Go to names the field; the
 // Runed Scroll drops from Aean Swiftriver at 46,70, south-east of it.
 const FIELD = `
-	Polestar.RegisterGuide({ id = "test/fog", pack = "test", title = "Southern Barrens", minLevel = 1, maxLevel = 60, steps = {
+	SendaFH.RegisterGuide({ id = "test/fog", pack = "test", title = "Southern Barrens", minLevel = 1, maxLevel = 60, steps = {
 		{ title = "Field of Giants", goals = {
 			{ t = "goto", map = 1429, x = 44.7, y = 70.7, text = "Field of Giants" },
 			{ t = "collect", item = 10621, itemName = "Runed Scroll", count = 1, optional = true, map = 1429, x = 46.0, y = 70.0, note = "Aean Swiftriver" },
@@ -360,7 +360,7 @@ test('the arrow leads to the current goal\'s own place; the step\'s Go to only w
 	const [out] = run({
 		guides: FIELD,
 		before: 'w.onQuest(7, { 10 }); w.moveTo(1429, 40, 60)',
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/fog" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/fog" }',
 		script: `
 			local r = {}
 			local wp = E.GetWaypoint()
@@ -387,7 +387,7 @@ test('the arrow leads to the current goal\'s own place; the step\'s Go to only w
 
 test('choosing the next spot of a goal the arrow is not on moves the arrow to that spot', () => {
 	const GUIDE = `
-		Polestar.RegisterGuide({ id = "test/sp", pack = "test", title = "Spots", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/sp", pack = "test", title = "Spots", minLevel = 1, maxLevel = 60, steps = {
 			{ title = "Hills", goals = {
 				{ t = "kill", target = "Kobold Vermin", count = 10, quest = 7, oi = 1, map = 1429, x = 20, y = 50,
 					spots = { { x = 20, y = 50, r = 30, n = 3 }, { x = 25, y = 50, r = 30, n = 2 } } },
@@ -400,7 +400,7 @@ test('choosing the next spot of a goal the arrow is not on moves the arrow to th
 	const [out] = run({
 		guides: GUIDE,
 		before: 'w.onQuest(7, { 10 }); w.onQuest(868, { 12 }); w.moveTo(1429, 20, 50)',
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/sp" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/sp" }',
 		script: `
 			local before = E.GetWaypoint().goalIndex
 			E.CycleSpot(1, 2, 3)
@@ -414,7 +414,7 @@ test('choosing the next spot of a goal the arrow is not on moves the arrow to th
 
 test('the next spot reaches the arrow itself (Engine and Nav together), over a point picked by hand too', () => {
 	const GUIDE = `
-		Polestar.RegisterGuide({ id = "test/sp", pack = "test", title = "Spots", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/sp", pack = "test", title = "Spots", minLevel = 1, maxLevel = 60, steps = {
 			{ title = "Hills", goals = {
 				{ t = "kill", target = "Kobold Vermin", count = 10, quest = 7, oi = 1, map = 1429, x = 20, y = 50,
 					spots = { { x = 20, y = 50, r = 30, n = 3 }, { x = 25, y = 50, r = 30, n = 2 } } },
@@ -427,11 +427,11 @@ test('the next spot reaches the arrow itself (Engine and Nav together), over a p
 	const [out] = runAddon({
 		stubs: ['stub_world.lua'],
 		before: `${WORLD}; w.onQuest(7, { 10 }); w.onQuest(868, { 12 }); w.moveTo(1429, 20, 50)`,
-		addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml'] }],
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, guide = "test/sp" }' },
+		addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml'] }],
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, guide = "test/sp" }' },
 		script: `${TEST_PACK}
 ${TEST_SOURCE}\n${GUIDE}\n${HELPERS}\nstub.login()\nstub.fire("QUEST_LOG_UPDATE"); stub.advance(0.6)
-			local Nav = Polestar.Nav
+			local Nav = SendaFH.Nav
 			local r = { first = Nav.GetTarget().x }
 			-- The eggs' next spot, from the row's button: the arrow goes there.
 			E.CycleSpot(1, 2, 2); flush()
@@ -452,7 +452,7 @@ ${TEST_SOURCE}\n${GUIDE}\n${HELPERS}\nstub.login()\nstub.fire("QUEST_LOG_UPDATE"
 
 test('a spawn spot holds while the player is on another continent, and is picked afresh from where they stand at the step start', () => {
 	const GUIDE = `
-		Polestar.RegisterGuide({ id = "test/sc", pack = "test", title = "Spots", minLevel = 1, maxLevel = 60, steps = {
+		SendaFH.RegisterGuide({ id = "test/sc", pack = "test", title = "Spots", minLevel = 1, maxLevel = 60, steps = {
 			{ goals = { { t = "accept", quest = 5, title = "First", npc = 1, map = 1429, x = 10, y = 50 } } },
 			{ title = "Hills", goals = {
 				{ t = "kill", target = "Kobold Vermin", count = 10, quest = 7, oi = 1, map = 1429, x = 20, y = 50,
@@ -464,7 +464,7 @@ test('a spawn spot holds while the player is on another continent, and is picked
 	const [out] = run({
 		guides: GUIDE,
 		before: 'w.addMap(1411, { name = "Durotar", c = 1, left = 0, right = -3000, top = 0, bottom = -3000 }); w.onQuest(7, { 10 }); w.moveTo(1411, 50, 50)',
-		saved: 'PolestarCharDB = { schema = 1, guide = "test/sc" }',
+		saved: 'SendaFHCharDB = { schema = 1, guide = "test/sc" }',
 		script: `
 			local r = {}
 			E.GetStepView(2) -- shown ahead ("Then:"): its spot is picked from Durotar

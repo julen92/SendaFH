@@ -10,7 +10,7 @@ const { runAddon } = require('./helpers/lua');
 const { writeCodexPack, sampleCodex } = require('./helpers/codex');
 const { emitPack, foldName } = require('../tools/lib/codex/pack');
 
-const FILES = { name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Core/Data.lua', 'Core/Guides.lua', 'Lookup/Codex.lua'] };
+const FILES = { name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Core/Data.lua', 'Core/Guides.lua', 'Lookup/Codex.lua'] };
 
 function run(script, { before = '', pack } = {}) {
 	return runAddon({
@@ -39,9 +39,9 @@ test('emitPack round-trips every record through Codex.lua', () => {
 	try {
 		const [loaded, got] = run(
 			`
-local ok, reason = Polestar.Codex.Load()
-emit({ ok = ok, reason = reason, schema = Polestar.Codex.Meta().schema, frame = Polestar.MapFrames.era[1429] ~= nil })
-local C = Polestar.Codex
+local ok, reason = SendaFH.Codex.Load()
+emit({ ok = ok, reason = reason, schema = SendaFH.Codex.Meta().schema, frame = SendaFH.MapFrames.era[1429] ~= nil })
+local C = SendaFH.Codex
 local out = { items = {}, npcs = {}, objects = {}, quests = {}, instances = {}, zones = {}, factions = {}, spells = {} }
 local ids = ${JSON.stringify({
 				items: Object.keys(codex.items),
@@ -91,7 +91,7 @@ test('Codex.Each walks one kind with names and item quality, and stops on false'
 	try {
 		const [each, stopped, names, loot] = run(
 			`
-local C = Polestar.Codex
+local C = SendaFH.Codex
 local out = {}
 for _, kind in ipairs({ "item", "mount", "pet", "recipe", "tabard", "npc", "rare", "quest", "zone", "instance", "treasure", "object" }) do
 	local list = {}
@@ -141,11 +141,11 @@ test('emitPack is deterministic and splits large groups across files', () => {
 	const big = { meta: {}, items: {} };
 	for (let id = 1; id <= 9000; id++) big.items[id] = { id, name: `Item ${id}`, quality: 1, kind: 'item', spell: null, reqLevel: null, sources: [] };
 	const files = emitPack(big, { version: '1' });
-	const toc = files['Polestar_Codex.toc'];
+	const toc = files['SendaFH_Codex.toc'];
 	assert.match(toc, /^## Interface: 16001$/m);
 	assert.match(toc, /^## LoadOnDemand: 1$/m);
-	assert.match(toc, /^## Dependencies: Polestar$/m);
-	assert.match(toc, /^## Title: Polestar Codex$/m);
+	assert.match(toc, /^## Dependencies: SendaFH$/m);
+	assert.match(toc, /^## Title: SendaFH Codex$/m);
 	assert.deepEqual(
 		toc.split('\n').filter((l) => l.endsWith('.lua')),
 		['Meta.lua', 'Items1.lua', 'Items2.lua', 'Items3.lua', 'Index.lua'],
@@ -157,7 +157,7 @@ test('emitPack is deterministic and splits large groups across files', () => {
 	try {
 		const [got] = run(
 			`
-local C = Polestar.Codex
+local C = SendaFH.Codex
 local out = {}
 for _, id in ipairs({ 1, 4000, 4001, 8000, 8001, 9000 }) do
 	local r = C.Item(id)
@@ -184,7 +184,7 @@ test('Codex.Index serves one search blob per kind and never loads the pack', () 
 	try {
 		const [before, blobs] = run(
 			`
-local C = Polestar.Codex
+local C = SendaFH.Codex
 emit({ C.Index("mount") == nil, C.IsLoaded() })
 C.Load()
 local out = {}
@@ -226,11 +226,11 @@ test('foldName folds names exactly like Search.Fold (without its leading space)'
 		'[Tag] (Old) 1/2', 'Ünder-Café', 'Tab\tName\nNext', 'ÿþ', 'ALL CAPS!', '"Quoted" & co.', 'Über_Thing~#5',
 	];
 	const [lua] = runAddon({
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Core/Compat.lua', 'Core/Data.lua', 'Core/Guides.lua', 'Core/Search.lua'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Core/Compat.lua', 'Core/Data.lua', 'Core/Guides.lua', 'Core/Search.lua'] }],
 		script: `
 local names = ${'{ ' + names.map((n) => JSON.stringify(n).replace(/\\u([0-9a-f]{4})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))).join(', ') + ' }'}
 local out = {}
-for i, n in ipairs(names) do out[i] = (Polestar.Search.Fold(n):gsub("^ ", "")) end
+for i, n in ipairs(names) do out[i] = (SendaFH.Search.Fold(n):gsub("^ ", "")) end
 emit(out)
 `,
 	}).emitted;
@@ -248,10 +248,10 @@ test('Data.Pack reports a missing pack once and never retries it', () => {
 local n = 0
 local load = C_AddOns.LoadAddOn
 C_AddOns.LoadAddOn = function(name) n = n + 1; return load(name) end
-emit({ Polestar.Data.Pack("Polestar_Codex") })
-emit({ Polestar.Data.Pack("Polestar_Codex") })
+emit({ SendaFH.Data.Pack("SendaFH_Codex") })
+emit({ SendaFH.Data.Pack("SendaFH_Codex") })
 emit(n)
-emit(Polestar.Data.Info("Polestar_Codex"))
+emit(SendaFH.Data.Info("SendaFH_Codex"))
 `);
 	assert.deepEqual(first, [false, 'missing']);
 	assert.deepEqual(second, [false, 'missing']);
@@ -268,18 +268,18 @@ local n = 0
 local load = C_AddOns.LoadAddOn
 C_AddOns.LoadAddOn = function(name) n = n + 1; return load(name) end
 function UpdateAddOnMemoryUsage() end
-function GetAddOnMemoryUsage(name) return name == "Polestar_Codex" and 1234.5 or 0 end
+function GetAddOnMemoryUsage(name) return name == "SendaFH_Codex" and 1234.5 or 0 end
 local fired = 0
-Polestar.On("CODEX_LOADED", function(meta) fired = fired + (meta and 1 or 0) end)
+SendaFH.On("CODEX_LOADED", function(meta) fired = fired + (meta and 1 or 0) end)
 stub.inCombat = true
-emit({ Polestar.Data.Pack("Polestar_Codex") })
-emit({ Polestar.Codex.Load() })
+emit({ SendaFH.Data.Pack("SendaFH_Codex") })
+emit({ SendaFH.Codex.Load() })
 stub.inCombat = false
-emit({ Polestar.Data.Pack("Polestar_Codex") })
-emit({ Polestar.Codex.Load() })
-Polestar.Codex.Load()
+emit({ SendaFH.Data.Pack("SendaFH_Codex") })
+emit({ SendaFH.Codex.Load() })
+SendaFH.Codex.Load()
 emit(n)
-emit(Polestar.Data.Info("Polestar_Codex"))
+emit(SendaFH.Data.Info("SendaFH_Codex"))
 emit(fired)
 `,
 			{ pack },
@@ -302,8 +302,8 @@ C_AddOns.LoadAddOn = function(name)
 	if name == "Broken" then error("boom") end
 	return false, "DISABLED"
 end
-emit({ Polestar.Data.Pack("Polestar_Codex") })
-emit({ Polestar.Data.Pack("Broken") })
+emit({ SendaFH.Data.Pack("SendaFH_Codex") })
+emit({ SendaFH.Data.Pack("Broken") })
 `);
 	assert.deepEqual(disabled, [false, 'disabled']);
 	assert.deepEqual(raised, [false, 'error']);
@@ -311,7 +311,7 @@ emit({ Polestar.Data.Pack("Broken") })
 
 // A player who copies only some of the release zip's folders, or an old one
 // over a new one, is told at login. The stub's default TOC version is
-// "0.1.0-test" for every addon, Polestar included.
+// "0.1.0-test" for every addon, SendaFH included.
 function loginWith(addons) {
 	return runAddon({
 		before: `stub.addons = { ${addons.map((a) => `{ name = "${a.name}" }`).join(', ')} }
@@ -319,7 +319,7 @@ ${addons.filter((a) => a.version).map((a) => `stub.addonMeta["${a.name}"] = { Ve
 		addons: [FILES],
 		login: true,
 		script: `
-local missing, stale = Polestar.Data.CheckInstall()
+local missing, stale = SendaFH.Data.CheckInstall()
 local said = {}
 for _, m in ipairs(stub.messages) do if m:find("installed incompletely", 1, true) then said[#said + 1] = m end end
 emit({ missing = table.concat(missing, ","), stale = table.concat(stale, ","), said = said })`,
@@ -327,19 +327,19 @@ emit({ missing = table.concat(missing, ","), stale = table.concat(stale, ","), s
 }
 
 test('a complete install of one version says nothing at login; the optional data packs may be absent', () => {
-	const out = loginWith([{ name: 'Polestar' }, { name: 'Polestar_Guides' }, { name: 'Polestar_Codex' }]);
+	const out = loginWith([{ name: 'SendaFH' }, { name: 'SendaFH_Guides' }, { name: 'SendaFH_Codex' }]);
 	assert.equal(out.missing, '');
 	assert.equal(out.stale, '');
 	assert.equal(Object.keys(out.said).length, 0);
 });
 
 test('a missing Codex and a Guides folder from an old zip are named once in chat, with how to reinstall', () => {
-	const out = loginWith([{ name: 'Polestar' }, { name: 'Polestar_Guides', version: '0.2.1' }, { name: 'Polestar_QuestDB' }]);
-	assert.equal(out.missing, 'Polestar_Codex');
-	assert.equal(out.stale, 'Polestar_Guides (0.2.1)');
+	const out = loginWith([{ name: 'SendaFH' }, { name: 'SendaFH_Guides', version: '0.2.1' }, { name: 'SendaFH_QuestDB' }]);
+	assert.equal(out.missing, 'SendaFH_Codex');
+	assert.equal(out.stale, 'SendaFH_Guides (0.2.1)');
 	assert.equal(out.said.length, 1);
-	assert.match(out.said[0], /Polestar_Codex not installed; Polestar_Guides \(0\.2\.1\) from another version/);
-	assert.match(out.said[0], /delete every Polestar folder.*not "Source code"/);
+	assert.match(out.said[0], /SendaFH_Codex not installed; SendaFH_Guides \(0\.2\.1\) from another version/);
+	assert.match(out.said[0], /delete every SendaFH folder.*not "Source code"/);
 });
 
 // ---------------------------------------------------------------------------
@@ -553,7 +553,7 @@ test('item status round-trips through the pack and reaches Codex.Each', () => {
 	try {
 		const [recs, each] = run(
 			`
-local C = Polestar.Codex
+local C = SendaFH.Codex
 emit({ C.Item(${ids[0]}).status, C.Item(${ids[1]}).status, C.Item(${ids[0]}).quality })
 local out = {}
 C.Each("mount", function(id, name, quality, status) out[tostring(id)] = (status or "-") .. "/" .. tostring(quality) end)
@@ -619,9 +619,9 @@ test('cluster merges nearby points, biggest first', () => {
 });
 
 test('buildCodex writes deterministic JSON and a pack whose memory it measures', async () => {
-	const tmp = tmpdir('polestar-codex-build-');
+	const tmp = tmpdir('sendafh-codex-build-');
 	const run = (n) =>
-		buildCodex({ inputs: syntheticInputs(), outDir: path.join(tmp, `out${n}`), packDir: path.join(tmp, `pack${n}`, 'Polestar_Codex'), version: '1.0.0', measure: n === 1 });
+		buildCodex({ inputs: syntheticInputs(), outDir: path.join(tmp, `out${n}`), packDir: path.join(tmp, `pack${n}`, 'SendaFH_Codex'), version: '1.0.0', measure: n === 1 });
 	const a = await run(1);
 	const b = await run(2);
 	const files = fs.readdirSync(path.join(tmp, 'out1')).sort();
@@ -638,13 +638,13 @@ test('buildCodex writes deterministic JSON and a pack whose memory it measures',
 	assert.ok(meta.pack.bytes > 0);
 	assert.ok(meta.pack.memoryKB > 0 && meta.pack.memoryKBDecoded > meta.pack.memoryKB, JSON.stringify(meta.pack));
 	assert.ok(meta.sources.some((s) => s.name === 'AtlasLootClassic' && s.licence === 'GPL-2.0'));
-	const toc = fs.readFileSync(path.join(a.packDir, 'Polestar_Codex.toc'), 'utf8');
+	const toc = fs.readFileSync(path.join(a.packDir, 'SendaFH_Codex.toc'), 'utf8');
 	assert.match(toc, /^Meta\.lua$/m);
 });
 
 test('curatedRepGates: a collectible guide reaching a standing before it buys the item gates that vendor', () => {
 	const { curatedRepGates } = require('../tools/lib/codex/build');
-	const dir = tmpdir('polestar-codex-gates-');
+	const dir = tmpdir('sendafh-codex-gates-');
 	fs.writeFileSync(path.join(dir, 'saber.guide'), [
 		'guide x/saber', 'collects 13086', '', 'step Rep', '  rep "Wintersaber Trainers" Exalted', '  talk 10618',
 		'step Buy', '  buy 13086 npc 10618                 -- Rivern Frostwind', '  buy 99 npc 10618',

@@ -1,7 +1,7 @@
 'use strict';
 // The Dungeons section's data: the builder (tools/lib/codex/journal.js) on the
 // synthetic fixture tests/fixtures/codex/dungeons.json, and the runtime
-// (addon/Polestar/Dungeons/Dungeons.lua) reading its pack file inside a Codex
+// (addon/SendaFH/Dungeons/Dungeons.lua) reading its pack file inside a Codex
 // pack, the way the client loads it.
 
 const { test, before, after } = require('node:test');
@@ -160,7 +160,7 @@ test('buildJournal tolerates missing inputs; emitJournal writes one file of summ
 	assert.deepEqual(buildJournal({}, {}).dungeons, {});
 	const [file] = emitJournal(buildJournal(inputs, codex));
 	assert.equal(file.name, 'Dungeons1.lua');
-	assert.match(file.text, /^local D = Polestar and Polestar\.Dungeons$/m);
+	assert.match(file.text, /^local D = SendaFH and SendaFH\.Dungeons$/m);
 	assert.match(file.text, /\["wailing-caverns"\]="return \{/);
 	assert.equal(emitJournal(buildJournal({}, {}))[0].name, 'Dungeons1.lua');
 });
@@ -181,8 +181,8 @@ function run(script, { withPack = true } = {}) {
 	return runAddon({
 		stubs: ['stub_world.lua'],
 		before: withPack ? pack.stubLua : '',
-		addons: [{ name: 'Polestar', files: FILES }],
-		script: `stub.login()\nlocal D = Polestar.Dungeons\n${script}`,
+		addons: [{ name: 'SendaFH', files: FILES }],
+		script: `stub.login()\nlocal D = SendaFH.Dungeons\n${script}`,
 	}).emitted;
 }
 
@@ -242,15 +242,15 @@ emit({ all = ids(D.Quests("wailing-caverns")), a = ids(D.Quests("wailing-caverns
 test('runtime: Open fires SHOW_DUNGEON; GuideTo and GuideToPoint set the arrow; the setting stops it; without the pack it says why', () => {
 	const [out] = run(`
 local nav = {}
-Polestar.Nav = { SetTarget = function(map, x, y, label) nav[#nav + 1] = { map, x, y, label } return true end }
+SendaFH.Nav = { SetTarget = function(map, x, y, label) nav[#nav + 1] = { map, x, y, label } return true end }
 local fired = {}
-Polestar.On("SHOW_DUNGEON", function(key) fired[#fired + 1] = key or "home" end)
+SendaFH.On("SHOW_DUNGEON", function(key) fired[#fired + 1] = key or "home" end)
 D.Open("deadmines")
 D.Open()
 local g1 = D.GuideTo("wailing-caverns")
 local g2 = D.GuideToPoint(D.Quest("wailing-caverns", 1486).start)
 local g3 = D.GuideTo("blackmaw-hold")
-Polestar.Set("dungeons.enabled", false)
+SendaFH.Set("dungeons.enabled", false)
 local opened = D.Open("deadmines")
 local ok, reason = D.Load()
 emit({ fired = fired, nav = nav, g = { g1, g2, g3 }, opened = opened, reason = reason, list = #D.List() })`);

@@ -1,6 +1,6 @@
-# Polestar: architecture and contracts
+# SendaFH: architecture and contracts
 
-Polestar is a leveling-guide system for **World of Warcraft: Forever** (client
+SendaFH is a leveling-guide system for **World of Warcraft: Forever** (client
 1.60.1, `## Interface: 16001`, install folder `_classic_beta_` during beta).
 This file is the contract between modules: the code follows it, and a change
 to a contract changes this file with it.
@@ -18,27 +18,27 @@ Reference material, checked out locally (gitignored):
 
 ## Overview
 
-Polestar is a set of addons, a folder of guides and the Node tools that turn
+SendaFH is a set of addons, a folder of guides and the Node tools that turn
 one into the other. The addons:
 
-| Addon | What it holds | Built by (`node tools/polestar.js …`) | In git | Ships |
+| Addon | What it holds | Built by (`node tools/sendafh.js …`) | In git | Ships |
 |---|---|---|---|---|
-| `Polestar` (`addon/Polestar/`) | The addon: engine, navigation, quests, gear, maps, quality of life, Lookup, Dungeons, Rares and every window | hand-written, plus a few generated data files | yes | yes |
-| `Polestar_Guides` (`addon/Polestar_Guides/`) | Polestar's own guide pack (pack id `guides`) | `compile`, from `guides/` | yes (generated) | yes |
+| `SendaFH` (`addon/SendaFH/`) | The addon: engine, navigation, quests, gear, maps, quality of life, Lookup, Dungeons, Rares and every window | hand-written, plus a few generated data files | yes | yes |
+| `SendaFH_Guides` (`addon/SendaFH_Guides/`) | SendaFH's own guide pack (pack id `guides`) | `compile`, from `guides/` | yes (generated) | yes |
 | community guide packs | Addons by other authors (`X-Polestar-Pack` in their TOC; `docs/PACKS.md`, `docs/PACK_FORMAT.md`) | the same compiler, from their own repositories | in their own repositories | by their authors |
-| `Polestar_ItemDB` (`addon/Polestar_ItemDB/`) | Item stats and Forever reward choices for the gear advice; loaded on demand | `itemdb build` (`Items.lua`), then `gear build` (`Forever.lua`) | yes (generated) | yes |
-| `Polestar_Names_<locale>` (`addon/Polestar_Names_deDE/` … `zhTW/`) | Quest, NPC, object and item names in one client language, for `Polestar.Names`; loaded on demand, only the client's own, never in English | `i18n names`, from DingDB (pinned) and pfQuest | yes (generated) | yes |
-| `Polestar_QuestDB` (`addon/Polestar_QuestDB/`) | The quest database behind quest markers and tooltips; loaded on demand | `questdb build` | no (local, gitignored) | yes, when built |
-| `Polestar_Codex` (`addon/Polestar_Codex/`) | Lookup's Codex, and the Dungeons and Rares data; loaded on demand | `codex build`, from release-safe inputs (`--local-extras` builds a local-only one) | no (generated, gitignored) | yes, always: `pack` fails without it |
-| `Polestar_Nav` (`addon/Polestar_Nav/`) | Shortest Path Forever's walking router and his map of Zephras Isle (Cillian Berragan, GPL-3.0-or-later) with Polestar's walking maps of Eastern Kingdoms and Kalimdor in his format and the walk's chokepoints, for the arrow's walking routes; loaded on demand at login, never while the target is handed to an installed Shortest Path Forever (Nav, "In-game walking routes (Polestar_Nav)", "Hand-off to Shortest Path Forever") | `nav vendor <checkout>` (his files, `UPSTREAM.json`), `nav pack` (ours, `PACK.json`, from the navigation grid) | yes | yes, always |
-| `Polestar_Travel` (`addon/Polestar_Travel/`) | Zone crossings for the travel planner, from an optional local crossings file; loaded with Polestar | `travel build` | no (local, gitignored) | no, never packaged (Nav, "Travel planner and zone crossings") |
-| `Polestar_Recorder` (`addon/Polestar_Recorder/`) | The optional standalone recorder of play sessions, for authoring | hand-written | yes | yes, as its own zip |
+| `SendaFH_ItemDB` (`addon/SendaFH_ItemDB/`) | Item stats and Forever reward choices for the gear advice; loaded on demand | `itemdb build` (`Items.lua`), then `gear build` (`Forever.lua`) | yes (generated) | yes |
+| `SendaFH_Names_<locale>` (`addon/SendaFH_Names_deDE/` … `zhTW/`) | Quest, NPC, object and item names in one client language, for `SendaFH.Names`; loaded on demand, only the client's own, never in English | `i18n names`, from DingDB (pinned) and pfQuest | yes (generated) | yes |
+| `SendaFH_QuestDB` (`addon/SendaFH_QuestDB/`) | The quest database behind quest markers and tooltips; loaded on demand | `questdb build` | no (local, gitignored) | yes, when built |
+| `SendaFH_Codex` (`addon/SendaFH_Codex/`) | Lookup's Codex, and the Dungeons and Rares data; loaded on demand | `codex build`, from release-safe inputs (`--local-extras` builds a local-only one) | no (generated, gitignored) | yes, always: `pack` fails without it |
+| `SendaFH_Nav` (`addon/SendaFH_Nav/`) | Shortest Path Forever's walking router and his map of Zephras Isle (Cillian Berragan, GPL-3.0-or-later) with SendaFH's walking maps of Eastern Kingdoms and Kalimdor in his format and the walk's chokepoints, for the arrow's walking routes; loaded on demand at login, never while the target is handed to an installed Shortest Path Forever (Nav, "In-game walking routes (SendaFH_Nav)", "Hand-off to Shortest Path Forever") | `nav vendor <checkout>` (his files, `UPSTREAM.json`), `nav pack` (ours, `PACK.json`, from the navigation grid) | yes | yes, always |
+| `SendaFH_Travel` (`addon/SendaFH_Travel/`) | Zone crossings for the travel planner, from an optional local crossings file; loaded with SendaFH | `travel build` | no (local, gitignored) | no, never packaged (Nav, "Travel planner and zone crossings") |
+| `SendaFH_Recorder` (`addon/SendaFH_Recorder/`) | The optional standalone recorder of play sessions, for authoring | hand-written | yes | yes, as its own zip |
 
 A guide goes from a `.guide` file to the game in four steps. An author
-writes it in a guide pack (`guides/` for Polestar's own). `lint` and
+writes it in a guide pack (`guides/` for SendaFH's own). `lint` and
 `compile` parse it and fill in names, places and coordinates from the
 reference data in `data/forever`. `compile` writes the result as Lua into the
-pack's addon folder (`addon/Polestar_Guides` for ours). `install` copies that
+pack's addon folder (`addon/SendaFH_Guides` for ours). `install` copies that
 folder into the game, where the pack registers its guides with
 `Core/Guides.lua` at load time and the Engine plays them ("Guide data" and
 "Engine" below).
@@ -49,7 +49,7 @@ table; [tools/README.md](../tools/README.md) lists the commands, every
 generated file and the rebuild order; [tests/README.md](../tests/README.md)
 describes the test layers and the fake client.
 
-`addon/Polestar/Polestar.toc` loads eleven XML manifests in this order. Each
+`addon/SendaFH/SendaFH.toc` loads eleven XML manifests in this order. Each
 module's manifest lists that module's files.
 The module sections below follow this order.
 
@@ -77,27 +77,27 @@ TOC and these manifests, so tests always load exactly what the client loads.
 Only these globals may be assigned anywhere under `addon/` (enforced by
 `tests/syntax.test.js` via `luac -l`):
 
-`Polestar`, `PolestarDB`, `PolestarCharDB`, `PolestarRecorderDB`,
-`SLASH_POLESTAR<n>`, `SLASH_POLESTARREC<n>`, `SLASH_POLESTARWAY<n>` (`/way`,
-claimed only while no addon has it), `BINDING_HEADER_POLESTAR`,
-`BINDING_NAME_POLESTAR_*`, in `Polestar_Nav` only `Polestar_NavEngine`
-(the engine's handoff) and `PolestarPathData` (the walking maps), and in
+`SendaFH`, `SendaFHDB`, `SendaFHCharDB`, `SendaFHRecorderDB`,
+`SLASH_SENDAFH<n>`, `SLASH_SENDAFHREC<n>`, `SLASH_SENDAFHWAY<n>` (`/way`,
+claimed only while no addon has it), `BINDING_HEADER_SENDAFH`,
+`BINDING_NAME_SENDAFH_*`, in `SendaFH_Nav` only `SendaFH_NavEngine`
+(the engine's handoff) and `SendaFHPathData` (the walking maps), and in
 `Nav/Journey.lua` only `TomTom` (its stand-in, set while TomTom is not
 installed and cleared when it stands down; "Nav API").
 
-Everything else is `local` or lives on the `Polestar` table. Named frames must
-be prefixed `Polestar`.
+Everything else is `local` or lives on the `SendaFH` table. Named frames must
+be prefixed `SendaFH`.
 
 ## Core
 
-`local ADDON, ns = ...` in every file; `Polestar = ns` is set once in
+`local ADDON, ns = ...` in every file; `SendaFH = ns` is set once in
 `Core/Init.lua` (first file loaded). Guide packs reach it as the global.
 
 ### Lifecycle
 
 ```lua
-Polestar.OnInit(fn)    -- ADDON_LOADED("Polestar"). Saved settings are loaded; Get falls back to defaults.
-Polestar.OnLogin(fn)   -- PLAYER_LOGIN, in registration order. Player info valid.
+SendaFH.OnInit(fn)    -- ADDON_LOADED("SendaFH"). Saved settings are loaded; Get falls back to defaults.
+SendaFH.OnLogin(fn)   -- PLAYER_LOGIN, in registration order. Player info valid.
 ```
 
 **SavedVariables may come back nil after a cold client restart** on Forever
@@ -109,11 +109,11 @@ chosen guide, and manual check-offs; losing it must degrade gracefully.
 ### Message bus
 
 ```lua
-local h = Polestar.On(msg, fn)   -- fn(...) ; returns handle
-Polestar.Off(h)
-Polestar.Fire(msg, ...)
-Polestar.RegisterEvent(event, fn)    -- game events, one shared hidden frame; fn(event, ...)
-Polestar.UnregisterEvent(event, fn)
+local h = SendaFH.On(msg, fn)   -- fn(...) ; returns handle
+SendaFH.Off(h)
+SendaFH.Fire(msg, ...)
+SendaFH.RegisterEvent(event, fn)    -- game events, one shared hidden frame; fn(event, ...)
+SendaFH.UnregisterEvent(event, fn)
 ```
 
 Messages:
@@ -127,17 +127,17 @@ Messages:
 | `STEP_UPDATED` | stepIndex | Engine (goal status/progress changed, same step); Names (names arrived) |
 | `NAMES_LOADED` | — | Names, when the names pack loads after a refusal in combat (the quest tracker reads its names again) |
 | `STEP_SKIPPED` | fromStep, toStep or nil, `{ { quest, title, reason, text }, ... }` | Engine, active tab, just before `STEP_CHANGED`: the computed step moved past a step whose open quest goals became unavailable (reasons as in "Unavailable quests") |
-| `PLAYER_SKIPPED_STEP` | guideId, stepIndex | Engine, after `Skip()` (the window, the menu, `/polestar skip`): the guide window offers the undo |
+| `PLAYER_SKIPPED_STEP` | guideId, stepIndex | Engine, after `Skip()` (the window, the menu, `/sendafh skip`): the guide window offers the undo |
 | `WAYPOINT_CHANGED` | waypoint or nil | Engine (and Nav when an override is set/cleared) |
 | `GUIDE_COMPLETED` | guideId | Engine |
 | `SETTING_CHANGED` | path, value | Core settings |
 | `TOGGLE_FRAME` / `SHOW_FRAME` / `HIDE_FRAME` | — | commands, keybinds → UI |
 | `SHOW_PICKER` | — | commands → UI |
 | `SHOW_OPTIONS` | section or nil | commands → UI |
-| `SHOW_WELCOME` | page or nil | About's "Show the welcome again", `/polestar welcome` → UI/Welcome.lua |
-| `SHOW_COPY` | title, text | `/polestar where` → UI/Copy.lua |
-| `SHOW_REPORT` | — | `/polestar report` → UI/Report.lua |
-| `SHOW_DISCORD` | — | `/polestar discord` → UI/Report.lua |
+| `SHOW_WELCOME` | page or nil | About's "Show the welcome again", `/sendafh welcome` → UI/Welcome.lua |
+| `SHOW_COPY` | title, text | `/sendafh where` → UI/Copy.lua |
+| `SHOW_REPORT` | — | `/sendafh report` → UI/Report.lua |
+| `SHOW_DISCORD` | — | `/sendafh discord` → UI/Report.lua |
 
 Modules fire their own (`TABS_CHANGED`, `ROUTE_*`, `TRAIN_DUE`,
 `CLASS_TRAINED`, `GUIDE_OUTLEVELED`, `QUESTDB_*`, `CODEX_LOADED`,
@@ -149,12 +149,12 @@ with their module.
 ### Settings
 
 ```lua
-Polestar.RegisterDefaults(section, tbl)  -- at file load; section = "ui" | "nav" | "behavior" | ...
-Polestar.Get("ui.scale")                 -- dotted path; falls back to defaults
-Polestar.Set("ui.scale", 1.1)            -- writes PolestarDB.settings, fires SETTING_CHANGED
-Polestar.CharState()                      -- PolestarCharDB, always a table
-Polestar.IsNewCharacter()                 -- true when there was no saved PolestarCharDB as the addon loaded
-Polestar.FormatDistance(yards, opts)      -- "120 yd", or "110 m" / "1.2 km" under nav.distanceUnit = "metres"
+SendaFH.RegisterDefaults(section, tbl)  -- at file load; section = "ui" | "nav" | "behavior" | ...
+SendaFH.Get("ui.scale")                 -- dotted path; falls back to defaults
+SendaFH.Set("ui.scale", 1.1)            -- writes SendaFHDB.settings, fires SETTING_CHANGED
+SendaFH.CharState()                      -- SendaFHCharDB, always a table
+SendaFH.IsNewCharacter()                 -- true when there was no saved SendaFHCharDB as the addon loaded
+SendaFH.FormatDistance(yards, opts)      -- "120 yd", or "110 m" / "1.2 km" under nav.distanceUnit = "metres"
 ```
 
 Every distance a player reads goes through `FormatDistance` (the arrow, the
@@ -164,13 +164,13 @@ the nearest 5, `opts.compact` writes yards from 1000 as "1.2k yd"
 (`Rares.YardsText`); metres turn to kilometres from 1000 m. The bug report
 keeps yards for whoever reads it.
 
-`PolestarDB = { schema = 1, settings = { [section] = { ... } }, packs = { [packId] = { off = true } }, welcomeSeen = 1 }`
-`PolestarCharDB = { schema = 1, guide = id|nil, tabs = { guideId, ... }, activeTab = n, absentAt = { [guideId] = place }, manual = { [guideId] = { ["s:g"] = true|"tick" } }, skipped = { [guideId] = { [stepIndex] = true, ["s:g"] = true } }, pins = { [guideId] = { step, done } }, offers = { [questID] = level }, shapes = { [guideId] = shape }, stepKeys = { [guideId] = { hash, ... } }, flags = { fp = { [name] = true }, ... }, welcomeSeen = 0|1 }`
+`SendaFHDB = { schema = 1, settings = { [section] = { ... } }, packs = { [packId] = { off = true } }, welcomeSeen = 1 }`
+`SendaFHCharDB = { schema = 1, guide = id|nil, tabs = { guideId, ... }, activeTab = n, absentAt = { [guideId] = place }, manual = { [guideId] = { ["s:g"] = true|"tick" } }, skipped = { [guideId] = { [stepIndex] = true, ["s:g"] = true } }, pins = { [guideId] = { step, done } }, offers = { [questID] = level }, shapes = { [guideId] = shape }, stepKeys = { [guideId] = { hash, ... } }, flags = { fp = { [name] = true }, ... }, welcomeSeen = 0|1 }`
 
 `packs[<id>].off` hides a pack's guides account-wide (the Guide packs page's
 switch). `welcomeSeen` (UI/Welcome.lua) is the version of the welcome last
-seen: in `PolestarDB`, the account has had its welcome (later characters skip
-its Set up page); in `PolestarCharDB`, this character has (0 while due).
+seen: in `SendaFHDB`, the account has had its welcome (later characters skip
+its Set up page); in `SendaFHCharDB`, this character has (0 while due).
 `behavior.suggestFrom` (default `"guides"`) is the pack suggestions come from.
 Modules keep their own keys beside these (`rares`, `instances` account-wide;
 `ui`, `routes`, `classTrainLevel`, `classTrainVisit`, `qol`, `flightTimes`,
@@ -194,10 +194,10 @@ ids) lets a pack update carry them to the steps it kept (see "Placement").
 ### Commands
 
 ```lua
-Polestar.RegisterCommand(name, fn(argString), help)
+SendaFH.RegisterCommand(name, fn(argString), help)
 ```
 
-`/polestar` and `/pole`. No argument fires `TOGGLE_FRAME`. `help` lists
+`/sendafh` and `/pole`. No argument fires `TOGGLE_FRAME`. `help` lists
 registered commands with their `help` lines (already translated:
 `L["..."]`). Core registers (Core/Commands.lua): `guides`, `options`, `show`, `hide`,
 `next`, `prev` (look at the next/previous step; nothing changes), `skip`
@@ -215,43 +215,43 @@ marked `live` because typed coordinates are read in the Era frame), then "For
 another goal, add @x,y live", and fires `SHOW_COPY` with the two lines. In an
 instance or on a map without a position it prints why instead.
 
-### Caught errors and the Polestar Discord
+### Caught errors and the SendaFH Discord
 
 ```lua
-Polestar.SafeCall(fn, ...)    -- runs fn; an error is noted, then handed to the error handler
-Polestar.NoteError(err)       -- notes an error Polestar caught (SafeCall, Hooks' callbacks)
-Polestar.Errors() -> { { msg, count }, ... }   -- this session's, oldest first, the last 5 kept
-Polestar.DiscordURL           -- the Polestar Discord's invite
+SendaFH.SafeCall(fn, ...)    -- runs fn; an error is noted, then handed to the error handler
+SendaFH.NoteError(err)       -- notes an error SendaFH caught (SafeCall, Hooks' callbacks)
+SendaFH.Errors() -> { { msg, count }, ... }   -- this session's, oldest first, the last 5 kept
+SendaFH.DiscordURL           -- the SendaFH Discord's invite
 ```
 
 Every message and game-event handler, init and login callback and command
 runs through `SafeCall`, and Hooks' callbacks through their own `pcall`, so
-the errors Polestar catches are noted by their first line, counted, for the
-report a player copies (UI, "Reporting a problem"). Polestar never replaces
+the errors SendaFH catches are noted by their first line, counted, for the
+report a player copies (UI, "Reporting a problem"). SendaFH never replaces
 the game's error handler: wrapping it would shift the stack the game and
 !BugGrabber show for every error.
 
 ### Localisation
 
-`Polestar.L[key]`: a key is the English text, and a missing key returns
+`SendaFH.L[key]`: a key is the English text, and a missing key returns
 itself, so a client without a translation reads English. A locale file
 (`Locales/<locale>.lua`, one per language of `tools/lib/i18n/locales.js`,
 loaded by `Core/Core.xml` right after `Core/Init.lua` and returning at once on
 another client) fills `L` for its client, so every file after it may read `L`
 at load; Init.lua, which loads before it, reads `L` only when it prints (the
 commands register in Core/Commands.lua). docs/TRANSLATING.md describes the
-files and `node tools/polestar.js i18n`.
+files and `node tools/sendafh.js i18n`.
 
 A word with more than one meaning gets a key per meaning:
-`Polestar.LC(context, text)` is the translation of `"<context>: <text>"`, and
+`SendaFH.LC(context, text)` is the translation of `"<context>: <text>"`, and
 `text` while there is none: a dungeon boss that is a chest is
 `LC("boss", "Chest")`.
 
 A game term the client names itself is shown in the client's words and has no
-key: reputation standings (`Polestar.StandingName(n)`,
+key: reputation standings (`SendaFH.StandingName(n)`,
 `FACTION_STANDING_LABELn` in the character's gender through `GetText`), item
-qualities (`Polestar.QualityName(q)`, `ITEM_QUALITYn_DESC`), the factions
-(`Polestar.FactionName(f)`, `FACTION_ALLIANCE`, `FACTION_HORDE`), gear slots
+qualities (`SendaFH.QualityName(q)`, `ITEM_QUALITYn_DESC`), the factions
+(`SendaFH.FactionName(f)`, `FACTION_ALLIANCE`, `FACTION_HORDE`), gear slots
 (`Gear.SlotName`, `HEADSLOT`…) and the Dungeon Journal (`ENCOUNTER_JOURNAL`).
 The test client (`tests/lua/wow_stub.lua`) holds their English values.
 Class and race names come from the client too, keeping their keys only as the
@@ -267,14 +267,14 @@ labels holds `L["Home"]`, not `"Home"` translated later through
 (a guide's category, race and class names, profession and spec names, the
 release stage), each listed in `DATA_KEYS` (`tools/lib/i18n/keys.js`).
 
-`Polestar.AI_LOCALES` names the languages whose translation is AI-made
+`SendaFH.AI_LOCALES` names the languages whose translation is AI-made
 (`status: "ai"` in locales.js; `tests/i18n.test.js` keeps the two equal). On
-such a client with its file loaded, `Polestar.AITranslation()` is true and
+such a client with its file loaded, `SendaFH.AITranslation()` is true and
 Options > About says so, with the Discord invite.
 
 ### Names
 
-`Polestar.Names` (`Core/Names.lua`) names quests, NPCs, objects and items in
+`SendaFH.Names` (`Core/Names.lua`) names quests, NPCs, objects and items in
 the client's language. The guides and data packs keep their English; where a
 name is shown or matched, the caller asks Names first and keeps its English
 when the answer is nil:
@@ -284,7 +284,7 @@ Names.Quest(id) / Names.Npc(id) / Names.Object(id) / Names.Item(id) -> name | ni
 Names.Cached(kind, id) -> name | nil   -- never asks the server; items from the pack only
 Names.Localised() -> bool              -- false on enUS and enGB
 Names.Ready() -> bool                  -- the pack is in, or will not load this session
-Names.PackName() -> "Polestar_Names_<locale>" | nil
+Names.PackName() -> "SendaFH_Names_<locale>" | nil
 Names.Add(locale, kind, { [id] = name })   -- the pack's files only
 ```
 
@@ -292,7 +292,7 @@ Names.Add(locale, kind, { [id] = name })   -- the pack's files only
   a quest's title (`Compat.GetQuestTitle`, `C_QuestLog.GetTitleForQuestID`)
   and an item's name (`Compat.GetItemName`, `C_Item.GetItemNameByID`). The
   client has none for NPCs and objects. Then the names pack of the client's
-  language, `Polestar_Names_<GetLocale()>`, loaded through `Data.Pack` on the
+  language, `SendaFH_Names_<GetLocale()>`, loaded through `Data.Pack` on the
   first ask (refused in combat, it loads when combat ends, fires
   `NAMES_LOADED` and redraws the guide window once; a missing
   folder is final for the session and harmless). Then nil. On an English
@@ -315,9 +315,9 @@ Names.Add(locale, kind, { [id] = name })   -- the pack's files only
   counts an id once and is listed under its translated name. The collect
   goals' compiled sources (`from`, `fromAlso`) carry no id and stay English.
 - **The packs.** One load-on-demand addon per language
-  (`addon/Polestar_Names_<locale>/`: `Names.lua` calling `Names.Add` per
+  (`addon/SendaFH_Names_<locale>/`: `Names.lua` calling `Names.Add` per
   1,000 names, the TOC, `LICENSE-DATA.txt`, Ding's `CREDITS.md`), committed
-  and shipped. `node tools/polestar.js i18n names` builds them from DingDB
+  and shipped. `node tools/sendafh.js i18n names` builds them from DingDB
   (cloned into `data/sources/ding`, pinned to a commit and its files'
   sha256s: `DING` in `tools/lib/i18n/names.js`) and, for the names it lacks,
   pfQuest's `db/<locale>` (no esMX), keeping only the ids the compiled guides,
@@ -328,7 +328,7 @@ Names.Add(locale, kind, { [id] = name })   -- the pack's files only
 ### Compat — the client's game data goes through here
 
 UI, Nav and Engine read the client's quests, map, units and items through
-`Polestar.Compat`, with these exceptions that call the client themselves:
+`SendaFH.Compat`, with these exceptions that call the client themselves:
 Nav's Blizzard user waypoint (`C_Map`, `C_SuperTrack`; `Nav/Bridges.lua`),
 the minimap's radius, shape, rotation and indoors state (`Nav/Pins.lua`;
 `Maps/RouteLines.lua` reads them through `Pins.MinimapView()`),
@@ -340,7 +340,7 @@ layers and exploration (`UI/ZoneArt.lua`), the class name in the options
 (`GetQuestDifficultyColor`, `UI/Dungeons.lua`), item names, icons and
 quality colours (`C_Item`; `UI/Dungeons.lua`, `UI/GearPick.lua`,
 `UI/Lookup.lua`, `Rares/View.lua`), the game's item and spell tooltips
-and modified clicks on Polestar's item and spell buttons
+and modified clicks on SendaFH's item and spell buttons
 (`GameTooltip:SetHyperlink`, `SetSpellByID`, `HandleModifiedItemClick`,
 `ChatFrameUtil.InsertLink`; `W.ItemTip`, `W.SpellTip`, `W.ItemClick`,
 `W.SpellClick` in `Theme/Widgets.lua`), the
@@ -371,7 +371,7 @@ through `ChatFrameUtil.GetActiveWindow` or `ChatEdit_GetActiveWindow`,
 (`GetCursorPosition`; `Pins.MinimapCursor()`, `Nav/Pins.lua`) and the nearby
 services' tracking menus (`Menu.ModifyMenu`, `Nav/Nearby.lua`). Frame and system calls (`GetTime`, `GetServerTime`, `C_Timer`,
 `InCombatLockdown`, the cursor, CVars, addon loading, the build and locale)
-are not routed either. `Polestar_Nav` is a separate addon whose vendored
+are not routed either. `SendaFH_Nav` is a separate addon whose vendored
 engine stays as upstream wrote it, so it calls the client directly:
 `C_EncodingUtil.DecodeBase64` and `C_EncodingUtil.DecompressString` with
 `Enum.CompressionMethod.Zlib` (decoding a map cluster, `Routing/PathGrid.lua`),
@@ -449,11 +449,11 @@ Plaguelands, Redridge Mountains, Stormwind City), and more may. Packs embed
 the Era world bounds for every map they reference:
 
 ```lua
-Polestar.RegisterMapFrames({ era = { [uiMapID] = { c = continentMapID, left = wy0, right = wy1, top = wx0, bottom = wx1 }, ... } }, packId)
+SendaFH.RegisterMapFrames({ era = { [uiMapID] = { c = continentMapID, left = wy0, right = wy1, top = wx0, bottom = wx1 }, ... } }, packId)
 ```
 
-`packId` nil is Polestar itself (its data addons, class trainers). Frames from
-Polestar and our pack (`guides`) win for a map both cover, whatever the load
+`packId` nil is SendaFH itself (its data addons, class trainers). Frames from
+SendaFH and our pack (`guides`) win for a map both cover, whatever the load
 order; another pack only adds maps they lack (lint warns where its frame
 differs).
 
@@ -469,18 +469,18 @@ Shared by every module (summarised in `docs/SUITE.md`, "Runtime services");
 each file's header lists its full API.
 
 ```lua
-Polestar.Data.Pack(name) -> loaded, reason|nil   -- C_AddOns.LoadAddOn once per session; never in combat ("combat", retried later)
-Polestar.Data.Info(name) -> { loaded, reason, memoryKB }
+SendaFH.Data.Pack(name) -> loaded, reason|nil   -- C_AddOns.LoadAddOn once per session; never in combat ("combat", retried later)
+SendaFH.Data.Info(name) -> { loaded, reason, memoryKB }
 
-Polestar.Hooks.ItemLines(owner, fn(tooltip, link, itemID))       -- GameTooltip, ItemRefTooltip
-Polestar.Hooks.UnitLines(owner, fn(tooltip, unit))               -- GameTooltip
-Polestar.Hooks.ObjectLines(owner, fn(tooltip, objectID, name))   -- GameTooltip; either may be nil
-Polestar.Hooks.ItemClick(owner, fn(link, itemID))                -- modified clicks on chat links, bag and loot items
-Polestar.Hooks.AddLine(tooltip, left, right?, r, g, b, rr, rg, rb)
+SendaFH.Hooks.ItemLines(owner, fn(tooltip, link, itemID))       -- GameTooltip, ItemRefTooltip
+SendaFH.Hooks.UnitLines(owner, fn(tooltip, unit))               -- GameTooltip
+SendaFH.Hooks.ObjectLines(owner, fn(tooltip, objectID, name))   -- GameTooltip; either may be nil
+SendaFH.Hooks.ItemClick(owner, fn(link, itemID))                -- modified clicks on chat links, bag and loot items
+SendaFH.Hooks.AddLine(tooltip, left, right?, r, g, b, rr, rg, rb)
 
-Polestar.Search.Query(text, opts) -> results, counts, more   -- opts = { kinds, limit = 60, perKind, offset, subtitles = false }
+SendaFH.Search.Query(text, opts) -> results, counts, more   -- opts = { kinds, limit = 60, perKind, offset, subtitles = false }
    -- result = { kind, id, title, subtitle, quality, score, status, curated }; exact > prefix > word prefix > substring
-Polestar.Search.Subtitle(result) ; Search.KINDS ; Search.Status() -> codexLoaded, reason
+SendaFH.Search.Subtitle(result) ; Search.KINDS ; Search.Status() -> codexLoaded, reason
 ```
 
 `Hooks` owns the client hooks: `TooltipDataProcessor.AddTooltipPostCall`
@@ -505,20 +505,20 @@ with 40 drop sources.
 
 ### Guide data (compiled Lua) — the toolchain/Engine contract
 
-Generated by `tools/polestar.js compile` from `.guide` sources
+Generated by `tools/sendafh.js compile` from `.guide` sources
 (`docs/GUIDE_FORMAT.md`) into the pack's addon folder: the generated TOC,
 `Pack.lua`, `MapFrames.lua`, `Guides.lua` (one `RegisterGuide` per guide, each
 built in its own function) and `LICENSE-DATA.txt`, plus `LICENSE.txt` (the
 pack's `LICENSE`) when the pack folder has one. Ours is
-`addon/Polestar_Guides/`; a community pack's is `<pack>/dist/<folder>/`. The
+`addon/SendaFH_Guides/`; a community pack's is `<pack>/dist/<folder>/`. The
 full contract for pack authors' tools is `docs/PACK_FORMAT.md`.
 
 ```lua
 local ADDON = ...
-Polestar.RegisterPack({ addon = ADDON, id = "guides", format = 2, title = "Polestar Guides",
+SendaFH.RegisterPack({ addon = ADDON, id = "guides", format = 2, title = "SendaFH Guides",
   author = "Polestar", version = "0.2.0", license = "GPL-3.0-only" })   -- optional: website, source, notes
 
-Polestar.RegisterGuide({
+SendaFH.RegisterGuide({
   id = "forever/alliance/human/01-elwynn-forest",
   pack = "guides",
   title = "Elwynn Forest",
@@ -562,7 +562,7 @@ goal's `x`/`y` stands for (the compiler's, from `spawnz.json`: GUIDE_FORMAT,
 "Heights"); the Engine puts it on the waypoint while the waypoint is that
 point (`posOf`: not a smart target's candidate, not a spot elsewhere), and the
 walk to it is searched with it ("Walking paths" under Nav). Packs stay format
-2: an older Polestar ignores it.
+2: an older SendaFH ignores it.
 
 Group content (format 2; GUIDE_FORMAT, "Group content"): `group = { kind =
 "elite", rank = 1|2|3 }`, `{ kind = "dungeon"|"raid", name = "Dire Maul" }` or
@@ -639,7 +639,7 @@ negations.
 
 Every guide belongs to a registered pack. The rules a pack meets (ids, no
 overrides, clashes, map frames, format, problems, literal text, packs on disk
-and their statuses) are in PACK_FORMAT.md, "Rules Polestar enforces"; lint
+and their statuses) are in PACK_FORMAT.md, "Rules SendaFH enforces"; lint
 applies the same ones (`tests/packs-parity.test.js`). Where `Core/Guides.lua`
 implements them:
 
@@ -651,7 +651,7 @@ implements them:
   until that addon's `ADDON_LOADED`; guides registered before their pack are
   refused, their ids kept in a per-pack list and listed as `guide-refused`
   problems when it comes.
-- Format: `Guides.FORMATS` (the formats this Polestar reads, `1` and `2`);
+- Format: `Guides.FORMATS` (the formats this SendaFH reads, `1` and `2`);
   `Guides.Validate` checks each guide against the `REQUIRED` verb table
   (`Guides.VERBS`).
 - Problems: each refusal goes on the pack's record,
@@ -664,22 +664,22 @@ implements them:
 
 A pack record: `id`, `addon`, `format`, `title`, `author`, `version`,
 `license`, `website`, `source`, `notes`, `official` (ours), `status` (the
-statuses of PACK_FORMAT rule 9; `off` from `PolestarDB.packs[id].off`),
+statuses of PACK_FORMAT rule 9; `off` from `SendaFHDB.packs[id].off`),
 `reason`, `needs`, `problems`, `guides` (ids), `guideCount`.
 
 ```lua
-Polestar.RegisterPack(meta) -> ok, err
-Polestar.RegisterGuide(def) -> ok, err      -- def.pack must be registered and own def.id; validates shape
-Polestar.RegisterMapFrames(frames, packId)
-Polestar.Guides.Packs() -> { record, ... }  -- every pack but internal ones, ours first, then by title
-Polestar.Guides.Pack(id) -> record | nil
-Polestar.Guides.PackShown(id) -> bool
-Polestar.Guides.SetPackShown(id, shown)     -- PolestarDB.packs[id].off; fires PACKS_CHANGED(id)
-Polestar.Guides.ProblemCount() -> n         -- over every listed pack (the Options dot)
-Polestar.Guides.OwnsId(packId, guideId) -> bool
-Polestar.Guides.SuggestSources() -> { packId, ... }  -- "guides", then shown packs with leveling guides
-Polestar.Guides.SuggestSource() -> packId   -- behavior.suggestFrom when it can, else "guides"
-Polestar.Guides.OfferedBy(id) -> { guide, ... }      -- shown guides whose route choice offers id
+SendaFH.RegisterPack(meta) -> ok, err
+SendaFH.RegisterGuide(def) -> ok, err      -- def.pack must be registered and own def.id; validates shape
+SendaFH.RegisterMapFrames(frames, packId)
+SendaFH.Guides.Packs() -> { record, ... }  -- every pack but internal ones, ours first, then by title
+SendaFH.Guides.Pack(id) -> record | nil
+SendaFH.Guides.PackShown(id) -> bool
+SendaFH.Guides.SetPackShown(id, shown)     -- SendaFHDB.packs[id].off; fires PACKS_CHANGED(id)
+SendaFH.Guides.ProblemCount() -> n         -- over every listed pack (the Options dot)
+SendaFH.Guides.OwnsId(packId, guideId) -> bool
+SendaFH.Guides.SuggestSources() -> { packId, ... }  -- "guides", then shown packs with leveling guides
+SendaFH.Guides.SuggestSource() -> packId   -- behavior.suggestFrom when it can, else "guides"
+SendaFH.Guides.OfferedBy(id) -> { guide, ... }      -- shown guides whose route choice offers id
 ```
 
 Only guides of shown packs (`on`, plus the internal `lookup`) are visible to
@@ -690,26 +690,26 @@ window, Lookup and the Engine's tabs ("Tabs", absent guides).
 ### Engine
 
 ```lua
-Polestar.Guides.Get(id) -> guide | nil
-Polestar.Guides.List() -> { header, ... }   -- header = guide without steps, plus stepCount
-Polestar.Guides.Suggestions() -> { id, ... } -- the leveling guides of the suggestion source (Guides.SuggestSource) for the player's faction/race/class/level, best first; ours fill in where it has none; none fits: the nearest upcoming one alone
-Polestar.Guides.Suggest() -> id | nil       -- the first of Suggestions()
+SendaFH.Guides.Get(id) -> guide | nil
+SendaFH.Guides.List() -> { header, ... }   -- header = guide without steps, plus stepCount
+SendaFH.Guides.Suggestions() -> { id, ... } -- the leveling guides of the suggestion source (Guides.SuggestSource) for the player's faction/race/class/level, best first; ours fill in where it has none; none fits: the nearest upcoming one alone
+SendaFH.Guides.Suggest() -> id | nil       -- the first of Suggestions()
 
-Polestar.Engine.GetGuide() -> guide | nil
-Polestar.Engine.SetGuide(id)                -- persists CharState().guide, recomputes, fires GUIDE_CHANGED
-Polestar.Engine.GetStepIndex() -> i | nil
-Polestar.Engine.GetStepCount() -> n
-Polestar.Engine.GetStepView(i) -> view | nil
-Polestar.Engine.Next() / Prev() / Goto(i)    -- look at another step; changes nothing (Goto un-skips its target)
-Polestar.Engine.Skip() -> stepIndex         -- skip the step shown, saved; fires PLAYER_SKIPPED_STEP
-Polestar.Engine.Unskip(i) -> bool           -- undo a skip
-Polestar.Engine.GetLiveStep() -> i | nil    -- the first open step, whatever step is shown
-Polestar.Engine.StartGate(id) -> gate | nil -- a Class guide this character cannot start yet: { level } or { pre, preTitle }, with giver, map (see "Not yet available")
-Polestar.Engine.ToggleGoal(stepIndex, goalIndex) -> bool   -- tick any goal but a note done, or clear its check-off
-Polestar.Engine.SkipGoal(stepIndex, goalIndex) -> bool     -- skip an optional goal, or bring it back
-Polestar.Engine.AimGoal(stepIndex, goalIndex) -> bool      -- lead the arrow to a goal of the current step (row click)
-Polestar.Engine.GetWaypoint() -> waypoint | nil
-Polestar.Engine.GetProgress() -> doneSteps, totalSteps
+SendaFH.Engine.GetGuide() -> guide | nil
+SendaFH.Engine.SetGuide(id)                -- persists CharState().guide, recomputes, fires GUIDE_CHANGED
+SendaFH.Engine.GetStepIndex() -> i | nil
+SendaFH.Engine.GetStepCount() -> n
+SendaFH.Engine.GetStepView(i) -> view | nil
+SendaFH.Engine.Next() / Prev() / Goto(i)    -- look at another step; changes nothing (Goto un-skips its target)
+SendaFH.Engine.Skip() -> stepIndex         -- skip the step shown, saved; fires PLAYER_SKIPPED_STEP
+SendaFH.Engine.Unskip(i) -> bool           -- undo a skip
+SendaFH.Engine.GetLiveStep() -> i | nil    -- the first open step, whatever step is shown
+SendaFH.Engine.StartGate(id) -> gate | nil -- a Class guide this character cannot start yet: { level } or { pre, preTitle }, with giver, map (see "Not yet available")
+SendaFH.Engine.ToggleGoal(stepIndex, goalIndex) -> bool   -- tick any goal but a note done, or clear its check-off
+SendaFH.Engine.SkipGoal(stepIndex, goalIndex) -> bool     -- skip an optional goal, or bring it back
+SendaFH.Engine.AimGoal(stepIndex, goalIndex) -> bool      -- lead the arrow to a goal of the current step (row click)
+SendaFH.Engine.GetWaypoint() -> waypoint | nil
+SendaFH.Engine.GetProgress() -> doneSteps, totalSteps
 ```
 
 #### Smart logic
@@ -717,13 +717,13 @@ Polestar.Engine.GetProgress() -> doneSteps, totalSteps
 - **Candidate goals.** A compiled goal may carry `candidates = { { npc, npcName, map, x, y, f, faction = "A"|"H"|"AH", races?, classes? }, ... }`
   (from `train <Profession>`, `train class`, `buy … nearest`, `vendor nearest`, `sethome nearest`; see GUIDE_FORMAT).
   The Engine filters by the character's faction (and races/classes when given),
-  then picks the cheapest by `Polestar.Nav.EstimateTravel(from, to)` seconds when
+  then picks the cheapest by `SendaFH.Nav.EstimateTravel(from, to)` seconds when
   Nav provides it, else world distance on the same continent with a large penalty
   across continents. A candidate in a zone whose level range (`Maps.GetZoneLevels`)
   starts more than 10 levels above the character comes after every other
   choice, other continents included. It re-picks on step start, zone change and landing, never per
   frame. The goal view then carries the chosen `npc`, `npcName`, `map`, `x`, `y`,
-  `f`, plus `alternatives = n`; `Polestar.Engine.CycleCandidate(stepIndex, goalIndex)`
+  `f`, plus `alternatives = n`; `SendaFH.Engine.CycleCandidate(stepIndex, goalIndex)`
   moves to the next-best one. Profession `train` goals are done when the
   profession's max rank reaches that rank's cap (75/150/225/300), so a trainer
   anywhere counts. `train class` is done on opening a trainer window for any
@@ -776,10 +776,10 @@ Polestar.Engine.GetProgress() -> doneSteps, totalSteps
   unless the quest is a prerequisite (`pre`, `preAll`) of a quest later in the
   guide or its chain that is not grey, directly or through other grey ones.
 - **Class-training reminder.** Class trainers ship in the core:
-  `Core/ClassTrainers.lua` (generated by `node tools/polestar.js trainers build`,
+  `Core/ClassTrainers.lua` (generated by `node tools/sendafh.js trainers build`,
   one trainer per town and class, with the Era frames of their maps) calls
-  `Polestar.RegisterClassTrainers({ { npc, npcName, map, x, y, f, faction, classes }, ... })`,
-  then `Polestar.RegisterClassTrainerIds({ WARRIOR = { npcId, ... }, ... })`
+  `SendaFH.RegisterClassTrainers({ { npc, npcName, map, x, y, f, faction, classes }, ... })`,
+  then `SendaFH.RegisterClassTrainerIds({ WARRIOR = { npcId, ... }, ... })`
   with every class trainer in `trainers.json`, not only one per town.
   `Engine.NearestClassTrainer()` returns the best one for the character (same
   ranking as candidate goals) or nil; `Engine.IsClassTrainer(npc)` whether an
@@ -928,14 +928,14 @@ default, the first) plus `nextChoices` (all of them, in order); each option may
 carry `pitch`, `pros`, `cons` (see GUIDE_FORMAT).
 
 ```lua
-Polestar.Engine.GetRouteChoice(fromId) -> { from, fromTitle, recommended, chosen, joinsAt,
+SendaFH.Engine.GetRouteChoice(fromId) -> { from, fromTitle, recommended, chosen, joinsAt,
     options = { { id, title, zoneName, minLevel, maxLevel, pitch, pros, cons, seconds,
                   quests, steps, recommended, chosen, outleveled, open }, ... } } | nil
-Polestar.Engine.ChooseRoute(fromId, toId) -> bool   -- remembers, loads, fires ROUTE_CHOSEN
-Polestar.Engine.PendingRouteChoice() -> fromId | nil -- the active tab's finished guide waiting for a choice
-Polestar.Engine.RouteChoiceFor(id) -> fromId | nil  -- the choice that offers guide `id` to this character
-Polestar.Engine.OfferRouteChoice() -> fromId | nil  -- /polestar path: fires ROUTE_CHOICE
-Polestar.Engine.GuideFocus(id) -> x, y | nil       -- live-frame percent of where the guide is for this character, for the
+SendaFH.Engine.ChooseRoute(fromId, toId) -> bool   -- remembers, loads, fires ROUTE_CHOSEN
+SendaFH.Engine.PendingRouteChoice() -> fromId | nil -- the active tab's finished guide waiting for a choice
+SendaFH.Engine.RouteChoiceFor(id) -> fromId | nil  -- the choice that offers guide `id` to this character
+SendaFH.Engine.OfferRouteChoice() -> fromId | nil  -- /sendafh path: fires ROUTE_CHOICE
+SendaFH.Engine.GuideFocus(id) -> x, y | nil       -- live-frame percent of where the guide is for this character, for the
                                                     -- guide menu's zone art: open in a tab and unfinished, the current
                                                     -- step's first goal on the guide's zone map (`zone`); else (or when
                                                     -- that step is elsewhere) its first goal on it: a route option's focusX/Y
@@ -964,10 +964,10 @@ Polestar.Engine.GuideFocus(id) -> x, y | nil       -- live-frame percent of wher
   character neither has nor has done, and that its guide does not accept (for
   this character) at or before that step, does not apply (status `na`): it was
   picked up on another route, or skipped. `chainNeeds` follows every route option.
-- **UI** (`UI/RouteChoice.lua`, frame `PolestarRouteChoice`): one card per
+- **UI** (`UI/RouteChoice.lua`, frame `SendaFHRouteChoice`): one card per
   option. Each card opens on the zone's art (`UI.ZoneArt`, below) framed on
   `focusX/focusY` (where the route starts), lightly desaturated, fading into
-  the card with the zone's name on it. Polestar ships no zone art; without the
+  the card with the zone's name on it. SendaFH ships no zone art; without the
   API or art for the map, a stretch of the night band stands in. Straight
   under the art, at the same y on every card, the stat row: levels (in text),
   travel time and quest count. Then the state chip, the pitch, at most 3 pros
@@ -978,18 +978,18 @@ Polestar.Engine.GuideFocus(id) -> x, y | nil       -- live-frame percent of wher
   waits out combat. The guide window's completed state and the out-levelled
   banner open it when a choice applies; Options → Guide → Automation →
   "Where to level next".
-  `POLESTAR_CLIENT_ART=<folder>` lets `preview` draw real map art from a local
+  `SENDAFH_CLIENT_ART=<folder>` lets `preview` draw real map art from a local
   cache of decoded client tiles (base and overlay tiles, `maps.json` with each
   map's `artID`); those renders go to `<folder>/preview/`, never into `docs/`.
 
 #### Tabs (several guides at once)
 
 ```lua
-Polestar.Engine.GetTabs() -> { { guideId, title, category, stepIndex, stepCount, done, total, complete }, ... }, activeIndex
-Polestar.Engine.OpenTab(guideId [, activate])  -> index   -- already open: just activates it (when activate ~= false)
-Polestar.Engine.CloseTab(index)                            -- the last tab may be closed (no guide)
-Polestar.Engine.SelectTab(index)
-Polestar.Engine.MoveTab(from, to)
+SendaFH.Engine.GetTabs() -> { { guideId, title, category, stepIndex, stepCount, done, total, complete }, ... }, activeIndex
+SendaFH.Engine.OpenTab(guideId [, activate])  -> index   -- already open: just activates it (when activate ~= false)
+SendaFH.Engine.CloseTab(index)                            -- the last tab may be closed (no guide)
+SendaFH.Engine.SelectTab(index)
+SendaFH.Engine.MoveTab(from, to)
 ```
 
 Up to 6 tabs per character, persisted as `CharState().tabs = { guideId, ... }` and
@@ -1072,7 +1072,7 @@ each goal):
   arrow's mark while it is the target.
 
 Placement: when a tab loads a guide (login and reload, `SetGuide`/`OpenTab`,
-auto-chaining to `next`, `/polestar reset`), the evaluations until the quest
+auto-chaining to `next`, `/sendafh reset`), the evaluations until the quest
 log is readable (the first `QUEST_LOG_UPDATE` of the session), at most 10 s,
 and ended early by the player's own Next/Prev/Skip/Goto or check-off, place
 it from the quest log (a Class guide not yet available is not placed: it
@@ -1140,8 +1140,8 @@ never accept a quest that closes another for good (Missable quests).
 ## Theme — used by UI and Nav
 
 ```lua
-Polestar.Theme.Accent() -> r, g, b
-Polestar.Theme.Color(name) -> r, g, b, a
+SendaFH.Theme.Accent() -> r, g, b
+SendaFH.Theme.Color(name) -> r, g, b, a
    -- grounds "bg","panel","panelAlt","sidebar","footer","sky"; text "text","textDim","textMuted";
    -- "accent","ink" (hairlines/washes),"star","shade" (wells, text shadows, art fades),
    -- "scrim" (dark grounds on zone art),"onAccent" (text on accent fills),"shadow";
@@ -1149,19 +1149,19 @@ Polestar.Theme.Color(name) -> r, g, b, a
    -- "dungeon" (dungeon and raid entrances); "mapUnexplored" (tint multiplied onto unexplored
    -- world map overlays: game art, the same in every scheme, outside the legibility guard);
    -- "discord" (Discord's Blurple, on its own mark only, outside the legibility guard)
-Polestar.Theme.Wash(role) -> r, g, b, a     -- ink at the role's alpha: "border","divider","hover",
+SendaFH.Theme.Wash(role) -> r, g, b, a     -- ink at the role's alpha: "border","divider","hover",
    -- "selected","progress","track","toggle","box","thumb","swatch","chip","watermark","mover"
-Polestar.Theme.Hex(name) -> "ffrrggbb"     -- for |c escapes
-Polestar.Theme.Palette() -> { name = { r, g, b, a }, ..., scheme = key }  -- resolved, read-only
-Polestar.Theme.SchemeKey() -> "dusk" | "night" | "graphite" | "ellesmere"
-Polestar.Theme.Band(parent, layer, sub) -> sky texture  -- the night-sky band (sky mask + stars)
-Polestar.Theme.GroundAlpha() -> a          -- ui.bgOpacity, every Polestar window's ground
-Polestar.Theme.Font(fontString, role)     -- role: "hero","display","title","heading","body","label","note","small","number","caption","goal","name","mono"
-Polestar.Theme.FontSpec(role) -> path, size, flags
-Polestar.Theme.Skin(frame, kind)          -- "window","panel","inset","button","editbox","checkbox","dropdown","scrollbar","tab","close"
-Polestar.Theme.Media(name) -> texturePath -- e.g. "icon-accept", "check", "white", "glow"
-Polestar.Theme.OnChanged(fn)              -- fn() on any scheme/colour/font change
-Polestar.Theme.IsEllesmere() -> bool
+SendaFH.Theme.Hex(name) -> "ffrrggbb"     -- for |c escapes
+SendaFH.Theme.Palette() -> { name = { r, g, b, a }, ..., scheme = key }  -- resolved, read-only
+SendaFH.Theme.SchemeKey() -> "dusk" | "night" | "graphite" | "ellesmere"
+SendaFH.Theme.Band(parent, layer, sub) -> sky texture  -- the night-sky band (sky mask + stars)
+SendaFH.Theme.GroundAlpha() -> a          -- ui.bgOpacity, every SendaFH window's ground
+SendaFH.Theme.Font(fontString, role)     -- role: "hero","display","title","heading","body","label","note","small","number","caption","goal","name","mono"
+SendaFH.Theme.FontSpec(role) -> path, size, flags
+SendaFH.Theme.Skin(frame, kind)          -- "window","panel","inset","button","editbox","checkbox","dropdown","scrollbar","tab","close"
+SendaFH.Theme.Media(name) -> texturePath -- e.g. "icon-accept", "check", "white", "glow"
+SendaFH.Theme.OnChanged(fn)              -- fn() on any scheme/colour/font change
+SendaFH.Theme.IsEllesmere() -> bool
 ```
 
 **Colour schemes** (`ui.scheme`, `Theme.SCHEMES`): Dusk (default: Night's
@@ -1180,7 +1180,7 @@ scheme.
 - Accent: `ui.accent` (`false` or `{ r, g, b }`) > the class colour when
   `ui.classAccent` (default off; `C_ClassColor`/`RAID_CLASS_COLORS`, moved
   toward the text colour until it reads at 4.5:1 on the panel) > EllesmereUI's
-  when `ui.matchAccent` (default on) or the EllesmereUI scheme > Polestar gold.
+  when `ui.matchAccent` (default on) or the EllesmereUI scheme > SendaFH gold.
   One source at a time: turning one of `ui.accent`, `ui.classAccent`,
   `ui.matchAccent` on turns the other two off.
 - Grounds: `ui.bgColor` (`false` or `{ r, g, b }`; every ground derived from it
@@ -1217,11 +1217,11 @@ colour change repaints live without a reload.
 ## Nav
 
 ```lua
-Polestar.Nav.SetTarget(map, x, y, label, f, stop)   -- user picked a goal; overrides the engine waypoint until the step changes;
+SendaFH.Nav.SetTarget(map, x, y, label, f, stop)   -- user picked a goal; overrides the engine waypoint until the step changes;
                                                      -- stop: what stands there ("dungeon", "trainer", ...), for the hand-off below
-Polestar.Nav.ClearTarget()
-Polestar.Nav.GetTarget() -> waypoint | nil
-Polestar.Nav.GetDistance() -> yards | nil      -- to an area target's edge, 0 inside it
+SendaFH.Nav.ClearTarget()
+SendaFH.Nav.GetTarget() -> waypoint | nil
+SendaFH.Nav.GetDistance() -> yards | nil      -- to an area target's edge, 0 inside it
 ```
 
 Settings live under `nav.*`; `nav.distanceUnit` (`"yards"`, the default, or
@@ -1282,29 +1282,29 @@ dropped when the guide's step changes.
 
 ```lua
 -- Public, for other addons. Points: a uiMapID and x, y as 0-1 fractions (as TomTom and C_Map).
-Polestar.Nav.API.version                      -- 1
-Polestar.Nav.API.Estimate(fromMap, fromX, fromY, toMap, toX, toY) -> seconds | nil, "invalid" | "unknown" | "busy"
+SendaFH.Nav.API.version                      -- 1
+SendaFH.Nav.API.Estimate(fromMap, fromX, fromY, toMap, toX, toY) -> seconds | nil, "invalid" | "unknown" | "busy"
     -- the travel planner's estimate (Nav.EstimateTravel: flights, boats, timetables, cached a few
     -- seconds per start cell and destination), else a straight run on one continent; fromMap nil:
     -- from the player, the Hearthstone counted. An uncached call runs a full route plan
-    -- (up to its 40 ms cap). Once a frame has spent 25 ms planning estimates (Polestar's own
+    -- (up to its 40 ms cap). Once a frame has spent 25 ms planning estimates (SendaFH's own
     -- included) no new plan starts for the API and the answer is nil, "busy": ask again next frame
-Polestar.Nav.API.Navigate(owner, map, x, y, title) -> true | false   -- owner: a non-empty string
-Polestar.Nav.API.Cancel(owner) -> true | false  -- that owner's target, while it is the one shown, lets go
-Polestar.Nav.API.Active() -> active, owner      -- anything guided to; owner while an API caller's target shows
+SendaFH.Nav.API.Navigate(owner, map, x, y, title) -> true | false   -- owner: a non-empty string
+SendaFH.Nav.API.Cancel(owner) -> true | false  -- that owner's target, while it is the one shown, lets go
+SendaFH.Nav.API.Active() -> active, owner      -- anything guided to; owner while an API caller's target shows
 -- Internal
-Polestar.Nav.journey.PlanTo(map, x, y, label, f) -> ok   -- onto the zone under a continent spot; refuses open sea
-Polestar.Nav.journey.Estimate(from, to, budgeted) -> seconds | nil[, "busy"] -- from, to = { map, x, y, f } (percent); from nil: the player; "busy" only when budgeted (the API)
-Polestar.Nav.nearby.Find(kind, skillLine) -> place, seconds | nil, "kind" | "codex" | "combat" | "none"
-Polestar.Nav.nearby.Go(kind, skillLine) -> ok
-Polestar.Pins.MinimapCursor() -> dNorth, dWest | nil      -- yards from the player to the cursor on the minimap
+SendaFH.Nav.journey.PlanTo(map, x, y, label, f) -> ok   -- onto the zone under a continent spot; refuses open sea
+SendaFH.Nav.journey.Estimate(from, to, budgeted) -> seconds | nil[, "busy"] -- from, to = { map, x, y, f } (percent); from nil: the player; "busy" only when budgeted (the API)
+SendaFH.Nav.nearby.Find(kind, skillLine) -> place, seconds | nil, "kind" | "codex" | "combat" | "none"
+SendaFH.Nav.nearby.Go(kind, skillLine) -> ok
+SendaFH.Pins.MinimapCursor() -> dNorth, dWest | nil      -- yards from the player to the cursor on the minimap
 ```
 
 - **Plan to anywhere** (`nav.mapPlan`, on): Shift-click empty space on the
   world map (a canvas click handler, so it takes the click before the map
   zooms) or the minimap; Alt-click anywhere on the world map, its icons
   included (`GLOBAL_MOUSE_DOWN`; the icon's name labels the target), except
-  Polestar's own clickable pins. The label is "Zone x, y". Shift- or
+  SendaFH's own clickable pins. The label is "Zone x, y". Shift- or
   Alt-clicking within 1.5% of the map's width (8% of the minimap's radius) of
   the shown pick, or Shift-clicking its pin, lets it go. With a chat edit box
   open Shift-click stays Blizzard's (links into chat). A spot on no zone (open
@@ -1318,7 +1318,7 @@ Polestar.Pins.MinimapCursor() -> dNorth, dWest | nil      -- yards from the play
   `RemoveWaypoint`, `ClearWaypoint`, `ClearAllWaypoints`, `SetCrazyArrow`,
   `IsValidWaypoint`, `WaypointExists`, `GetDistanceToWaypoint`, `GetKey` and
   `SetClosestWaypoint` through `API.Navigate("TomTom", ...)`, one waypoint at a
-  time; `corpse` waypoints (the death helper's job) and `from = "Polestar"`
+  time; `corpse` waypoints (the death helper's job) and `from = "SendaFH"`
   ones are refused. Any other method name with an upper-case first letter
   (TomTom's style) is a no-op returning nil, so an addon calling more of
   TomTom's API never errors; fields (`TomTom.db`, profiles) are not provided
@@ -1331,18 +1331,18 @@ Polestar.Pins.MinimapCursor() -> dNorth, dWest | nil      -- yards from the play
   Options, Arrow & routes, Other waypoints) says so. With it off nothing sets
   `TomTom` and `/way` is not claimed.
 - **Following TomTom** (`nav.followTomTom`, off; real TomTom only): hooks on
-  TomTom's table: `SetCrazyArrow(uid)` points Polestar's arrow at that
-  waypoint (not `corpse`, not `from = "Polestar"`), `RemoveWaypoint` and
+  TomTom's table: `SetCrazyArrow(uid)` points SendaFH's arrow at that
+  waypoint (not `corpse`, not `from = "SendaFH"`), `RemoveWaypoint` and
   `ClearWaypoint` of it let it go ("Remove all waypoints" clears through
   `ClearWaypoint` alone). Waypoints TomTom restores at login are followed one
   frame after `PLAYER_ENTERING_WORLD`, the one its arrow was left on, unless
   something is picked already. A followed waypoint is not mirrored back.
-- **`/way`** (with `nav.answerTomTom`): claimed at login (`SLASH_POLESTARWAY1`)
+- **`/way`** (with `nav.answerTomTom`): claimed at login (`SLASH_SENDAFHWAY1`)
   only when TomTom is not loaded and no `SLASH_*` global spells `/way`.
   `/way [#mapID | zone] x y [title]`: the zone is any name under the player's
   world, exactly, the one zone it begins, else the one it is part of
   ("barrens"); several print their names. `/way reset` clears.
-- **Nearby services** (`/polestar near <kind> [profession]`; `nav.nearbyMenu`
+- **Nearby services** (`/sendafh near <kind> [profession]`; `nav.nearbyMenu`
   adds a "Nearby services" submenu to `MENU_WORLD_MAP_TRACKING` and
   `MENU_MINIMAP_TRACKING`): kinds trainer (profession, by skill line, or any),
   class, repair, reagents, vendor, innkeeper, bank, auction, flight, stable.
@@ -1363,13 +1363,13 @@ installed (its global `ShortestPathForever.API`, `version` 1, with `Cancel`
 and `NavigateRoute` or `Navigate`; every other function checked before it is
 called, as its `minor` grows) and `nav.spfHandoff` on (the default; Options,
 Arrow & routes, Routes: "Guide with Shortest Path Forever when it's
-installed", shown only with it installed), Polestar's target is guided by it
-and Polestar's own guidance steps aside, so the two never guide at once.
+installed", shown only with it installed), SendaFH's target is guided by it
+and SendaFH's own guidance steps aside, so the two never guide at once.
 
 ```lua
-Polestar.Nav.HandedOff() -> bool   -- the one predicate: installed, on, and the last stop not refused
-Polestar.Nav.Reapply()             -- (Nav.lua) re-plan and tell every module the same target again, unannounced
-Polestar.Nav.handoff.Available() -> bool
+SendaFH.Nav.HandedOff() -> bool   -- the one predicate: installed, on, and the last stop not refused
+SendaFH.Nav.Reapply()             -- (Nav.lua) re-plan and tell every module the same target again, unannounced
+SendaFH.Nav.handoff.Available() -> bool
 ```
 
 - **What steps aside.** While `Nav.HandedOff()`: the arrow hides
@@ -1377,7 +1377,7 @@ Polestar.Nav.handoff.Available() -> bool
   are no route lines, journey steps (`UI/JourneyPanel.lua`), travel button
   (`Nav/Prompts.lua`) or leg alerts; the trail is cleared (`Layers.lua`);
   transport alerts are off (`Alerts.Check`); `Nav/Walk.lua` neither loads
-  `Polestar_Nav` (`Data.Pack` is never called) nor searches; Shift/Alt map
+  `SendaFH_Nav` (`Data.Pack` is never called) nor searches; Shift/Alt map
   clicks plan nothing, the TomTom stand-in is not installed and `/way` is not
   claimed (`Nav/Journey.lua`, at login and when the setting changes; the
   addon then claims its own); `Nav/Bridges.lua` mirrors into neither TomTom
@@ -1385,7 +1385,7 @@ Polestar.Nav.handoff.Available() -> bool
   The guide window, the target pin, spawn regions, every other pin and the
   Engine's own arrival checks stay. When the predicate flips,
   `Nav.Reapply()` brings each surface back or sends it away again.
-- **The stop.** One stop through `NavigateRoute("Polestar", { stop })`
+- **The stop.** One stop through `NavigateRoute("SendaFH", { stop })`
   (`Navigate` with title and kind when only that exists): the target's live
   map point (`Nav.LiveCoords`, as 0-1), its label as the title, and a kind:
   the hand-set target's `stop` (Dungeons' entrances, Nearby's trainers, inns
@@ -1406,20 +1406,20 @@ Polestar.Nav.handoff.Available() -> bool
   churn. In combat, without a position or in an instance nothing is called and
   the stop waits (`PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD`,
   `ZONE_CHANGED_NEW_AREA`); a call refused because combat began waits the
-  same way. No target: `Cancel("Polestar")` while its journey runs. Dead or a
+  same way. No target: `Cancel("SendaFH")` while its journey runs. Dead or a
   ghost (`UnitIsDeadOrGhost`): no call at all, as it guides corpse runs
   itself; alive again the target goes as it is (the same stop is not resent).
 - **Not fighting.** `Subscribe` (else Nav's once-a-second tick) reads
-  `Ended("Polestar")` and `CurrentStop`: once the journey arrived or was
+  `Ended("SendaFH")` and `CurrentStop`: once the journey arrived or was
   cleared or replaced it is left ended, nothing is resent and no `Cancel`
-  is called, until Polestar's target changes.
+  is called, until SendaFH's target changes.
 - **Refused.** A stop refused out of combat (its Journeys off, or a point it
-  cannot place) and a target with no live point: Polestar guides that target
+  cannot place) and a target with no live point: SendaFH guides that target
   itself (`Nav.HandedOff()` false) and cancels its earlier journey; the next
   target, or a zone change, offers a stop again, and the first one taken hands
   back.
-- **Off.** Turning `nav.spfHandoff` off cancels the journey and Polestar
-  guides again (`Polestar_Nav` loads then); on again sends the stop anew.
+- **Off.** Turning `nav.spfHandoff` off cancels the journey and SendaFH
+  guides again (`SendaFH_Nav` loads then); on again sends the stop anew.
 - **Options and commands.** `Nav.HandoffOption(control)` wraps every option
   that has no effect while handing off: its `disabled` also answers
   `Nav.HandedOff()` and its help ends "Greyed out while Shortest Path Forever
@@ -1429,9 +1429,9 @@ Polestar.Nav.handoff.Available() -> bool
   addons' waypoints, the Blizzard and TomTom mirrors and TomTom's arrow).
   Distances, boat-time sharing, map pins, following TomTom and the nearby
   menu still act and stay. `Nav.SayHandedOff()` prints one line ("Shortest
-  Path Forever is guiding. Turn off ...") instead of `/polestar arrow show`
-  (or the bare toggle turning it on), `/polestar route` and
-  `/polestar skipleg`. Polestar's arrival chime is silent meanwhile.
+  Path Forever is guiding. Turn off ...") instead of `/sendafh arrow show`
+  (or the bare toggle turning it on), `/sendafh route` and
+  `/sendafh skipleg`. SendaFH's arrival chime is silent meanwhile.
 
 Tested by `tests/nav-handoff.test.js` against a fake API written to its
 `docs/api.md` (v1.16.0).
@@ -1439,10 +1439,10 @@ Tested by `tests/nav-handoff.test.js` against a fake API written to its
 ### Pins — map and minimap icons for every module
 
 ```lua
-Polestar.Pins.SetLayer(layer, pins, opts)   -- replace a layer; opts = { world = true, minimap = true, edge = false, scale = 1,
+SendaFH.Pins.SetLayer(layer, pins, opts)   -- replace a layer; opts = { world = true, minimap = true, edge = false, scale = 1,
                                             --   minimapAreas = false }
-Polestar.Pins.ClearLayer(layer)
-Polestar.Pins.SetLayerVisible(layer, visible)
+SendaFH.Pins.ClearLayer(layer)
+SendaFH.Pins.SetLayerVisible(layer, visible)
 -- pin = { map, x, y, f, icon (Theme.Media name or texture path), size, minimapSize, color = { r, g, b, a },
 --         tooltip = string | function(tooltip), onClick = function(button), priority,
 --         glow (soft halo), ring = { r, g, b } (ring round the disc), backdrop (scrim disc), area (yards),
@@ -1486,12 +1486,12 @@ same way; a hull is laid out again only when its pin, the zoom, the minimap's
 size or (rotating) the facing changed, and walking moves only the first
 piece, which the others are anchored to. `GetMinimapHulls(layer)` lists the
 drawn hulls with their outlines (tests); `AreaStats()` counts hulls, pieces
-and discs per surface (in game: `/dump Polestar.Pins.AreaStats()`).
+and discs per surface (in game: `/dump SendaFH.Pins.AreaStats()`).
 
 ```lua
-Polestar.Pins.SetTrail(runs, opts)   -- runs = { { live = true?, { c, wx, wy }, ... }, ... }; opts = { world, minimap, color }
-Polestar.Pins.ClearTrail()
-Polestar.Pins.TrailDots(points, spacing, phase, rect, cap) -> count, positions   -- pure placement (tests)
+SendaFH.Pins.SetTrail(runs, opts)   -- runs = { { live = true?, { c, wx, wy }, ... }, ... }; opts = { world, minimap, color }
+SendaFH.Pins.ClearTrail()
+SendaFH.Pins.TrailDots(points, spacing, phase, rect, cap) -> count, positions   -- pure placement (tests)
 ```
 
 The trail: animated dots along straight lines between consecutive points
@@ -1506,7 +1506,7 @@ map width / 60) yd, clipped to the map, 6 px under the pins in their own
 no-mouse pool, at most 300. One 20 Hz driver runs only while dots show.
 `nav.trailDots` (default on) with `nav.worldPins` / `nav.minimapPins` per surface.
 The trail stands in only while route lines draw nothing (`nav.routeLines` off):
-`Nav/Layers.lua` clears it while `Polestar.RouteLines.Active()`.
+`Nav/Layers.lua` clears it while `SendaFH.RouteLines.Active()`.
 
 ### Route lines (`Maps/RouteStrokes.lua`, `Maps/RouteLines.lua`)
 
@@ -1515,7 +1515,7 @@ The way to the target on the world map and the minimap, from
 `NAV_ROUTE_GEOMETRY` on change). The geometry and the painters are ported
 from Shortest Path Forever's `UI/Strokes.lua`, `UI/FlightLines.lua` and
 `UI/Route.lua` (v1.15.0, Cillian Berragan, GPL-3.0-or-later, with his
-permission; `addon/Polestar_Nav/CREDITS.md`).
+permission; `addon/SendaFH_Nav/CREDITS.md`).
 
 - `RouteStrokes.lua` is pure: draw paths and a view in, strokes out, into a
   buffer of parallel arrays rewritten in place (no allocation per draw).
@@ -1556,22 +1556,22 @@ permission; `addon/Polestar_Nav/CREDITS.md`).
 ### Travel planner and zone crossings
 
 ```lua
-Polestar.Nav.PlanRoute(p) -> legs | nil, reason   -- pure; Nav/Travel.lua
-Polestar.Nav.GetRoute() -> legs, ci               -- the live route and its current leg
-Polestar.Nav.EstimateTravel(from, to, budgeted) -> seconds | nil[, "busy"] -- same planner, cached; budgeted (the API's): no new plan past 25 ms a frame
-Polestar.Nav.RegisterTravelData(d, replace)        -- TravelData.lua: flight masters, flights, transports, portals, inns
-Polestar.Nav.AddTravelPaths(chunk)                 -- learned walking paths (nodes: c, wx, wy, gateway, uiMap)
-Polestar.Nav.RegisterCrossings(d)                  -- zone crossings (merges; ids seen before are skipped)
-Polestar.Nav.travel.SkipLeg() -> bool              -- leave this hearth/teleport/flight/ride out for the target; else the next leg
-Polestar.Nav.travel.SkipReplans(leg) -> bool      -- skipping it replans (the prompts' "Skip this leg"), else "Mark this leg done"
-Polestar.Nav.travel.RestoreWalk(c, x, y) -> bool  -- the path to (c, x, y) failed or was cleared: the walk's straight estimate again
-Polestar.Nav.travel.Remeasured() -> bool          -- Walk.Measure landed: plan again, take it only if it goes another way
-Polestar.Nav.travel.PricePaths() -> bool          -- a later walk's path landed (Walk.LegPath): its legs take its measure
-Polestar.Nav.walk.Measure(c, x, y, water, places) -- one reversed Path.FindMany from the target to the plan's places
-Polestar.Nav.walk.Measured(c, x, y, water) -> walkCost | nil -- the planner's p.walkCost for that target
-Polestar.Nav.walk.LegPath(from, to) -> yards | nil -- a later walk's searched path
-Polestar.Nav.travel.Progress() -> seconds, yards   -- the current leg's rest (allocation-free, always finite; rides count down)
-Polestar.Nav.GetRouteGeometry() -> { legs = { { kind, pts = { { c, wx, wy }, ... }, current, choke }, ... } } | nil
+SendaFH.Nav.PlanRoute(p) -> legs | nil, reason   -- pure; Nav/Travel.lua
+SendaFH.Nav.GetRoute() -> legs, ci               -- the live route and its current leg
+SendaFH.Nav.EstimateTravel(from, to, budgeted) -> seconds | nil[, "busy"] -- same planner, cached; budgeted (the API's): no new plan past 25 ms a frame
+SendaFH.Nav.RegisterTravelData(d, replace)        -- TravelData.lua: flight masters, flights, transports, portals, inns
+SendaFH.Nav.AddTravelPaths(chunk)                 -- learned walking paths (nodes: c, wx, wy, gateway, uiMap)
+SendaFH.Nav.RegisterCrossings(d)                  -- zone crossings (merges; ids seen before are skipped)
+SendaFH.Nav.travel.SkipLeg() -> bool              -- leave this hearth/teleport/flight/ride out for the target; else the next leg
+SendaFH.Nav.travel.SkipReplans(leg) -> bool      -- skipping it replans (the prompts' "Skip this leg"), else "Mark this leg done"
+SendaFH.Nav.travel.RestoreWalk(c, x, y) -> bool  -- the path to (c, x, y) failed or was cleared: the walk's straight estimate again
+SendaFH.Nav.travel.Remeasured() -> bool          -- Walk.Measure landed: plan again, take it only if it goes another way
+SendaFH.Nav.travel.PricePaths() -> bool          -- a later walk's path landed (Walk.LegPath): its legs take its measure
+SendaFH.Nav.walk.Measure(c, x, y, water, places) -- one reversed Path.FindMany from the target to the plan's places
+SendaFH.Nav.walk.Measured(c, x, y, water) -> walkCost | nil -- the planner's p.walkCost for that target
+SendaFH.Nav.walk.LegPath(from, to) -> yards | nil -- a later walk's searched path
+SendaFH.Nav.travel.Progress() -> seconds, yards   -- the current leg's rest (allocation-free, always finite; rides count down)
+SendaFH.Nav.GetRouteGeometry() -> { legs = { { kind, pts = { { c, wx, wy }, ... }, current, choke }, ... } } | nil
 -- leg = { kind = "walk"|"fly"|"boat"|"zeppelin"|"tram"|"portal"|"hearth"|"teleport"|"lift", from, to, label,
 --         seconds, rest, yards, radius (arrival yards at `to`), waypoint (true: `to` is a crossing or chain node),
 --         handmade (a walk the crossing data lays out), crossing, side (a crossing walked from end a|b),
@@ -1613,7 +1613,7 @@ legs, counts down the same way. `EstimateTravel`
 evicts its oldest cached answer when 64 are held. A budgeted call (only
 `API.Estimate`'s) starts no new plan once the frame has spent 25 ms planning
 estimates (`debugprofilestop`) and answers `nil, "busy"` until the next
-frame; the plan it does start may still run to its 40 ms cap. Polestar's own
+frame; the plan it does start may still run to its 40 ms cap. SendaFH's own
 callers (`ns.TravelCost`, `Nearby.Rank`, the item sources, the dungeon
 pickup order) are never refused, so a ranking compares full plans only; their
 own caps and the cache bound them. The arrow's ETA adds the 1.25 detour only to straight distances
@@ -1621,7 +1621,7 @@ own caps and the cache bound them. The arrow's ETA adds the 1.25 detour only to 
 
 **Walking paths.** `Nav/Walk.lua` lets the arrow follow real paths on the
 ground with Shortest Path Forever's walking engine ("In-game walking routes
-(Polestar_Nav)" below). The planner above stays synchronous; its walks into
+(SendaFH_Nav)" below). The planner above stays synchronous; its walks into
 the target are priced by the engine's measure (below), its other walks by
 straight lines until their paths are searched. The walk the arrow is
 on is searched first: player to the current walk leg's end, or to the target,
@@ -1652,7 +1652,7 @@ guide goal whose last located goal before it, across steps, is a `goto`
 (the author's way in: a cave's mouth; the goto itself is walked) keep the
 straight arrow, so a target underground is never routed over the hill
 above it. `nav.navRouting` (default on, Guide > Arrow & routes) off, the
-engine missing, or Polestar_Nav not loaded: the straight arrow everywhere.
+engine missing, or SendaFH_Nav not loaded: the straight arrow everywhere.
 `GetRouteGeometry` (rebuilt on `NAV_ROUTE_GEOMETRY`, which fires on every
 plan, leg change, target change and path arrival) gives the map lines the
 legs from the current one on: the current walk as the engine's points once
@@ -1722,9 +1722,9 @@ handed off (`Walk:Refresh` cancels one in flight).
 
 **Chokepoint steps.** When the path arrives, the walk the arrow is on is
 split into legs where the path passes a chokepoint. It splits at the
-lifts `Transit.Lifts()` knows when Polestar_Nav has no chokepoints, plus the crossings, approach chains and guide
-`goto`s the planner already makes legs of, and Polestar_Nav's
-`PolestarNavChokepoints[map]` table (`Nav/Chokepoints.lua`, generated by `nav
+lifts `Transit.Lifts()` knows when SendaFH_Nav has no chokepoints, plus the crossings, approach chains and guide
+`goto`s the planner already makes legs of, and SendaFH_Nav's
+`SendaFHNavChokepoints[map]` table (`Nav/Chokepoints.lua`, generated by `nav
 pack`: lifts, gates, bridges, tunnels, passes, cave and building mouths, each
 with a radius), read instead of the Transit lifts. A chokepoint counts within its radius of the path, snapped to the
 nearest point on the path (the step ends there, so no leg runs out and back:
@@ -1792,7 +1792,7 @@ chain waypoint and on moving more than 50 yd from where a plan at least 30 s
 old was made (checked at most once a second). `ROUTE_CHANGED` (legs) fires on
 every plan, `ROUTE_ADVANCED` (legs, ci) when the current leg moves on.
 
-**Data.** `node tools/polestar.js travel build` writes TravelData.lua
+**Data.** `node tools/sendafh.js travel build` writes TravelData.lua
 (committed: flight masters and flight times, boats, zeppelins, the tram and
 inns from the client tables, learned paths, the shipped zone crossings, and
 crossings learned from zone changes in recordings,
@@ -1800,7 +1800,7 @@ crossings learned from zone changes in recordings,
 `complete = false`: they refine a continent that has full crossing data and
 change nothing elsewhere). The shipped crossings are the full crossing data
 of both continents (`complete = true`): `tools/lib/travel/crossings.json`,
-committed, written by `node tools/polestar.js travel import --carbonite
+committed, written by `node tools/sendafh.js travel import --carbonite
 <ZoneConnections.lua> --source <text>` from Carbonite's Classic Era zone
 connections (GPL-3.0; `tools/lib/travel/carbonite.js`): its walks between
 two zones of one continent, both ways unless Carbonite marks one way, every
@@ -1809,7 +1809,7 @@ tram and portals are TravelData's own transports and are left out. `travel
 build --shipped none` builds without them (the test fixtures). An optional
 local crossings file, `data/local/crossings.json` (gitignored), adds to them:
 the build validates it and writes it into the local data addon
-`addon/Polestar_Travel` (gitignored; `## Dependencies: Polestar`, registers
+`addon/SendaFH_Travel` (gitignored; `## Dependencies: SendaFH`, registers
 with `RegisterCrossings` at load, which merges; installed when built, never
 packaged). Without the file nothing is written and TravelData.lua never holds
 it.
@@ -1836,7 +1836,7 @@ continent, in different zones, at most 1000 yd apart; open pairs distinct,
 on one continent, not repeated; chains of 2+ nodes on one continent with hops
 of at most 600 yd; captions plain text of at most 160 characters (no `|`
 escape codes). `travel route` runs the addon planner and includes
-Polestar_Travel when it is built (`--crossings-lua none` leaves it out).
+SendaFH_Travel when it is built (`--crossings-lua none` leaves it out).
 
 **Chains from recordings.** `travel chain --to <map,x,y> [--name <place>]`
 drafts an approach chain from the recorded walks that pass within 30 yd of a
@@ -1862,7 +1862,7 @@ reviewer, moves the mouth. The walks are `tools/lib/travel/paths.js`
 `recordedWalks`, the ones learned paths are built from; the chain is
 `crossings.js` `recordedChain`.
 
-**Aids from the navigation grid.** `node tools/polestar.js nav aids`
+**Aids from the navigation grid.** `node tools/sendafh.js nav aids`
 (`tools/lib/nav/aids.js`; the grid is described under "Navigation grid")
 generates a file in this schema from the grid (`nav build`) with
 no per-place rule: a surface's zone is its chunk's area id walked up
@@ -1889,10 +1889,10 @@ of located goals in the guides planned by `tools/lib/nav/arrow.js` (many
 PlanRoute calls in one Lua process) without and with the aids, and how many
 walk legs cross ground the grid cannot walk (`nav.los`), plus a comparison
 with the local crossings file (never changed). `--lua <file>` writes the
-aids as a Crossings.lua; `node tools/polestar.js travel build --offline
+aids as a Crossings.lua; `node tools/sendafh.js travel build --offline
 --crossings data/local/nav/aids.json --travel-addon <test folder> --json
 <test folder>/travel.json --lua <test folder>/TravelData.lua` builds a test
-copy of the data addon from them without touching `addon/Polestar_Travel` or
+copy of the data addon from them without touching `addon/SendaFH_Travel` or
 the committed travel files. Shipping them is the owner's call.
 **Timetables, portals and teleports (`Nav/Transit.lua`).** Ported from
 Shortest Path Forever by Cillian Berragan (GPL-3.0-or-later, used with
@@ -1900,17 +1900,17 @@ permission: his `Transport/Model.lua`, `Timetable.lua`, `Observer.lua`,
 `Sync.lua`, `Teleports.lua` and `tools/gen_routes.py`, `gen_transit.py`).
 
 ```lua
-Polestar.Transit.Now() -> server seconds with a fraction
-Polestar.Transit.NextDeparture(kind, id, now, side) -> wait, ride, timed | nil
+SendaFH.Transit.Now() -> server seconds with a fraction
+SendaFH.Transit.NextDeparture(kind, id, now, side) -> wait, ride, timed | nil
     -- id: TravelData transport id (or the entry), or a lift id; side "a"|"b", "top"|"bottom", nil = soonest;
     -- now: when you reach the dock. wait until it leaves with you aboard (its `board` seconds early
     -- enough), ride until you are off; untimed: the expected values, timed = false
-Polestar.Transit.NextArrival(kind, id, now, side) -> arriveIn (0 = there), departIn | nil while untimed
-Polestar.Transit.Caption(kind, id, now, side) -> "Next boat in 1:20" | "Boat docked, leaves in 0:40"
+SendaFH.Transit.NextArrival(kind, id, now, side) -> arriveIn (0 = there), departIn | nil while untimed
+SendaFH.Transit.Caption(kind, id, now, side) -> "Next boat in 1:20" | "Boat docked, leaves in 0:40"
     | untimed "Next boat in about 2:55"
-Polestar.Transit.Riding(now) -> { kind, route, dock, arriveIn } | nil   -- the ride the observer identified
-Polestar.Transit.Lifts() -> { { id, name, c, wx, wy, top, bottom }, ... };  LiftNear(c, wx, wy [, yards]) -> id, name
-Polestar.Transit.Teleports(now) -> { { spell, name, cast, ready, to = point | nil, bind }, ... }
+SendaFH.Transit.Riding(now) -> { kind, route, dock, arriveIn } | nil   -- the ride the observer identified
+SendaFH.Transit.Lifts() -> { { id, name, c, wx, wy, top, bottom }, ... };  LiftNear(c, wx, wy [, yards]) -> id, name
+SendaFH.Transit.Teleports(now) -> { { spell, name, cast, ready, to = point | nil, bind }, ... }
 -- NAV_TRANSIT fires when a sighting changes a timing or the usable teleports change.
 ```
 
@@ -1932,11 +1932,11 @@ dates the loop, once the ride clearly fits one loop (1.25x the runner-up:
 loops sharing a lane both fit). It fits every 10 samples and when 30 s pass
 without one or the player leaves the world; a new sighting prints "Timed the
 <route> from your ride" unless one of yours is under 10 minutes old.
-Sightings are kept per realm in `PolestarDB.transit[realm][route] = { epoch,
+Sightings are kept per realm in `SendaFHDB.transit[realm][route] = { epoch,
 seen, source }` and dropped after 6 hours (a restart resets the loops).
 Sharing is opt-in: with `nav.shareTransit` (off by default; Options, Arrow &
 routes, "Share boat times") a new sighting of yours goes to the guild and
-group as an addon message (`PolestarT1`: `S<route>:<seen s>:<phase ms at
+group as an addon message (`SendaFHT1`: `S<route>:<seen s>:<phase ms at
 seen>;...`; never to a raid in a battleground or arena). A guild query (`Q`,
 sent 15 s after login) is answered after a random 2-12 s, at most every 30 s
 per channel, with your own fresh sightings no other reply on that channel
@@ -1995,29 +1995,29 @@ the rows used are kept beside it in `transit.json`; the client tables are
 cached with the others. Without those sources the boats and zeppelins are
 still timetabled and the rest is skipped with a warning.
 
-### In-game walking routes (Polestar_Nav)
+### In-game walking routes (SendaFH_Nav)
 
 The arrow's walks follow real paths thanks to Shortest Path Forever by
 Cillian Berragan (https://github.com/cjber/shortest-path-forever,
-GPL-3.0-or-later, used with his permission). `addon/Polestar_Nav` is his
-router, vendored, running on Polestar's own walking maps of Eastern Kingdoms
+GPL-3.0-or-later, used with his permission). `addon/SendaFH_Nav` is his
+router, vendored, running on SendaFH's own walking maps of Eastern Kingdoms
 and Kalimdor (packed from our navigation grid in his map format, `nav pack`)
-and his map of Zephras Isle; Polestar's travel planner (above) keeps choosing
+and his map of Zephras Isle; SendaFH's travel planner (above) keeps choosing
 flights, rides and the Hearthstone, and the walking is his engine's: the
 arrow's walk, every later walk's path, and the measure of the walks into the
 target the planner prices (`Path.Find` and one reversed `Path.FindMany` per
 target, "Walks priced by the engine" above).
 
 ```
-Polestar_Nav.toc        LoadOnDemand, Dependencies: Polestar
-  Nav\Nav.xml           the walking maps -> PolestarPathData[map], then the chokepoints
+SendaFH_Nav.toc        LoadOnDemand, Dependencies: SendaFH
+  Nav\Nav.xml           the walking maps -> SendaFHPathData[map], then the chokepoints
     Nav0*.lua, Nav1*.lua  ours: `nav pack` from the grid (128 cells a tile, 4.17 yd), listed in PACK.json
     Nav2991*.lua          his (Zephras Isle), listed in UPSTREAM.json
-    Chokepoints.lua       ours: PolestarNavChokepoints[map] for the walk's named steps
+    Chokepoints.lua       ours: SendaFHNavChokepoints[map] for the walk's named steps
   Routing\PathGrid.lua  his: decoded clusters, memory ceilings, frame slicing, string-pulling
   Routing\Path.lua      his: HPA* between clusters, the 8 yd grid inside them, FindMany's Dijkstra
   Routing\PathJobs.lua  his: the coroutine queue sharing Path.budget (2 ms) a frame
-  API.lua               Polestar_NavEngine = the Path table, plus Available(map); the memory ceilings
+  API.lua               SendaFH_NavEngine = the Path table, plus Available(map); the memory ceilings
 ```
 
 **Memory.** Loaded, the packed maps are about 26 MB of Lua strings (his own
@@ -2044,11 +2044,11 @@ Lua error the first time a search reads a missing cluster's graph
 engine's own case: that cluster counts as empty. The bytes of the shipped
 blocks are not checked at load; `nav check` pins them by sha256.
 
-**The handoff.** Polestar loads the addon with `Data.Pack("Polestar_Nav")`
+**The handoff.** SendaFH loads the addon with `Data.Pack("SendaFH_Nav")`
 at login or later, never at its own `ADDON_LOADED` (decoding nothing, it
 still builds about 26 MB of packed strings) and never in combat; with
 `nav.navRouting` off it is not loaded. `API.lua` sets the global
-`Polestar_NavEngine` to upstream's Path table; `Nav/Walk.lua` keeps it as
+`SendaFH_NavEngine` to upstream's Path table; `Nav/Walk.lua` keeps it as
 `Nav.Path`. The calls are upstream's, unchanged:
 
 ```lua
@@ -2072,23 +2072,23 @@ in `API.lua`). The maps are base64 zlib blocks decoded per cluster with
 `PACK.json` (grid build, cells, date, sizes, the sha256 of every file), and
 `Nav.xml` to both.
 
-**Our own maps, always.** The engine reads only `PolestarPathData`, never an
+**Our own maps, always.** The engine reads only `SendaFHPathData`, never an
 installed Shortest Path Forever's `ShortestPathForeverPathData`, even when it
 holds the same bake: his engine evicts and resets the decoded entries of its
 tables (`PathGrid.lua` trimming, eviction, `Idle`, `Reset`) while ours may be
 in the middle of a search that already counts a cluster as decoded, which
 would end in a Lua error (docs/NAV_QA.md H1). With both
 addons installed and the hand-off off, each holds its own maps in memory
-(with it on, the default, `Polestar_Nav` is not loaded: "Hand-off to Shortest
+(with it on, the default, `SendaFH_Nav` is not loaded: "Hand-off to Shortest
 Path Forever"); `tests/nav-vendor.test.js`
 trims a stand-in for his tables after every frame of one of our searches and
 checks the route is unchanged.
 
-**Updating.** `node tools/polestar.js nav vendor <checkout>`
+**Updating.** `node tools/sendafh.js nav vendor <checkout>`
 (`tools/lib/nav/vendor.js`) copies `Routing/PathGrid.lua`, `Path.lua`,
 `PathJobs.lua`, `Nav/Nav.xml` and the map files it lists, with one mechanical
 transform (idempotent): `ShortestPathForeverPathData` becomes
-`PolestarPathData`, and a first line names the upstream file and commit, his
+`SendaFHPathData`, and a first line names the upstream file and commit, his
 copyright and licence, and the date of the change (GPLv3 section 5a;
 `--date`, default today). Only `Nav<name>.lua` map names are taken from
 `Nav.xml`, so a checkout cannot point it outside `Nav/`. It refuses a
@@ -2110,19 +2110,19 @@ vendored files by hand: a fix belongs upstream, then a re-vendor.
 
 **Licence.** The folder is GPL-3.0-or-later with his copyright (`LICENSE`,
 `CREDITS.md`). It is code and data of a GPL program, not reference data:
-Polestar's guide-pack exception does not cover it, and nothing from it goes
+SendaFH's guide-pack exception does not cover it, and nothing from it goes
 into a guide pack.
 
 **Quality.** Every problem reported against Shortest Path Forever that
-touches what Polestar uses from it (the router, the maps, route lines,
+touches what SendaFH uses from it (the router, the maps, route lines,
 timetables, map clicks, TomTom, the travel prompts) is listed in
-[docs/NAV_QA.md](NAV_QA.md) with the check Polestar holds itself to; test
+[docs/NAV_QA.md](NAV_QA.md) with the check SendaFH holds itself to; test
 names cite its ids (rows 1-16, C1-C17, H1-H2, K1-K8, Z1-Z3).
 
 ## Quests — quest database, markers, tooltips, quest levels
 
-`addon/Polestar/Quests/` loads the load-on-demand data addon
-`Polestar_QuestDB` through `Data.Pack` (≈ 1.3 MB of Lua, ≈ 6.4 MB resident)
+`addon/SendaFH/Quests/` loads the load-on-demand data addon
+`SendaFH_QuestDB` through `Data.Pack` (≈ 1.3 MB of Lua, ≈ 6.4 MB resident)
 at login, and only while `qol.questDB` is on and at least one feature that
 needs it is (`QuestDB.IsWanted()`: map/minimap objectives, available quests,
 turn-ins, tooltips, nameplates); turning the first one on later loads it then,
@@ -2133,23 +2133,23 @@ An entity's spawn clusters (70 yd) cover every known spawn on each map (the
 reference data's `pts` and `more`), with no cap on how many.
 
 ```lua
-Polestar.QuestDB.IsLoaded() / IsEnabled() / IsRunning() / IsWanted()
-Polestar.QuestDB.GetQuest(id)  -> { id, title, level, minLevel, races, classes, faction, start = { npc, object, item },
+SendaFH.QuestDB.IsLoaded() / IsEnabled() / IsRunning() / IsWanted()
+SendaFH.QuestDB.GetQuest(id)  -> { id, title, level, minLevel, races, classes, faction, start = { npc, object, item },
                                     finish = { npc, object }, pre (any-of), preAll, excl, zone, skill, holiday,
                                     objectives = { { kind = "kill"|"item"|"object"|"event", id, count, map, x, y, f } } } | nil
-Polestar.QuestDB.GetNpc(id) / GetObject(id) -> { id, name, spawns = { { map, x, y, r (yd), f } } } | nil
-Polestar.QuestDB.GetItem(id)   -> { id, name, droppers = { { id, name, chance } }, objects = { ... }, vendors = { { id, name } } } | nil
-Polestar.QuestDB.GetItemDroppers(itemID) -> { { id, name, chance }, ... } | nil   -- best chance first
-Polestar.QuestDB.GetObjectiveMobs(questID, oi) -> { name, ... } | nil            -- kill target or item droppers
-Polestar.QuestDB.CheckAvailable(id, ctx, isDone, isOn, opts) -> ok, reason      -- opts: lowLevel, levelAbove, skillRank
-Polestar.QuestDB.EachAvailabilityRef(id, fn) -> needsSkill                       -- fn(q) per quest whose done/in-log state CheckAvailable reads
-Polestar.QuestDB.GetAvailableQuests() -> { questID, ... } ; IsAvailable(q) ; WhyUnavailable(q) -> reason | nil
+SendaFH.QuestDB.GetNpc(id) / GetObject(id) -> { id, name, spawns = { { map, x, y, r (yd), f } } } | nil
+SendaFH.QuestDB.GetItem(id)   -> { id, name, droppers = { { id, name, chance } }, objects = { ... }, vendors = { { id, name } } } | nil
+SendaFH.QuestDB.GetItemDroppers(itemID) -> { { id, name, chance }, ... } | nil   -- best chance first
+SendaFH.QuestDB.GetObjectiveMobs(questID, oi) -> { name, ... } | nil            -- kill target or item droppers
+SendaFH.QuestDB.CheckAvailable(id, ctx, isDone, isOn, opts) -> ok, reason      -- opts: lowLevel, levelAbove, skillRank
+SendaFH.QuestDB.EachAvailabilityRef(id, fn) -> needsSkill                       -- fn(q) per quest whose done/in-log state CheckAvailable reads
+SendaFH.QuestDB.GetAvailableQuests() -> { questID, ... } ; IsAvailable(q) ; WhyUnavailable(q) -> reason | nil
    -- reasons: "eligibility" (faction, race incl. Skyborne high bits, class, holiday), "done", "active", "level"
    -- (minLevel), "grey", "high" (beyond qol.questLevelWindow), "prerequisite", "exclusive", "skill"
-Polestar.QuestDB.ObjectivesForNpc(id) / ObjectivesForItem(id) / ObjectivesForObject(id)
+SendaFH.QuestDB.ObjectivesForNpc(id) / ObjectivesForItem(id) / ObjectivesForObject(id)
                                -> { { q, kind, id, name, cur, max, done, entry = { q, title, ready } }, ... } | nil  -- quests in the log
-Polestar.QuestDB.GetMarkers(map [, "objectives"|"turnin"|"available"]) -> { pin, ... }
-Polestar.QuestDB.IsGuideQuest(q) -> bool                                         -- in the active guide's current step
+SendaFH.QuestDB.GetMarkers(map [, "objectives"|"turnin"|"available"]) -> { pin, ... }
+SendaFH.QuestDB.IsGuideQuest(q) -> bool                                         -- in the active guide's current step
 ```
 
 "Done" comes from `C_QuestLog.GetAllCompletedQuestIDs` (one call per available
@@ -2169,12 +2169,12 @@ done or undone); a progress count alone only fires `QUESTDB_UPDATED`, since
 tooltips and nameplates read counts live. A rebuild reuses the pin tables
 the last one kept for the same cluster, with their world position (`c`,
 `wx`, `wy`) worked out once, so `Pins.SetLayer` converts only new pins. Look is
-applied at publish: while a Polestar guide runs, pins of quests in its current
+applied at publish: while a SendaFH guide runs, pins of quests in its current
 step (`Engine.GetGuide().steps[Engine.GetStepIndex()].goals[*].quest`, re-read on
 `STEP_CHANGED`/`GUIDE_CHANGED`) are 1.3× inside an accent ring and on top;
 with `qol.guideDim` every other quest pin drops to 0.6 alpha (`Q.DIM_ALPHA`).
 
-Tooltips go through `Polestar.Hooks` (owner `"quests"`: UnitLines, ItemLines,
+Tooltips go through `SendaFH.Hooks` (owner `"quests"`: UnitLines, ItemLines,
 ObjectLines, registered only while running) with the suite's quest line,
 `Hooks.AddLine(tt, "<Quest>:", "<what> cur/max", quest, textDim | success)`:
 "Kill Kobold Vermin 3/10" on the target, "Large Candle 3/8" on a dropper, "3/8"
@@ -2239,7 +2239,7 @@ flight timer and the instance tracker are set under Quality of Life.
   isn't licence-clean and the core ships no entrances. The Codex is loaded the
   first time the world map opens with the setting on, or the layer is built
   on `CODEX_LOADED`. A click opens the dungeon's page in the hub
-  (`Polestar.Dungeons.Open(key)`); with the Dungeons module off, or on
+  (`SendaFH.Dungeons.Open(key)`); with the Dungeons module off, or on
   Shift-click, it sets a Nav waypoint.
 
 ## QoL — quality-of-life helpers
@@ -2252,10 +2252,10 @@ choices for the guide's own reward pick (`Gear.RankChoices`, used by
 `Gear/Picks.lua`); it draws nothing on the reward panel.
 
 ```lua
-Polestar.QoL.Rewards.ReadChoices(fromLog) -> { { index, link, itemID, count, value, upgrade, delta } }, complete
-Polestar.QoL.Rewards.Rank(choices) -> { index, ... } (best first), "upgrade" | "value"
-Polestar.QoL.Rewards.Mark() -> true | false | nil   -- draw the marks; whether the best was marked (nil: no best)
-Polestar.QoL.Rewards.best, .reason                -- auto-pick's settled answer on QUEST_COMPLETE
+SendaFH.QoL.Rewards.ReadChoices(fromLog) -> { { index, link, itemID, count, value, upgrade, delta } }, complete
+SendaFH.QoL.Rewards.Rank(choices) -> { index, ... } (best first), "upgrade" | "value"
+SendaFH.QoL.Rewards.Mark() -> true | false | nil   -- draw the marks; whether the best was marked (nil: no best)
+SendaFH.QoL.Rewards.best, .reason                -- auto-pick's settled answer on QUEST_COMPLETE
 ```
 
 - **Best** = the largest Gear upgrade (delta > 0, Gear enabled); with none,
@@ -2273,32 +2273,32 @@ Polestar.QoL.Rewards.best, .reason                -- auto-pick's settled answer 
   from its item ID; the best waits for complete data (or auto-pick's answer).
 - **Tooltips**: the client's `SetQuestItem` / `SetQuestLogItem` run the item
   post-calls, so Gear's comparison line ("+12% upgrade · Head") shows on a
-  hovered choice through `Polestar.Hooks`. Gear's "Best pick" line
+  hovered choice through `SendaFH.Hooks`. Gear's "Best pick" line
   (`gear.pickTooltip`) appears only when its pick is an upgrade, so it never
   contradicts the coin. `gear.rewards` is the guide window's pick line only.
 
 ## Lookup — Codex, sources, generated guides, mount spotting
 
-`addon/Polestar/Lookup/` (`Lookup.xml`: Codex, Sources, Guide, Spotter,
+`addon/SendaFH/Lookup/` (`Lookup.xml`: Codex, Sources, Guide, Spotter,
 Options). Everything is off with `lookup.enabled`; `lookup.tooltip`,
 `lookup.altClick` and `lookup.mounts` switch the parts (Discovery → Lookup).
 
 ```lua
-Polestar.Codex.Load() / IsLoaded() / Meta()       -- the local Polestar_Codex pack through Data.Pack; CODEX_LOADED(meta)
-Polestar.Codex.Item(id) / Npc(id) / Object(id) / Quest(id) / Instance(key) / Zone(id) / Faction(id) / Spell(spellId)
-Polestar.Codex.Name(kind, id) ; Codex.WithRole(role) ; Codex.Loot(kind, id) ; Codex.Each(kind, fn(id, name, quality, status))
+SendaFH.Codex.Load() / IsLoaded() / Meta()       -- the local SendaFH_Codex pack through Data.Pack; CODEX_LOADED(meta)
+SendaFH.Codex.Item(id) / Npc(id) / Object(id) / Quest(id) / Instance(key) / Zone(id) / Faction(id) / Spell(spellId)
+SendaFH.Codex.Name(kind, id) ; Codex.WithRole(role) ; Codex.Loot(kind, id) ; Codex.Each(kind, fn(id, name, quality, status))
 
-Polestar.Lookup.Sources(kind, id) -> rows, entity     -- ranked for this character
+SendaFH.Lookup.Sources(kind, id) -> rows, entity     -- ranked for this character
    -- row = { type, src, label, detail, zone, map, x, y, f, travel, effort, cost, available, why, whyText,
    --         chance, price, standing, guideable }
-Polestar.Lookup.CuratedGuide(kind, id) -> guideId | nil
-Polestar.Lookup.BuildGuide(kind, id, ranked) -> def | nil, reason
-Polestar.Lookup.Guide(kind, id, index) -> guideId | nil, reason
-Polestar.Lookup.UnitMount(unit) -> { spell, item, name, icon, class } | nil
-Polestar.Lookup.Show(query, kind, id)                 -- SHOW_LOOKUP(query, kind, id) for UI/Lookup.lua
-Polestar.Lookup.RegisterPlanner(kind, build)          -- build(id) -> { title, steps, ... } | nil, reason: another module's guide kind
-Polestar.Lookup.QuestChain(questId, player) -> { quest, ... }, truncated  -- open prerequisites first, the quest last
-Polestar.Lookup.QuestStep(quest, from) -> step         -- accept, objectives, turn-in
+SendaFH.Lookup.CuratedGuide(kind, id) -> guideId | nil
+SendaFH.Lookup.BuildGuide(kind, id, ranked) -> def | nil, reason
+SendaFH.Lookup.Guide(kind, id, index) -> guideId | nil, reason
+SendaFH.Lookup.UnitMount(unit) -> { spell, item, name, icon, class } | nil
+SendaFH.Lookup.Show(query, kind, id)                 -- SHOW_LOOKUP(query, kind, id) for UI/Lookup.lua
+SendaFH.Lookup.RegisterPlanner(kind, build)          -- build(id) -> { title, steps, ... } | nil, reason: another module's guide kind
+SendaFH.Lookup.QuestChain(questId, player) -> { quest, ... }, truncated  -- open prerequisites first, the quest last
+SendaFH.Lookup.QuestStep(quest, from) -> step         -- accept, objectives, turn-in
 ```
 
 - **Codex records** use the field names of `data/forever/codex/*.json` (see
@@ -2346,8 +2346,8 @@ Polestar.Lookup.QuestStep(quest, from) -> step         -- accept, objectives, tu
   Codex's mount spells (the client's `ItemEffect`: aura spell → item, class
   mounts with their class), else `C_MountJournal.GetMountFromSpell`. The unit
   tooltip gets "Mount: <name>" and its best source; `MOUNT_SPOTTED(unit, info)`
-  fires on target change and mouseover; `/polestar mount` opens Lookup at the
-  target's (else the mouseover's) mount, `/polestar lookup [text]` searches.
+  fires on target change and mouseover; `/sendafh mount` opens Lookup at the
+  target's (else the mouseover's) mount, `/sendafh lookup [text]` searches.
 
 ## Dungeons — dungeon quest journal, pick-up and hand-in guides
 
@@ -2390,12 +2390,12 @@ table (the corpse point, placed on its zone); and the page's `attunement`
 list (below). No loot tables. `codex attune` writes the local comparison with
 the Attune addon (`tools/lib/codex/questaudit.js`,
 `tools/lib/consume/attune.js`; `data/local/dungeon-quests-audit.md` and
-`.json`, then the attunements report). Runtime: `addon/Polestar/Dungeons/Dungeons.lua`
-(`Polestar.Dungeons`: List, Get, Entrance, Quests, Quest, Bosses, Open,
+`.json`, then the attunements report). Runtime: `addon/SendaFH/Dungeons/Dungeons.lua`
+(`SendaFH.Dungeons`: List, Get, Entrance, Quests, Quest, Bosses, Open,
 GuideTo, GuideToPoint, ShowOnMap; `SHOW_DUNGEON`). `dungeons build` writes no
 guides.
 
-The pick-up guide is built in game (`addon/Polestar/Dungeons/Pickup.lua`):
+The pick-up guide is built in game (`addon/SendaFH/Dungeons/Pickup.lua`):
 `Dungeons.PickupPlan(key)` takes the page's quests that apply to the character
 (faction, race and class masks through `Lookup.QuestBlock`, the page's class
 list), not done, not in the log (those are `carried`), open by
@@ -2424,7 +2424,7 @@ prerequisites its quests wait on (one step with an accept per quest; the
 giver comes up again for a quest still waiting, and visits to the same giver
 in a row are one step). The last step lists the carried quests as notes,
 goes to the entrance and says where the hand-in guide is (a note naming
-`/polestar dungeons <name>`). Nothing to take: nil, "nothing". The route is
+`/sendafh dungeons <name>`). Nothing to take: nil, "nothing". The route is
 kept per character (`CharState().dungeonPickup[key]`, the stop keys in
 order) and used when the guide is rebuilt without a position
 (`Dungeons.OrderStops(stops, from, finish, field, key)`, shared with the
@@ -2435,7 +2435,7 @@ hand-in guide). It is a Lookup planner kind
 ADDON_LOADED like Lookup's own; it is gated by `dungeons.enabled`, not
 `lookup.enabled`.
 
-The hand-in guide is the run's other half (`addon/Polestar/Dungeons/Handin.lua`,
+The hand-in guide is the run's other half (`addon/SendaFH/Dungeons/Handin.lua`,
 planner kind `handin`, `lookup/handin/<key>`, `Dungeons.HandIn(key)`).
 `Dungeons.HandinPlan(key)` sorts the page's quests in the log: `hand`
 (objectives done, by `Compat.IsQuestReadyForTurnIn`, or a delivery with no
@@ -2460,7 +2460,7 @@ at its last step (its job ends at the entrance), else in a new tab. A
 finished pick-up guide's "Guide complete" panel (UI/GuideFrame.lua) offers
 "Hand in the quests" while the dungeon has quests in the log.
 
-Attunements and keys (`addon/Polestar/Dungeons/Attune.lua`, planner kind
+Attunements and keys (`addon/SendaFH/Dungeons/Attune.lua`, planner kind
 `attune`, `lookup/attune/<key>:<id>`). A page's `attunement` list (Codex,
 "Dungeons and raids": `tools/lib/codex/attunements.js`) is read by
 `Dungeons.Attunements(key, faction)` (faction "A" | "H" | nil: the entries
@@ -2500,7 +2500,7 @@ the entrance. Nothing left: nil, "done"; the other side's attunement: nil,
 Any module adds settings to the options window without touching UI files:
 
 ```lua
-Polestar.RegisterOptions({
+SendaFH.RegisterOptions({
   page = "Quests", icon = "icon-accept", order = 30,      -- sidebar page (created on first use), its title as shown
   key = "quests",                                           -- optional: the page's stable key (default: made from page)
   tab = "Map", section = "Markers",                         -- tab row entry and section header
@@ -2519,7 +2519,7 @@ Polestar.RegisterOptions({
 })
 ```
 
-Controls read and write `Polestar.Get/Set`; `disabled = function() return bool end` is optional;
+Controls read and write `SendaFH.Get/Set`; `disabled = function() return bool end` is optional;
 registered labels and help are searchable. Pages sort by `order`; Recorder and
 About always close the list. A page or tab with no available control is left
 out of the sidebar and tab row. Every row resets to its default on right-click.
@@ -2539,7 +2539,7 @@ quests: Guide, Quest markers; Rares & travel: Rares and treasures, Dungeons and
 travel; Zones: Zones, Coordinates) Nav, Quests, Rares and Maps place every map
 and minimap setting.
 
-A page is opened by its key (`/polestar options <key>`, `UI.ShowOptions(key)`,
+A page is opened by its key (`/sendafh options <key>`, `UI.ShowOptions(key)`,
 `Options.Select`), not its title: the built-in pages give English keys
 (`guide`, `appearance`, `map`, `questing`, `discovery`, `qualityoflife`,
 `guidepacks`, `recorder`, `about`) so a translated title does not move them;
@@ -2648,7 +2648,7 @@ Reading flow: `docs/DESIGN.md` ("Intent" and "The Guide Window").
   (`Search.Status`) it says what is missing and still searches guides.
   Up/Down walk the results, Enter acts, Escape closes the hub.
 - **Dungeons** (`UI/Dungeons.lua`, the hub section "Dungeons", order 30;
-  `SHOW_DUNGEON(key)` from `Polestar.Dungeons.Open(key)` opens the hub at a
+  `SHOW_DUNGEON(key)` from `SendaFH.Dungeons.Open(key)` opens the hub at a
   page, nil at Home). A dungeon quest journal: dungeons grouped by level, a
   page per dungeon (`docs/DESIGN.md`, "Intent"). Sidebar (`nav`): For your
   level, All dungeons, 10–20 … 50–60, Raids, with counts; the faction filter
@@ -2738,15 +2738,15 @@ Reading flow: `docs/DESIGN.md` ("Intent" and "The Guide Window").
   pack (`pack:<id>`, "<title> · <author>"), its guides grouped as ours are.
   Pack guides carry their pack's title in rows and results; the details pane
   has a credits line for every guide ("By <author> · <pack title> <version> ·
-  <licence>", plus the pack's `source`; ours "By Polestar"). The empty states
-  name both Polestar Guides and guide packs.
-- **Guide packs page** (`UI/Packs.lua`, Options order 70, `/polestar
+  <licence>", plus the pack's `source`; ours "By SendaFH"). The empty states
+  name both SendaFH Guides and guide packs.
+- **Guide packs page** (`UI/Packs.lua`, Options order 70, `/sendafh
   packs`): one row per `Guides.Packs()` record: title, credits, guide count,
   website as a `W.Link` (the address without its scheme; the click opens
   `UI.ShowCopy("<title> website", <address>)`), source, and a `W.Switch` (`Guides.SetPackShown`) or
   the status text ("turned off in the AddOns list" with **Enable and reload**,
-  "not loaded[: <reason>]", "needs Polestar <v> or newer" (or "needs a newer
-  Polestar"), "broken: registered
+  "not loaded[: <reason>]", "needs SendaFH <v> or newer" (or "needs a newer
+  SendaFH"), "broken: registered
   no guides", "refused: <reason>"); with problems a warning chip, **Show**
   (the list) and **Copy report** (`P.Report`: pack, versions, client build,
   every problem). Then **Suggest guides from** (`behavior.suggestFrom`,
@@ -2754,42 +2754,42 @@ Reading flow: `docs/DESIGN.md` ("Intent" and "The Guide Window").
   `W.Link` to docs/GUIDE_PACKS.md opening `UI.ShowCopy("Guide packs,
   explained", <address>)` (`ns.DocsURL()` with `GUIDE_PACKS.md` for
   `PACKS.md`: the TOC's `X-Website` + `/blob/HEAD/docs/GUIDE_PACKS.md`, else
-  "docs/GUIDE_PACKS.md in Polestar's source"). While `Guides.ProblemCount() > 0` the page's sidebar row carries
+  "docs/GUIDE_PACKS.md in SendaFH's source"). While `Guides.ProblemCount() > 0` the page's sidebar row carries
   the warning dot (a page spec's `dot`). Nothing goes to chat.
 - **Welcome** (`UI/Welcome.lua`, `SHOW_WELCOME`): centred, three pages under
   a starlit hero, with step dots, Skip, Back and Next in the footer: Hello,
-  <name> (what Polestar does, then the guide window, the arrow and
-  `/polestar guides`); Set up (quest automation, the guide at login, the
+  <name> (what SendaFH does, then the guide window, the arrow and
+  `/sendafh guides`); Set up (quest automation, the guide at login, the
   colour scheme as cards that apply live); Start (the guide
   `Guides.Suggest()` picks on its zone painting, with its level range and
   pitch; the beta note while `ns.routesBeta`; the Discord invite in a copy
   box; what guide packs are; then Start guide, or Choose a guide without
   one, and Browse guides). Once
-  per new character (`PolestarCharDB.welcomeSeen`: 0 for a character with no
-  saved `PolestarCharDB` as Polestar loaded, `ns.IsNewCharacter()`; set seen
+  per new character (`SendaFHCharDB.welcomeSeen`: 0 for a character with no
+  saved `SendaFHCharDB` as SendaFH loaded, `ns.IsNewCharacter()`; set seen
   silently for one with saved data and no flag), 2 s after login, never in
   combat, during a cinematic or over the route choice; a due welcome that never opened stays due
   for the next login, and one that opened is marked on the character as it
   opens (a /reload or logout with it up does not repeat it); one the intro
   cinematic closes comes back on its page when the cinematic ends. Set up is in it only while the account has not had its
-  welcome (`PolestarDB.welcomeSeen`); the page set is fixed when a showing
+  welcome (`SendaFHDB.welcomeSeen`); the page set is fixed when a showing
   starts. Any close marks the account (and the character). About's "Show the
-  welcome again" and `/polestar welcome` open it with every page.
-- **Copy window** (`UI/Copy.lua`, frame `PolestarCopy`, `UI.ShowCopy(title,
+  welcome again" and `/sendafh welcome` open it with every page.
+- **Copy window** (`UI/Copy.lua`, frame `SendaFHCopy`, `UI.ShowCopy(title,
   text)` or `SHOW_COPY`): a small window with the band, a title, a read-only
   `W.CopyBox` holding the text, selected and focused, and how to copy it; ✕
-  and Escape close it. `/polestar where` uses it. `opts` (`UI.ShowCopy(title,
+  and Escape close it. `/sendafh where` uses it. `opts` (`UI.ShowCopy(title,
   text, opts)`): `icon` and `iconColor` put a mark before the title, `hint`
-  replaces the line above the box; the Polestar Discord's invite
+  replaces the line above the box; the SendaFH Discord's invite
   (`UI.ShowDiscord`) comes with Discord's mark.
-- **Reporting a problem** (`UI/Report.lua`, frame `PolestarReport`,
+- **Reporting a problem** (`UI/Report.lua`, frame `SendaFHReport`,
   `UI.ShowReport()` or `SHOW_REPORT`): the guide window's bug (in the
   navigator while a guide is open), its menu's "Report a problem" and
-  `/polestar report` open it on the step on screen. The player types what
+  `/sendafh report` open it on the step on screen. The player types what
   went wrong (250 letters); the report box holds `UI.Report.Text(description,
   details)`: their words after "**What went wrong:**", then
   `UI.Report.Details()` in a code block, one fact a line, taken when the
-  window opens: Polestar's version and stage, the client build and locale;
+  window opens: SendaFH's version and stage, the client build and locale;
   race, class, level (XP %) and faction (never the name or realm); the guide
   (title, id, pack and version); "Step n of N: title", with "the guide is at
   step m" while another step is looked at, or "skipped"; each goal (the first
@@ -2800,17 +2800,17 @@ Reading flow: `docs/DESIGN.md` ("Intent" and "The Guide Window").
   spot; the arrow's target and distance (and "your own waypoint" with its
   position when the player set it); where the player stands (zone, subzone,
   `map <id> @x,y live`); other guide packs that are on; and the errors
-  (`Polestar.Errors()`, plus with !BugGrabber its errors this session in
-  Polestar's files, `BugGrabber:GetDB()`), the newest three, counted, by
+  (`SendaFH.Errors()`, plus with !BugGrabber its errors this session in
+  SendaFH's files, `BugGrabber:GetDB()`), the newest three, counted, by
   their path from the AddOns folder. Every line is cut at 100 bytes, so at
   its longest the report fits one Discord message (2000 characters). Under
-  it, Discord's mark, "Polestar on Discord" and "Get the invite", which opens
-  the invite (`Polestar.DiscordURL`) in the copy window: the game opens no
+  it, Discord's mark, "SendaFH on Discord" and "Get the invite", which opens
+  the invite (`SendaFH.DiscordURL`) in the copy window: the game opens no
   links for addons, so the report is the only text a member copies. What the
   player typed stays while the window is reopened on the same step. The
   hub's and the settings' sidebars carry the Discord's mark at the end of
   the version line (`UI.Report.SidebarLink(shell)`), which opens the invite like
-  `/polestar discord` (`UI.ShowDiscord`, `SHOW_DISCORD`).
+  `/sendafh discord` (`UI.ShowDiscord`, `SHOW_DISCORD`).
 - **Per-character UI state** in `CharState().ui`: `recentGuides` (ids, newest
   first, at most 10), `favoriteGuides` (id -> true), `pickerSelected` (id).
 
@@ -2854,7 +2854,7 @@ render: `docs/preview/journey.svg`.
 
 ## Rares — rare NPCs and treasures
 
-`addon/Polestar/Rares/` (`Rares\Rares.xml`, loaded after `UI\UI.xml`):
+`addon/SendaFH/Rares/` (`Rares\Rares.xml`, loaded after `UI\UI.xml`):
 `Rares.lua` (settings `rares.*`, history, the decision), `Detect.lua` (client
 events), `Pins.lua` (map layers), `Toast.lua` (the alert), `Options.lua`
 (Discovery → Rares: When a rare shows up, How rares are noticed, History; Map
@@ -2863,12 +2863,12 @@ Everything is off with `rares.enabled`; a detection path that is off has no
 event registered.
 
 ```lua
-Polestar.Rares.Decide(s, ctx) -> action, reason   -- pure; "alert" | "hold" | "record" | "skip"
-Polestar.Rares.Sighting(s, where) -> action, reason -- decide, record, alert (RARE_SPOTTED)
-Polestar.Rares.History() -> { [key] = { kind, id, name, level, t, first, n, map, x, y, src, alerted, dead } }
-Polestar.Rares.Info(kind, id) -> { kind, id, name, level, levelMax, elite, instance, spawns, loot } | nil
-Polestar.Rares.BuildPins(o) -> pins                 -- pure pin selection
-Polestar.Rares.Show(kind, id)                       -- SHOW_RARES: the hub section at it
+SendaFH.Rares.Decide(s, ctx) -> action, reason   -- pure; "alert" | "hold" | "record" | "skip"
+SendaFH.Rares.Sighting(s, where) -> action, reason -- decide, record, alert (RARE_SPOTTED)
+SendaFH.Rares.History() -> { [key] = { kind, id, name, level, t, first, n, map, x, y, src, alerted, dead } }
+SendaFH.Rares.Info(kind, id) -> { kind, id, name, level, levelMax, elite, instance, spawns, loot } | nil
+SendaFH.Rares.BuildPins(o) -> pins                 -- pure pin selection
+SendaFH.Rares.Show(kind, id)                       -- SHOW_RARES: the hub section at it
 ```
 
 - **Detection** (APIs verified against `.ref/wow-ui-source-forever`, 1.60.1):
@@ -2888,11 +2888,11 @@ Polestar.Rares.Show(kind, id)                       -- SHOW_RARES: the hub secti
   without `rares.combatAlerts` → held until `PLAYER_REGEN_ENABLED` (dropped
   after a minute); else the alert (`RARE_SPOTTED(alert)`, sound
   `rares.soundKit` when `rares.sound`).
-- **History**: account-wide per realm, `PolestarDB.rares.history[realm][key]`
+- **History**: account-wide per realm, `SendaFHDB.rares.history[realm][key]`
   (`"rare:<npc>"`, `"treasure:<object>"`, `"name:<name>"` without an id), at
   most 400 entries; the cooldown reads `alerted` (epoch seconds), so it
   survives a reload. Losing it only resets cooldowns and the Seen list.
-- **Toast** (`PolestarRareToast`): name, "Level n Rare · 85 yd · Zone"
+- **Toast** (`SendaFHRareToast`): name, "Level n Rare · 85 yd · Zone"
   (vignettes: the distance; units: "in sight"; a vignette without a position:
   "known spawn 120 yd"), "Set waypoint" (the vignette's position, asked again
   on the click and on parent maps when the player's map lacks it; a unit:
@@ -2900,7 +2900,7 @@ Polestar.Rares.Show(kind, id)                       -- SHOW_RARES: the hub secti
   or no waypoint) and "Show rare" (the section),
   `rares.toastSeconds` with a drain line, held under the cursor, draggable
   (`rares.toastPoint`).
-- **Pins**: layers `rares.rare` and `rares.treasure` through `Polestar.Pins`,
+- **Pins**: layers `rares.rare` and `rares.treasure` through `SendaFH.Pins`,
   world map and minimap per kind (`rares.worldRares`, `worldTreasures`,
   `minimapRares`, `minimapTreasures`; all off by default, Map → Rares & travel →
   Rares and treasures); one pin per distinct spawn (spawns of
@@ -2922,20 +2922,20 @@ Polestar.Rares.Show(kind, id)                       -- SHOW_RARES: the hub secti
 
 ## Talents — talent plans
 
-`addon/Polestar/Talents/` (`Talents\Talents.xml`, loaded after `Rares\Rares.xml`):
+`addon/SendaFH/Talents/` (`Talents\Talents.xml`, loaded after `Rares\Rares.xml`):
 `Talents.lua` (settings `talents.*`, the plan per character in
-`PolestarCharDB.talents.build`, progress, validation, the unspent-point reminder),
+`SendaFHCharDB.talents.build`, progress, validation, the unspent-point reminder),
 `Builds.lua` (generated by `talents build`), `Overlay.lua` (the talent frame),
 `Options.lua` (Questing → Talents → Talent plan), `View.lua` (the hub section,
 order 40).
 
 ```
-Polestar.Talents.Current() -> { data, build, live, valid, level, granted, state, staged } | nil, reason
-Polestar.Talents.State(build, ranks, level, granted) -> { status, done, total, next, nodeNext, offPlan, spent, points, unspent, source }  -- pure
-Polestar.Talents.Replay(data, build) -> errors              -- pure; the snapshot's rules
-Polestar.Talents.Validate(data, live) -> { map, back, moved, missing, ok }
-Polestar.Talents.Choose(key | "auto")                       -- per character; "auto" follows Gear's spec, else the column with most points
-Polestar.Talents.Show()                                     -- SHOW_TALENTS; /pole talents
+SendaFH.Talents.Current() -> { data, build, live, valid, level, granted, state, staged } | nil, reason
+SendaFH.Talents.State(build, ranks, level, granted) -> { status, done, total, next, nodeNext, offPlan, spent, points, unspent, source }  -- pure
+SendaFH.Talents.Replay(data, build) -> errors              -- pure; the snapshot's rules
+SendaFH.Talents.Validate(data, live) -> { map, back, moved, missing, ok }
+SendaFH.Talents.Choose(key | "auto")                       -- per character; "auto" follows Gear's spec, else the column with most points
+SendaFH.Talents.Show()                                     -- SHOW_TALENTS; /pole talents
 ```
 
 - **Client.** Forever's talents are one C_Traits tree per class (Paladin:
@@ -2975,7 +2975,7 @@ Polestar.Talents.Show()                                     -- SHOW_TALENTS; /po
 
 ## Toolchain (Node ≥ 24, zero npm dependencies)
 
-`node tools/polestar.js <command> [args]`. Each command is a module
+`node tools/sendafh.js <command> [args]`. Each command is a module
 `tools/commands/<name>.js` exporting:
 
 ```js
@@ -3030,8 +3030,8 @@ are warnings in other packs.
 
 ### Zone art overlays (`maps overlays`)
 
-`node tools/polestar.js maps overlays [--build <ver>] [--offline]` writes
-`addon/Polestar/UI/ZoneArtOverlays.lua` (`tools/lib/maps/overlays.js`) from
+`node tools/sendafh.js maps overlays [--build <ver>] [--offline]` writes
+`addon/SendaFH/UI/ZoneArtOverlays.lua` (`tools/lib/maps/overlays.js`) from
 the client's DB2 tables, as wago.tools CSV cached under
 `data/sources/wago/<build>/`: `UiMapXMapArt` (every art a map shows, any
 phase), `UiMapArt` → `UiMapArtStyleLayer` (layer 0's tile size), then each
@@ -3048,7 +3048,7 @@ registers through `ZoneArt.RegisterOverlays` the way `MapFrames.lua` and
 
 ### Codex (`codex build`)
 
-`node tools/polestar.js codex build [--addons <dir>] [--build <version>] [--offline] [--out <dir>] [--local-extras]`
+`node tools/sendafh.js codex build [--addons <dir>] [--build <version>] [--offline] [--out <dir>] [--local-extras]`
 merges `data/forever/*.json` (pfQuest, QuestieDB facts, recordings,
 corrections, Wowhead and web XP facts), the Forever client's tables
 (wago.tools, cached under `data/sources/wago/<build>/`: the newest 1.60+
@@ -3056,9 +3056,9 @@ corrections, Wowhead and web XP facts), the Forever client's tables
 `--forever-build` (`pickBuild` in `tools/lib/data/wago.js`); `--build`
 names one; offline or with wago.tools unreachable, the newest cached build
 holding every table the Codex reads; `meta.json` records it), the installed
-ForeverLevelingBiS (MIT) and Polestar's own guides into
+ForeverLevelingBiS (MIT) and SendaFH's own guides into
 `data/forever/codex/*.json`, then emits the load-on-demand pack
-`addon/Polestar_Codex/` (`tools/lib/codex/pack.js`) with its
+`addon/SendaFH_Codex/` (`tools/lib/codex/pack.js`) with its
 `LICENSE-DATA.txt`, which lists every source with its version and licence.
 Both are build products (gitignored); the pack is part of the release:
 `pack` puts it in the zip and fails without it, `install` copies it when
@@ -3066,7 +3066,7 @@ built.
 
 - Release-safe by default. `--local-extras` also merges three inputs that
   may not be redistributed: AtlasLoot (GPL-2.0, incompatible with
-  Polestar's GPL-3.0-only), RareScanner (All Rights Reserved) and
+  SendaFH's GPL-3.0-only), RareScanner (All Rights Reserved) and
   `data/forever/dungeons.json` (DungeonJournal, no licence). That build's
   `meta.json` and `Meta.lua` carry `localExtras = true`, its
   `LICENSE-DATA.txt` says not to share it, and `pack` refuses it, as it
@@ -3440,7 +3440,7 @@ means unrestricted. pfQuest masks are **Era** masks: Skyborne has no bit there,
 so never read an Era-only mask as excluding Skyborne. QuestieDB masks add
 Forever's Skyborne bits 2^32 (High Order, Alliance) and 2^33 (Windshapers,
 Horde), past 32-bit `bit.band`: split them arithmetically (`races % 2^32`,
-`floor(races / 2^32)`). `Polestar_QuestDB` keeps the low 32 bits. Spawn `f` is the frame of
+`floor(races / 2^32)`). `SendaFH_QuestDB` keeps the low 32 bits. Spawn `f` is the frame of
 those points (`"e"` Era, `"l"` live Forever). A frame's `c` is the instance map id (0 Eastern
 instances.json { "<instance map id>": { id, name, type: "party"|"raid", entrances: [ { map, x, y, n } ],
                  encounters: { "<DungeonEncounter id>": { name, npcs: [ids], kills } }, source: ["recorder"] } }   (recorded only; {} without)
@@ -3516,14 +3516,14 @@ exclusive group: pfQuest `close` united with QuestieDB `exclusiveTo`.
    Its Forever database also lists datamined quests that are not live (`<NYI>`
    placeholders, Season of Discovery leftovers), so presence there is not
    evidence that a quest is in the game.
-4. **Polestar corrections** (`tools/lib/data/corrections.json`, committed):
+4. **SendaFH corrections** (`tools/lib/data/corrections.json`, committed):
    facts QuestieDB or pfQuest get wrong or lack, each with its source in a `note`:
    quest fields (`set`), item sources to drop (`removeDrops`, `removeVendors`),
    npc/object fields (`set`: the Forever elite and rare ranks QuestieDB's
    Forever store lacks, since it gives every Forever npc rank 0, and renamed
    Era records) and npc/object spawn maps (`addSpawns`). They are applied
    after the merge, only in a build that reads QuestieDB, and the record's
-   `source` gains `polestar-correction`. One
+   `source` gains `sendafh-correction`. One
    cleanup is general rather than per quest: `pre`, `preAll` and `preAny`
    never contain the quest itself or an id from its `excl`. QuestieDB
    preQuestSingle sometimes lists the whole exclusive group.
@@ -3532,7 +3532,7 @@ exclusive group: pfQuest `close` united with QuestieDB `exclusiveTo`.
    the rules of their own paragraph there.
 
 `source` on every quest, npc, object and item lists its contributors in
-that order: `pfquest`, `questie-forever`, `wowhead:*` (change notes), `polestar-correction`, the web XP tag, `recorder`, then the recorded XP tag (`recorder:xp-*`).
+that order: `pfquest`, `questie-forever`, `wowhead:*` (change notes), `sendafh-correction`, the web XP tag, `recorder`, then the recorded XP tag (`recorder:xp-*`).
 Blizzard map tables come from wago.tools: Classic Era (`wow_classic_era`) for
 the Era frames pfQuest's coordinates use, and the Forever client
 (`wow_classic_beta` builds 1.60+, `--forever-build`, `--no-forever`) for
@@ -3579,7 +3579,7 @@ database: the quest's reward, `foreverchanges:xp`, or its quest-chain list,
 
 ### Recordings (`data/recordings/<session>.json`)
 
-Normalised from `PolestarRecorderDB` by `record import`:
+Normalised from `SendaFHRecorderDB` by `record import`:
 
 ```
 { schema: 1, build, session, char: { name, realm, race, class, faction }, started, ended,
@@ -3621,19 +3621,19 @@ header, headerRep, standing, value, min, max, atWar, canToggleAtWar } }`,
 `legacy: { categories, achievements, majorFactions, trees }`, each time-stamped
 in `dumped: { kind: epochSeconds }`.
 
-Route telemetry (`v = 1`), recorded while Polestar runs: `step {v, reason,
+Route telemetry (`v = 1`), recorded while SendaFH runs: `step {v, reason,
 guide, step, title, guideTitle, time, lvl, xp, xpMax, rested, money, combat,
 map, x, y}` with `reason` = `login` (session start or /reload), `step`
 (`STEP_CHANGED`), `guide` (`GUIDE_CHANGED`: tab switch or new guide) or
 `complete` (`GUIDE_COMPLETED`; no `step`). Only the active tab is snapshotted.
-Also, with or without Polestar: `combat {on}` (`PLAYER_REGEN_DISABLED/ENABLED`),
+Also, with or without SendaFH: `combat {on}` (`PLAYER_REGEN_DISABLED/ENABLED`),
 `afk {on}`, `revive` (alive again after a `death`).
 
 #### Measuring routes
 
-Recording is opt-in (`PolestarRecorderDB.enabled == true`, set by `/psrec on` or
+Recording is opt-in (`SendaFHRecorderDB.enabled == true`, set by `/psrec on` or
 Options > Recorder); while it is off the Recorder writes nothing, not even a
-session. Testers turn it on, play with Polestar, run `record import`
+session. Testers turn it on, play with SendaFH, run `record import`
 (or keep `record watch` running), then `record report [--guide <text>]
 [--json] [--top n]`. The report rebuilds step passes from every session and
 character:
@@ -3666,7 +3666,7 @@ no XP or a third of the guide's XP per yard.
 
 ### Route planner (`planner`)
 
-`node tools/polestar.js planner [<pack dir>...] [--port 8078] [--nav <dir>]` serves a local
+`node tools/sendafh.js planner [<pack dir>...] [--port 8078] [--nav <dir>]` serves a local
 page (127.0.0.1 only) that plays a guide route on the game's map and edits its
 `.guide` sources. Inspired by Nivek_Gaming (@Nivek_Gaming on X), whose idea
 the planner and the navigation grid both come from.
@@ -3750,7 +3750,7 @@ the planner and the navigation grid both come from.
 
 ### Navigation grid (`nav build`)
 
-`node tools/polestar.js nav build [--continents 0,1] [--force] [--offline]`
+`node tools/sendafh.js nav build [--continents 0,1] [--force] [--offline]`
 builds `data/local/nav` from the Forever client's own files, fetched by
 fileDataID from wago.tools into `data/sources/casc` (local, never shipped):
 
@@ -3789,7 +3789,7 @@ fileDataID from wago.tools into `data/sources/casc` (local, never shipped):
 - **Packing for the in-game engine** (`nav pack`, `tools/lib/nav/pack.js`,
   rules in its header): the grid in Shortest Path Forever's walking-map
   format (his baker's HPA* and encodings, ported), so his engine in
-  `Polestar_Nav` routes on it. Each SPF cell (128 per tile by default, 4.17
+  `SendaFH_Nav` routes on it. Each SPF cell (128 per tile by default, 4.17
   yd) holds the connected pieces of our surfaces in its columns (base plus
   floors; a wall inside a cell keeps its sides apart); a step between cells
   is open only where one of our links crosses it, so walls and cliffs close
@@ -3812,7 +3812,7 @@ fileDataID from wago.tools into `data/sources/casc` (local, never shipped):
   among them). A route down a face goes round as well; slopes under 50° still
   cost only their flat length in his search (a height-aware step cost is his
   engine's to add). `chokepoints.js` adds `Chokepoints.lua`
-  (`PolestarNavChokepoints[map]`: lift landings, bridges, gates at passages,
+  (`SendaFHNavChokepoints[map]`: lift landings, bridges, gates at passages,
   tunnels, cave and building mouths, passes, each named by its AreaTable
   area) for the journey's named walk steps.
 

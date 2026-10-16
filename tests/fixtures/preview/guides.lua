@@ -1,14 +1,14 @@
 -- The Horde road from Durotar through the Barrens to Stonetalon Mountains, as
 -- `compile` built it at 1990760: the six -- Source blocks of
--- addon/Polestar_Guides/Guides.lua, copied unchanged. The guide menu scenes of
--- `node tools/polestar.js preview` load these instead of the shipped guides, so
+-- addon/SendaFH_Guides/Guides.lua, copied unchanged. The guide menu scenes of
+-- `node tools/sendafh.js preview` load these instead of the shipped guides, so
 -- docs/preview changes only with the UI, never with a recompile. Copy the
 -- blocks again when the compiled guide shape changes.
 
 -- Source: forever/horde/orc-troll/01-durotar.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "forever/horde/orc-troll/01-durotar",
 			pack = "guides",
 			title = "Durotar",
@@ -590,7 +590,7 @@ end
 -- Source: forever/horde/orc-troll/02-the-barrens.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "forever/horde/orc-troll/02-the-barrens",
 			pack = "guides",
 			title = "The Barrens",
@@ -951,7 +951,7 @@ end
 -- Source: forever/horde/02-the-barrens.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "forever/horde/02-the-barrens",
 			pack = "guides",
 			title = "The Barrens",
@@ -1344,7 +1344,7 @@ end
 -- Source: forever/horde/03-silverpine-forest.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "forever/horde/03-silverpine-forest",
 			pack = "guides",
 			title = "Silverpine Forest & Orgrimmar",
@@ -1668,7 +1668,7 @@ end
 -- Source: forever/horde/04-the-barrens.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "forever/horde/04-the-barrens",
 			pack = "guides",
 			title = "The Barrens",
@@ -2323,7 +2323,7 @@ end
 -- Source: forever/horde/05-stonetalon-mountains.guide
 do
 	local function register()
-		Polestar.RegisterGuide({
+		SendaFH.RegisterGuide({
 			id = "forever/horde/05-stonetalon-mountains",
 			pack = "guides",
 			title = "Stonetalon Mountains & Ashenvale",

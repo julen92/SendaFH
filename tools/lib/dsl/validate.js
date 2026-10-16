@@ -61,7 +61,7 @@ function followProblem(g, other, data) {
 	const same = g.classes ? (g.races ? 'races and classes' : 'classes') : 'races';
 	return {
 		message: `no ${whoLabel(g)} character can follow ${other.id} (it is for ${whoLabel(other)} only)`,
-		hint: `pick a guide for the same ${same}: \`polestar find --kind guide <zone>${flags}\``,
+		hint: `pick a guide for the same ${same}: \`sendafh find --kind guide <zone>${flags}\``,
 	};
 }
 
@@ -107,7 +107,7 @@ const PIPE_NAMES = [
 // Player-facing text exactly as the author wrote it (the parsed guide, so
 // names filled in from data and defaults such as the pack's author are not
 // reported): header title, folder, pitch, pros, cons and author; step titles
-// and tips; goal texts, notes and quoted names (rewards included). Polestar
+// and tips; goal texts, notes and quoted names (rewards included). SendaFH
 // shows it as written (every `|` is escaped when a guide registers), so a `|`
 // prints literally.
 function checkPipes(g, diag) {
@@ -167,7 +167,7 @@ function validatePackFrames(guides, data, ours, ourData, diag) {
 		const mine = data.eraFrame(map);
 		const theirs = ourFrames.get(map);
 		if (!mine || !theirs || FRAME_KEYS.every((k) => mine[k] === theirs[k])) return;
-		diag.warn(g._ast.file, goal._line, `map ${map}: this pack's Era frame differs from the one Polestar's guides register; in game Polestar's wins, so coordinates on this map may be off`);
+		diag.warn(g._ast.file, goal._line, `map ${map}: this pack's Era frame differs from the one SendaFH's guides register; in game SendaFH's wins, so coordinates on this map may be off`);
 	});
 }
 
@@ -298,7 +298,7 @@ function validateGuides(guides, data, diag) {
 	for (const g of byId.values()) {
 		for (const to of g.nextChoices || (g.next ? [g.next] : [])) {
 			if (!byId.has(to)) {
-				diag.error(g._ast.file, g._ast.lines.next, `\`next\` points to unknown guide "${to}"`, 'list guide ids with `polestar find --kind guide <text>`');
+				diag.error(g._ast.file, g._ast.lines.next, `\`next\` points to unknown guide "${to}"`, 'list guide ids with `sendafh find --kind guide <text>`');
 				continue;
 			}
 			const other = byId.get(to);

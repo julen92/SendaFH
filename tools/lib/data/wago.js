@@ -48,7 +48,7 @@ function newestCachedBuild(cacheRoot, product, tables = product.tables) {
 }
 
 async function fetchText(fetchImpl, url) {
-	const res = await fetchImpl(url, { headers: { 'user-agent': 'polestar-data-build' } });
+	const res = await fetchImpl(url, { headers: { 'user-agent': 'sendafh-data-build' } });
 	if (!res.ok) throw new Error(`GET ${url}: HTTP ${res.status}`);
 	return res.text();
 }

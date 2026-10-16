@@ -1,0 +1,11 @@
+## Interface: 16001
+## Title: SendaFH | Nombres en español (Latinoamérica)
+## Notes: Nombres por ID para clientes esMX. Datos y créditos originales de Polestar, Ding y sus fuentes.
+## Author: Polestar
+## X-License: GPL-3.0-only
+## Version: 0.5.0-beta.1
+## Category: Quests
+## LoadOnDemand: 1
+## Dependencies: SendaFH
+
+Names.lua

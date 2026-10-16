@@ -150,7 +150,7 @@ describe('Wowhead zone list cache', () => {
 	}
 
 	test('fetches once, reuses the cache for a day, then refreshes', async () => {
-		const sourcesDir = tmpdir('polestar-wowhead-');
+		const sourcesDir = tmpdir('sendafh-wowhead-');
 		const calls = [];
 		const first = await loadZoneQuests({ sourcesDir, zones, fetchImpl: fakeFetch(calls), now: T0 });
 		assert.equal(calls.length, 12, 'the nine class pages, the zone and the dungeon and raid pages, once each');
@@ -168,7 +168,7 @@ describe('Wowhead zone list cache', () => {
 	});
 
 	test('a cache from before a page was added is read again, however fresh: the class pages reach an old zones.json', async () => {
-		const sourcesDir = tmpdir('polestar-wowhead-');
+		const sourcesDir = tmpdir('sendafh-wowhead-');
 		fs.mkdirSync(path.join(sourcesDir, 'wowhead'), { recursive: true });
 		// Written an hour ago by a build that read only the zone pages.
 		fs.writeFileSync(path.join(sourcesDir, 'wowhead', 'zones.json'), JSON.stringify({ fetchedAt: new Date(T0).toISOString(), zones: { 11: [{ id: 5, xp: 100 }] } }));
@@ -181,7 +181,7 @@ describe('Wowhead zone list cache', () => {
 	});
 
 	test('a cache an older parser wrote (no version) is read again, however fresh', async () => {
-		const sourcesDir = tmpdir('polestar-wowhead-');
+		const sourcesDir = tmpdir('sendafh-wowhead-');
 		fs.mkdirSync(path.join(sourcesDir, 'wowhead'), { recursive: true });
 		const pages = zonePages(zones).map((p) => p.page);
 		fs.writeFileSync(path.join(sourcesDir, 'wowhead', 'zones.json'), JSON.stringify({ fetchedAt: new Date(T0).toISOString(), pages, zones: { 11: [{ id: 5, xp: 100 }] } }));
@@ -193,7 +193,7 @@ describe('Wowhead zone list cache', () => {
 	});
 
 	test('a failed refresh keeps the cached lists; --offline never fetches', async () => {
-		const sourcesDir = tmpdir('polestar-wowhead-');
+		const sourcesDir = tmpdir('sendafh-wowhead-');
 		await loadZoneQuests({ sourcesDir, zones, fetchImpl: fakeFetch([]), now: T0 });
 		const failed = await loadZoneQuests({ sourcesDir, zones, fetchImpl: fakeFetch([], { fail: true }), now: T0 + 25 * 3600e3 });
 		assert.equal(failed.rows.get(5).xp, 100);
@@ -201,7 +201,7 @@ describe('Wowhead zone list cache', () => {
 		assert.equal(JSON.parse(fs.readFileSync(path.join(sourcesDir, 'wowhead', 'zones.json'), 'utf8')).fetchedAt, new Date(T0).toISOString());
 
 		const calls = [];
-		const offline = await loadZoneQuests({ sourcesDir: tmpdir('polestar-wowhead-'), zones, offline: true, fetchImpl: fakeFetch(calls), now: T0 });
+		const offline = await loadZoneQuests({ sourcesDir: tmpdir('sendafh-wowhead-'), zones, offline: true, fetchImpl: fakeFetch(calls), now: T0 });
 		assert.equal(calls.length, 0);
 		assert.equal(offline.rows.size, 0);
 		assert.match(offline.warnings.join('\n'), /--offline: no cached Wowhead zone lists/);

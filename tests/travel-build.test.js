@@ -27,7 +27,7 @@ const opts = (extra = {}) => ({
 });
 
 function tmp() {
-	return tmpdir('polestar-travel-');
+	return tmpdir('sendafh-travel-');
 }
 
 test('flight masters, flights, transports and inns come from the client tables and spawn data', async () => {
@@ -132,7 +132,7 @@ test('the CLI writes byte-identical travel.json, TravelData.lua and FlightPaths.
 			const r = spawnSync(
 				process.execPath,
 				[
-					path.join(ROOT, 'tools', 'polestar.js'), 'travel', 'build', '--offline', '--shipped', 'none',
+					path.join(ROOT, 'tools', 'sendafh.js'), 'travel', 'build', '--offline', '--shipped', 'none',
 					'--data', path.join(FIX, 'data'), '--recordings', path.join(FIX, 'recordings'), '--sources', path.join(FIX, 'sources'),
 					'--json', path.join(dir, 'travel.json'), '--lua', path.join(dir, 'TravelData.lua'), '--flight-lua', path.join(dir, 'FlightPaths.lua'),
 				],
@@ -154,11 +154,11 @@ test('the CLI writes byte-identical travel.json, TravelData.lua and FlightPaths.
 
 test('with --lua and no --flight-lua the CLI writes FlightPaths.lua beside it, never into the addon', () => {
 	const dir = tmp();
-	const committed = path.join(ROOT, 'addon', 'Polestar', 'Maps', 'FlightPaths.lua');
+	const committed = path.join(ROOT, 'addon', 'SendaFH', 'Maps', 'FlightPaths.lua');
 	const before = fs.readFileSync(committed, 'utf8');
 	try {
 		const r = spawnSync(process.execPath, [
-			path.join(ROOT, 'tools', 'polestar.js'), 'travel', 'build', '--offline', '--shipped', 'none',
+			path.join(ROOT, 'tools', 'sendafh.js'), 'travel', 'build', '--offline', '--shipped', 'none',
 			'--data', path.join(FIX, 'data'), '--recordings', path.join(FIX, 'recordings'), '--sources', path.join(FIX, 'sources'),
 			'--json', path.join(dir, 'travel.json'), '--lua', path.join(dir, 'TravelData.lua'), '--travel-addon', path.join(dir, 'PT'),
 		], { encoding: 'utf8' });
@@ -195,7 +195,7 @@ test('generated TravelData.lua loads under Lua 5.1 and the addon planner routes 
 		assert.throws(() => planRoute({ ...common, faction: 'Scourge' }), /unknown faction "Scourge"/);
 		// The CLI: repeatable --known, --json exits 1 without a route, bad factions fail.
 		const cli = (...args) =>
-			spawnSync(process.execPath, [path.join(ROOT, 'tools', 'polestar.js'), 'travel', 'route', '--data', dir, '--lua', common.travelLua, ...args], { encoding: 'utf8' });
+			spawnSync(process.execPath, [path.join(ROOT, 'tools', 'sendafh.js'), 'travel', 'route', '--data', dir, '--lua', common.travelLua, ...args], { encoding: 'utf8' });
 		const ends = ['--from', '1436,56,47', '--to', '1453,60,60'];
 		const ok = cli(...ends, '--known', 'Sentinel Hill, Westfall', '--known', 'Stormwind', '--json');
 		assert.equal(ok.status, 0, ok.stderr);
@@ -217,8 +217,8 @@ test('generated TravelData.lua loads under Lua 5.1 and the addon planner routes 
 test('the committed TravelData.lua is loaded by the addon with the real network', () => {
 	const [counts] = runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
-		script: 'emit({ Polestar.Nav.travel.Counts() })',
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
+		script: 'emit({ SendaFH.Nav.travel.Counts() })',
 	}).emitted;
 	const [taxi, transports, inns] = counts;
 	assert.ok(taxi >= 50, `${taxi} flight masters`);
@@ -227,10 +227,10 @@ test('the committed TravelData.lua is loaded by the addon with the real network'
 	// Inns with their own area answer to both names (GetBindLocation may report either).
 	const [names] = runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
 		script: `
 			local out = {}
-			for _, inn in ipairs(Polestar.Nav.GetTravelData().inns) do
+			for _, inn in ipairs(SendaFH.Nav.GetTravelData().inns) do
 				if inn.npc == 6734 then out = inn.names end
 			end
 			emit(out)`,
@@ -242,10 +242,10 @@ test('the committed TravelData.lua is loaded by the addon with the real network'
 function committedInns() {
 	return runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
 		script: `
 			local out = {}
-			for _, inn in ipairs(Polestar.Nav.GetTravelData().inns) do out[#out + 1] = { npc = inn.npc, area = inn.area or false, names = inn.names } end
+			for _, inn in ipairs(SendaFH.Nav.GetTravelData().inns) do out[#out + 1] = { npc = inn.npc, area = inn.area or false, names = inn.names } end
 			emit(out)`,
 	}).emitted[0];
 }
@@ -258,7 +258,7 @@ test('every inn of the committed TravelData.lua has its AreaTable area', () => {
 });
 
 const AREAS = loadAreas(path.join(ROOT, 'data', 'sources'));
-test('every committed inn\'s area is named, in English, like one of its bind locations', { skip: !AREAS && 'no cached Forever AreaTable under data/sources/wago (node tools/polestar.js data build)' }, () => {
+test('every committed inn\'s area is named, in English, like one of its bind locations', { skip: !AREAS && 'no cached Forever AreaTable under data/sources/wago (node tools/sendafh.js data build)' }, () => {
 	const wrong = committedInns()
 		.filter((i) => !AREAS.byId.has(i.area) || !i.names.includes(AREAS.byId.get(i.area).name))
 		.map((i) => `${i.names.join('/')}: area ${i.area} is ${AREAS.byId.has(i.area) ? `"${AREAS.byId.get(i.area).name}"` : 'not in the AreaTable'}`);
@@ -321,10 +321,10 @@ test('a Forever ship calling at three docks: one transport per dock pair, follow
 test('the committed TravelData.lua has the Forever ships on their dock maps', () => {
 	const [ships] = runAddon({
 		stubs: ['stub_nav.lua'],
-		addons: [{ name: 'Polestar', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
+		addons: [{ name: 'SendaFH', files: ['Core/Init.lua', 'Nav/Nav.xml'] }],
 		script: `
 			local out = {}
-			for _, t in ipairs(Polestar.Nav.GetTravelData().transports) do
+			for _, t in ipairs(SendaFH.Nav.GetTravelData().transports) do
 				out[t.id] = { t.faction, t.a.map, t.a.f, t.b.map, t.b.f, t.ab, t.ba, t.waitA, t.waitB }
 			end
 			emit(out)`,

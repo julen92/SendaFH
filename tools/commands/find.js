@@ -15,7 +15,7 @@ const CLASS_NAMES = Object.values(CLASSES).map((c) => classLabel(c.file));
 const SEARCHED = ['quests.json', 'npcs.json', 'objects.json', 'items.json', 'zones.json'];
 const PLACES = ['travel.json', 'zones.json'];
 
-const usage = `usage: node tools/polestar.js find <text> [options]
+const usage = `usage: node tools/sendafh.js find <text> [options]
 
 Searches the reference data (quests, NPCs, objects, items, inns and flight
 points) and our guides. A number matches ids exactly; other text matches
@@ -88,7 +88,7 @@ async function run(argv) {
 	const missing = opts.kind === 'guide' ? [] : data.missing.filter((f) => (listed ? PLACES : SEARCHED).includes(f));
 	if (missing.length) {
 		const build = missing.includes('travel.json') && missing.length === 1 ? 'travel build' : 'data build';
-		console.error(`find: the reference data in ${dataDir} is missing ${missing.join(', ')}; run node tools/polestar.js ${build} (or pass --data)`);
+		console.error(`find: the reference data in ${dataDir} is missing ${missing.join(', ')}; run node tools/sendafh.js ${build} (or pass --data)`);
 		return 1;
 	}
 	const guides = opts.kind && opts.kind !== 'guide' ? [] : loadGuideHeaders(resolvePath(opts.guides, 'guides', ROOT));

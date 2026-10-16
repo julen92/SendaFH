@@ -4,7 +4,7 @@ faction Horde
 levels 40-43
 zone Stranglethorn Vale
 next forever/horde/40-50/02-feralas
-# Route from the Polestar route simulator's Horde consensus (Tauren export),
+# Route from the SendaFH route simulator's Horde consensus (Tauren export),
 # visit 31 (Stranglethorn Vale, levels 40.2-42.3) and visit 32 (Swamp of
 # Sorrows, 42.3-42.5) of the export it was written from; the October
 # refresh's export has them as visits 30 (Stranglethorn 40.9-42.9) and 28

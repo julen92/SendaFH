@@ -304,7 +304,7 @@ function guidesFor(meta, visits) {
 		];
 		if (i + 1 < visits.length) lines.push(`next ${visits[i + 1].guide}`);
 		lines.push(
-			`# Skeleton from \`polestar sim export\` (${meta.label}). Era + known Forever quests only.`,
+			`# Skeleton from \`sendafh sim export\` (${meta.label}). Era + known Forever quests only.`,
 			'# Quests in the order the simulator did them; review every step in game before publishing.',
 			'',
 		);

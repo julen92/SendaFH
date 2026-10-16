@@ -5,12 +5,12 @@
 #   docker compose up -d --build     start, or update after a git pull
 #   docker compose logs -f           what it is doing
 
-name: polestar-bot
+name: sendafh-bot
 
 services:
   bot:
     build: .
-    image: polestar-bot:latest
+    image: sendafh-bot:latest
     env_file: .env
     restart: unless-stopped
     init: true

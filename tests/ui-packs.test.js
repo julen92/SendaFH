@@ -1,5 +1,5 @@
 'use strict';
-// The Guide packs page (addon/Polestar/UI/Packs.lua, registered by
+// The Guide packs page (addon/SendaFH/UI/Packs.lua, registered by
 // UI/Options.lua) against the real Core + Theme + UI manifests. The UI's
 // fake Engine comes from tests/lua/stub_ui.lua; the guide registry is the
 // real one (Core/Guides.lua), so the rows come from the core's own records
@@ -17,8 +17,8 @@ const FILES = ['Core/Core.xml', 'Theme/Theme.xml', 'UI/UI.xml'];
 const ADDONS = `
 ADDON_INTERFACE_VERSION = "Out of date"
 stub.addons = {
-	{ name = "Polestar", loaded = true },
-	{ name = "Polestar_Guides", loaded = true },
+	{ name = "SendaFH", loaded = true },
+	{ name = "SendaFH_Guides", loaded = true },
 	{ name = "JoeAddon", loaded = true },
 	{ name = "EmptyAddon", loaded = true },
 	{ name = "Off", reason = "DISABLED", enabled = false },
@@ -33,7 +33,7 @@ local function toc(id, title, extra)
 	for k, v in pairs(extra or {}) do m[k] = v end
 	return m
 end
-stub.addonMeta.Polestar_Guides = toc("guides", "Polestar Guides")
+stub.addonMeta.SendaFH_Guides = toc("guides", "SendaFH Guides")
 stub.addonMeta.JoeAddon = toc("joe", "Joe's Routes")
 stub.addonMeta.EmptyAddon = toc("empty", "Empty")
 stub.addonMeta.Off = toc("off", "Switched Off")
@@ -46,7 +46,7 @@ stub.addonMeta.Dung = toc("dung", "Dungeon Pack")
 
 const PACKS = `
 uistub.install()
-Polestar.Guides = uistub.realGuides
+SendaFH.Guides = uistub.realGuides
 G = uistub.realGuides
 local function meta(addon, id, title, extra)
 	local m = { addon = addon, id = id, format = 1, title = title, author = title .. " Author", version = "1.2.0", license = "MIT" }
@@ -56,30 +56,30 @@ end
 local function guide(id, pack, extra)
 	local g = { id = id, pack = pack, title = "T " .. id, minLevel = 10, maxLevel = 20, steps = { { goals = { { t = "level", level = 20 } } } } }
 	for k, v in pairs(extra or {}) do g[k] = v end
-	return Polestar.RegisterGuide(g)
+	return SendaFH.RegisterGuide(g)
 end
-assert(Polestar.RegisterPack(meta("Polestar_Guides", "guides", "Polestar Guides", { author = "Polestar", license = "GPL-3.0" })))
+assert(SendaFH.RegisterPack(meta("SendaFH_Guides", "guides", "SendaFH Guides", { author = "Polestar", license = "GPL-3.0" })))
 guide("forever/a", "guides")
 guide("forever/b", "guides")
-assert(Polestar.RegisterPack(meta("JoeAddon", "joe", JOE_TITLE or "Joe's Routes", { author = "Joe", license = "CC-BY-4.0",
+assert(SendaFH.RegisterPack(meta("JoeAddon", "joe", JOE_TITLE or "Joe's Routes", { author = "Joe", license = "CC-BY-4.0",
 	website = "https://github.com/joe/routes", source = JOE_SOURCE or "Written from my own play" })))
 guide("joe/a", "joe")
-assert(Polestar.RegisterPack(meta("EmptyAddon", "empty", "Empty")))
-assert(Polestar.RegisterPack(meta("Probs", "probs", "Problem Pack")))
+assert(SendaFH.RegisterPack(meta("EmptyAddon", "empty", "Empty")))
+assert(SendaFH.RegisterPack(meta("Probs", "probs", "Problem Pack")))
 guide("probs/ok", "probs")
 guide("elsewhere/one", "probs")
 guide("elsewhere/two", "probs")
-assert(Polestar.RegisterPack(meta("Dung", "dung", "Dungeon Pack")))
+assert(SendaFH.RegisterPack(meta("Dung", "dung", "Dungeon Pack")))
 guide("dung/deadmines", "dung", { category = "Dungeons" })
 stub.login()
-UI, O, P = Polestar.UI, Polestar.UI.Options, Polestar.UI.Packs
+UI, O, P = SendaFH.UI, SendaFH.UI.Options, SendaFH.UI.Packs
 function openPage() UI.ShowOptions("guidepacks"); return P.view end
 function rowOf(addon)
 	for _, r in ipairs(P.view.rows) do if r:IsShown() and r.psRecord.addon == addon then return r end end
 end
 function shownText(fs) return fs:IsShown() and fs:GetText() or false end
 function navDot()
-	for _, b in ipairs(PolestarOptions.navButtons) do
+	for _, b in ipairs(SendaFHOptions.navButtons) do
 		if b:IsShown() and b.psKey == "guidepacks" then return b.Dot:IsShown() end
 	end
 end
@@ -89,7 +89,7 @@ function run(script, { before = '' } = {}) {
 	return runAddon({
 		stubs: ['stub_ui.lua'],
 		before: ADDONS + before,
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `${PACKS}\n${script}`,
 	}).emitted;
 }
@@ -106,12 +106,12 @@ test('one row per pack, ours first: credits, count, website, source and each sta
 					website = r.Website:IsShown() and r.Website.Label:GetText() or false, source = shownText(r.Source) }
 			end
 		end
-		emit({ rows = rows, title = PolestarOptions.Title:GetText() })`);
+		emit({ rows = rows, title = SendaFHOptions.Title:GetText() })`);
 	const by = Object.fromEntries(out.rows.map((r) => [r.addon, r]));
 	assert.equal(out.title, 'Guide packs');
 	assert.deepEqual(out.rows.map((r) => r.addon),
-		['Polestar_Guides', 'Crash', 'Dung', 'EmptyAddon', 'Future', 'JoeAddon', 'Old', 'Probs', 'Off']);
-	assert.deepEqual(by.Polestar_Guides, { addon: 'Polestar_Guides', title: 'Polestar Guides', credits: 'Polestar  ·  1.2.0  ·  GPL-3.0',
+		['SendaFH_Guides', 'Crash', 'Dung', 'EmptyAddon', 'Future', 'JoeAddon', 'Old', 'Probs', 'Off']);
+	assert.deepEqual(by.SendaFH_Guides, { addon: 'SendaFH_Guides', title: 'SendaFH Guides', credits: 'Polestar  ·  1.2.0  ·  GPL-3.0',
 		count: '2 guides', switch: true, enable: false, status: false, problems: false, website: false, source: false });
 	assert.deepEqual(by.JoeAddon, { addon: 'JoeAddon', title: "Joe's Routes", credits: 'Joe  ·  1.2.0  ·  CC-BY-4.0',
 		count: '1 guide', switch: true, enable: false, status: false, problems: false,
@@ -123,16 +123,16 @@ test('one row per pack, ours first: credits, count, website, source and each sta
 	assert.equal(by.Off.status, 'turned off in the AddOns list');
 	assert.equal(by.Off.enable, true);
 	assert.equal(by.Old.status, 'not loaded: Out of date');
-	assert.equal(by.Future.status, 'needs Polestar 0.4.0 or newer');
+	assert.equal(by.Future.status, 'needs SendaFH 0.4.0 or newer');
 	assert.equal(by.Probs.problems, '2 problems');
 	assert.equal(by.Probs.switch, true);
 	assert.equal(by.Probs.count, '1 guide');
 });
 
-test('a too-new pack without X-Polestar-Needs needs "a newer Polestar"', () => {
+test('a too-new pack without X-Polestar-Needs needs "a newer SendaFH"', () => {
 	const [out] = run(`openPage(); emit({ status = shownText(rowOf("Future").Status) })`,
 		{ before: 'stub.addonMeta.Future["X-Polestar-Needs"] = nil' });
-	assert.equal(out.status, 'needs a newer Polestar');
+	assert.equal(out.status, 'needs a newer SendaFH');
 });
 
 test('the switch hides and shows a pack through Guides.SetPackShown', () => {
@@ -143,7 +143,7 @@ test('the switch hides and shows a pack through Guides.SetPackShown', () => {
 		G.SetPackShown = function(id, shown) calls[#calls + 1] = { id, shown }; return set(id, shown) end
 		local row = rowOf("JoeAddon")
 		row.Switch:Click()
-		local off = { status = G.Pack("joe").status, checked = rowOf("JoeAddon").Switch.checked, stored = PolestarDB.packs.joe.off }
+		local off = { status = G.Pack("joe").status, checked = rowOf("JoeAddon").Switch.checked, stored = SendaFHDB.packs.joe.off }
 		rowOf("JoeAddon").Switch:Click()
 		emit({ calls = calls, off = off, on = G.Pack("joe").status })`);
 	assert.deepEqual(out.calls, [['joe', false], ['joe', true]]);
@@ -184,7 +184,7 @@ test('Show lists the problems; Copy report fills a selected box with the pack, v
 	}
 	assert.match(out.report, /^Pack: probs \(Probs\)$/m);
 	assert.match(out.report, /Pack version: 1\.2\.0/);
-	assert.match(out.report, /Polestar version: 0\.1\.0-test/);
+	assert.match(out.report, /SendaFH version: 0\.1\.0-test/);
 	assert.match(out.report, /1\.60\.1 \(70338\)/);
 	assert.equal(out.focused, true, 'the report box takes focus, its text selected');
 });
@@ -225,7 +225,7 @@ test('the report box grows to fit a long problem message as it wraps', () => {
 
 test('a refused pack says why', () => {
 	const [out] = run(`
-		Polestar.RegisterPack({ addon = "JoeCopy", id = "joe", format = 1, title = "Joe Again", author = "X", version = "1", license = "MIT" })
+		SendaFH.RegisterPack({ addon = "JoeCopy", id = "joe", format = 1, title = "Joe Again", author = "X", version = "1", license = "MIT" })
 		openPage()
 		local row = rowOf("JoeCopy")
 		emit({ status = shownText(row.Status), switch = row.Switch:IsShown() })`);
@@ -235,7 +235,7 @@ test('a refused pack says why', () => {
 
 test('a refused pack\'s id and addon, kept as given, print literally in the row title and the report', () => {
 	const [out] = run(`
-		Polestar.RegisterPack({ addon = "Bad|Addon", id = "bad|cffid", format = 1 })
+		SendaFH.RegisterPack({ addon = "Bad|Addon", id = "bad|cffid", format = 1 })
 		openPage()
 		local row = rowOf("Bad|Addon")
 		local title = row.Title:GetText()
@@ -272,17 +272,17 @@ test('the source wraps on its own line under the website box, at the row\'s full
 	assert.ok(out.rowH >= -out.source.y + out.source.h, 'the row grows to hold it');
 });
 
-test('Suggest guides from lists Polestar and packs with leveling guides; choosing one sets behavior.suggestFrom', () => {
+test('Suggest guides from lists SendaFH and packs with leveling guides; choosing one sets behavior.suggestFrom', () => {
 	const [out] = run(`
 		local view = openPage()
 		view.Source.Button:Click()
 		local choices = {}
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() then choices[#choices + 1] = r.Text:GetText() end end
-		for _, r in ipairs(PolestarMenu.rows) do if r:IsShown() and r.Text:GetText() == "Joe's Routes" then r:Click() end end
-		emit({ choices = choices, setting = Polestar.Get("behavior.suggestFrom"), source = G.SuggestSource(),
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() then choices[#choices + 1] = r.Text:GetText() end end
+		for _, r in ipairs(SendaFHMenu.rows) do if r:IsShown() and r.Text:GetText() == "Joe's Routes" then r:Click() end end
+		emit({ choices = choices, setting = SendaFH.Get("behavior.suggestFrom"), source = G.SuggestSource(),
 			shown = view.Source.Button.Label:GetText(), sources = G.SuggestSources() })`);
 	assert.deepEqual(out.sources, ['guides', 'joe', 'probs'], 'the page lists what the core allows');
-	assert.deepEqual(out.choices, ['Polestar', "Joe's Routes", 'Problem Pack']);
+	assert.deepEqual(out.choices, ['SendaFH', "Joe's Routes", 'Problem Pack']);
 	assert.equal(out.setting, 'joe');
 	assert.equal(out.source, 'joe');
 	assert.equal(out.shown, "Joe's Routes");
@@ -296,24 +296,24 @@ test('the navigation dot shows while a pack has problems and goes with them', ()
 	assert.equal(out.with, true);
 	const [clean] = runAddon({
 		stubs: ['stub_ui.lua'],
-		addons: [{ name: 'Polestar', files: FILES }],
+		addons: [{ name: 'SendaFH', files: FILES }],
 		script: `uistub.install()
-			Polestar.Guides = uistub.realGuides
-			assert(Polestar.RegisterPack({ addon = "Polestar_Guides", id = "guides", format = 1, title = "Polestar Guides", author = "Polestar", version = "1", license = "GPL-3.0" }))
-			assert(Polestar.RegisterGuide({ id = "forever/a", pack = "guides", title = "A", steps = { { goals = { { t = "level", level = 2 } } } } }))
+			SendaFH.Guides = uistub.realGuides
+			assert(SendaFH.RegisterPack({ addon = "SendaFH_Guides", id = "guides", format = 1, title = "SendaFH Guides", author = "Polestar", version = "1", license = "GPL-3.0" }))
+			assert(SendaFH.RegisterGuide({ id = "forever/a", pack = "guides", title = "A", steps = { { goals = { { t = "level", level = 2 } } } } }))
 			stub.login()
-			Polestar.UI.ShowOptions("guide")
+			SendaFH.UI.ShowOptions("guide")
 			local dot
-			for _, b in ipairs(PolestarOptions.navButtons) do if b:IsShown() and b.psKey == "guidepacks" then dot = b.Dot:IsShown() end end
-			emit({ dot = dot, problems = Polestar.Guides.ProblemCount() })`,
+			for _, b in ipairs(SendaFHOptions.navButtons) do if b:IsShown() and b.psKey == "guidepacks" then dot = b.Dot:IsShown() end end
+			emit({ dot = dot, problems = SendaFH.Guides.ProblemCount() })`,
 	}).emitted;
 	assert.deepEqual(clean, { dot: false, problems: 0 });
 });
 
-test('/polestar packs opens the page', () => {
+test('/sendafh packs opens the page', () => {
 	const [out] = run(`
-		SlashCmdList.POLESTAR("packs")
-		emit({ shown = PolestarOptions:IsShown(), title = PolestarOptions.Title:GetText() })`);
+		SlashCmdList.SENDAFH("packs")
+		emit({ shown = SendaFHOptions:IsShown(), title = SendaFHOptions.Title:GetText() })`);
 	assert.deepEqual(out, { shown: true, title: 'Guide packs' });
 });
 
@@ -323,11 +323,11 @@ test('the website and the docs line are links that open the copy window; without
 		local seen = { label = view.DocsLabel:GetText(), link = view.Docs:IsShown() and view.Docs.Label:GetText() or false,
 			kind = view.Docs:GetObjectType() }
 		view.Docs:Click()
-		seen.docsTitle, seen.docsCopy = PolestarCopy.Title:GetText(), PolestarCopy.Box:GetText()
+		seen.docsTitle, seen.docsCopy = SendaFHCopy.Title:GetText(), SendaFHCopy.Box:GetText()
 		rowOf("JoeAddon").Website:Click()
-		seen.siteTitle, seen.siteCopy = PolestarCopy.Title:GetText(), PolestarCopy.Box:GetText()
+		seen.siteTitle, seen.siteCopy = SendaFHCopy.Title:GetText(), SendaFHCopy.Box:GetText()
 		emit(seen)`,
-	{ before: 'stub.addonMeta.Polestar = { ["X-Website"] = "https://github.com/polestar/polestar/" }' });
+	{ before: 'stub.addonMeta.SendaFH = { ["X-Website"] = "https://github.com/polestar/polestar/" }' });
 	assert.deepEqual(withSite, {
 		label: 'Read more:', link: 'github.com/polestar/polestar/blob/HEAD/docs/GUIDE_PACKS.md', kind: 'Button',
 		docsTitle: 'Guide packs, explained', docsCopy: 'https://github.com/polestar/polestar/blob/HEAD/docs/GUIDE_PACKS.md',
@@ -336,7 +336,7 @@ test('the website and the docs line are links that open the copy window; without
 	const [without] = run(`
 		local view = openPage()
 		emit({ label = view.DocsLabel:GetText(), link = view.Docs:IsShown() })`);
-	assert.deepEqual(without, { label: "Read more: docs/GUIDE_PACKS.md in Polestar's source", link: false });
+	assert.deepEqual(without, { label: "Read more: docs/GUIDE_PACKS.md in SendaFH's source", link: false });
 });
 
 test('a 64-character title is cut to its column, inside the row', () => {

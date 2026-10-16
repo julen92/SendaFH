@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const WORLD = `
 local w = stub.world
@@ -21,7 +21,7 @@ w.zone, w.subzone = "Undercity", "Undercity"
 `;
 
 const GUIDE = `
-Polestar.RegisterGuide({ id = "test/z", pack = "test", title = "Heights", category = "Leveling", minLevel = 1, maxLevel = 60, steps = {
+SendaFH.RegisterGuide({ id = "test/z", pack = "test", title = "Heights", category = "Leveling", minLevel = 1, maxLevel = 60, steps = {
 	{ goals = { { t = "talk", npc = 6522, npcName = "Andron Gant", map = 1458, x = 54.81, y = 76.33, z = -66 } } },
 	{ goals = { { t = "kill", npc = 1, target = "Rat", count = 99, map = 1458, x = 40, y = 40, z = -40,
 		spots = { { x = 40, y = 40, r = 15, n = 1 }, { x = 70, y = 70, r = 15, n = 1 } } } } },
@@ -41,7 +41,7 @@ function run(script) {
 		script: `${TEST_PACK}
 ${TEST_SOURCE}
 ${GUIDE}
-			E = Polestar.Engine
+			E = SendaFH.Engine
 			stub.login()
 			${script}`,
 	}).emitted;

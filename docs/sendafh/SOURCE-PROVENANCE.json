@@ -1,0 +1,17 @@
+{
+  "version": "0.5.0-beta.1",
+  "installer_sha256": "b02eaac76ed2a9f05da7af3fc5df910d81f6786a16a4fdf19fc1da117a6c6cff",
+  "modules": [
+    "SendaFH",
+    "SendaFH_Codex",
+    "SendaFH_Guides",
+    "SendaFH_ItemDB",
+    "SendaFH_Names_esES",
+    "SendaFH_Names_esMX",
+    "SendaFH_Nav",
+    "SendaFH_QuestDB"
+  ],
+  "runtime_files_verified": 361,
+  "editable_source_files": 1119,
+  "runtime_matches_submitted_zip": true
+}

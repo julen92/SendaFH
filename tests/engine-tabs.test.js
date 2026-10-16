@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK, TEST_SOURCE } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const WORLD = `
 local w = stub.world
@@ -18,36 +18,36 @@ w.moveTo(1429, 20, 80)
 // A leveling guide (suggested for a level-1 Human), a warrior class guide,
 // a profession guide, and filler guides for the cap.
 const GUIDES = `
-Polestar.RegisterGuide({ id = "test/lvl", pack = "test", title = "Northshire", faction = "Alliance", minLevel = 1, maxLevel = 6, next = "test/lvl2", steps = {
+SendaFH.RegisterGuide({ id = "test/lvl", pack = "test", title = "Northshire", faction = "Alliance", minLevel = 1, maxLevel = 6, next = "test/lvl2", steps = {
 	{ goals = { { t = "accept", quest = 783, title = "A Threat Within", map = 1429, x = 48, y = 42 } } },
 	{ goals = { { t = "turnin", quest = 783, title = "A Threat Within", map = 1429, x = 49, y = 41 } } },
 } })
-Polestar.RegisterGuide({ id = "test/lvl2", pack = "test", title = "Elwynn", faction = "Alliance", minLevel = 6, maxLevel = 10, steps = {
+SendaFH.RegisterGuide({ id = "test/lvl2", pack = "test", title = "Elwynn", faction = "Alliance", minLevel = 6, maxLevel = 10, steps = {
 	{ goals = { { t = "level", level = 10 } } },
 } })
-Polestar.RegisterGuide({ id = "test/warrior", pack = "test", title = "Warrior skills", category = "Class", minLevel = 1, maxLevel = 10, steps = {
+SendaFH.RegisterGuide({ id = "test/warrior", pack = "test", title = "Warrior skills", category = "Class", minLevel = 1, maxLevel = 10, steps = {
 	{ goals = { { t = "accept", quest = 1684, title = "Elanaria", map = 1429, x = 60, y = 60 } } },
 	{ goals = { { t = "turnin", quest = 1684, title = "Elanaria" } } },
 } })
-Polestar.RegisterGuide({ id = "test/cook", pack = "test", title = "Cooking", category = "Professions", minLevel = 1, maxLevel = 60, next = "test/cook2", steps = {
+SendaFH.RegisterGuide({ id = "test/cook", pack = "test", title = "Cooking", category = "Professions", minLevel = 1, maxLevel = 60, next = "test/cook2", steps = {
 	{ goals = { { t = "buy", item = 159, itemName = "Spring Water", count = 2 } } },
 } })
-Polestar.RegisterGuide({ id = "test/cook2", pack = "test", title = "Cooking 2", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
+SendaFH.RegisterGuide({ id = "test/cook2", pack = "test", title = "Cooking 2", category = "Professions", minLevel = 1, maxLevel = 60, steps = {
 	{ goals = { { t = "level", level = 50 } } },
 } })
 for i = 1, 6 do
-	Polestar.RegisterGuide({ id = "test/f" .. i, pack = "test", title = "Filler " .. i, category = "Exploration", minLevel = 1, maxLevel = 60, steps = {
+	SendaFH.RegisterGuide({ id = "test/f" .. i, pack = "test", title = "Filler " .. i, category = "Exploration", minLevel = 1, maxLevel = 60, steps = {
 		{ goals = { { t = "level", level = 60 } } },
 	} })
 end
 `;
 
 const HELPERS = `
-E = Polestar.Engine
+E = SendaFH.Engine
 function flush() stub.advance(0.25) end
 LOG = {}
 for _, m in ipairs({ "GUIDE_CHANGED", "STEP_CHANGED", "WAYPOINT_CHANGED", "GUIDE_COMPLETED", "TABS_CHANGED" }) do
-	Polestar.On(m, function(a, b)
+	SendaFH.On(m, function(a, b)
 		local v = a
 		if m == "WAYPOINT_CHANGED" then v = a and (a.stepIndex .. ":" .. a.goalIndex) or "nil" end
 		if m == "TABS_CHANGED" then
@@ -97,7 +97,7 @@ test('open, select, move and close tabs; the active tab and its guide persist', 
 			r.afterCloseActive = { ids(), E.GetGuide().id }
 			E.CloseTab(1)
 			r.afterCloseOther = ids()
-			r.saved = { tabs = PolestarCharDB.tabs, activeTab = PolestarCharDB.activeTab, guide = PolestarCharDB.guide }
+			r.saved = { tabs = SendaFHCharDB.tabs, activeTab = SendaFHCharDB.activeTab, guide = SendaFHCharDB.guide }
 			emit(r)
 		`,
 	});
@@ -119,13 +119,13 @@ test('open, select, move and close tabs; the active tab and its guide persist', 
 test('saved tabs reopen at login with their own step state; a guide not registered stays saved, after the open tabs', () => {
 	const [out] = run({
 		before: 'stub.world.onQuest(783, {})',
-		saved: { Polestar: 'PolestarCharDB = { schema = 1, tabs = { "test/warrior", "gone", "test/lvl" }, activeTab = 3, guide = "test/lvl" }' },
+		saved: { SendaFH: 'SendaFHCharDB = { schema = 1, tabs = { "test/warrior", "gone", "test/lvl" }, activeTab = 3, guide = "test/lvl" }' },
 		script: `
 			local list, active = E.GetTabs()
 			emit({ ids = ids(), guide = E.GetGuide().id, step = E.GetStepIndex(),
 				tabs = { { list[1].guideId, list[1].stepIndex, list[1].done, list[1].total, list[1].complete },
 					{ list[2].guideId, list[2].stepIndex, list[2].done, list[2].total, list[2].complete } },
-				saved = PolestarCharDB.tabs })
+				saved = SendaFHCharDB.tabs })
 		`,
 	});
 	assert.deepEqual(out, {
@@ -186,7 +186,7 @@ test('autoNextGuide replaces a finished guide within its own tab', () => {
 			E.OpenTab("test/cook", false)
 			takeLog()
 			stub.world.addItem(159, 2); flush()
-			emit({ ids = ids(), active = E.GetGuide().id, log = takeLog(), saved = PolestarCharDB.tabs })
+			emit({ ids = ids(), active = E.GetGuide().id, log = takeLog(), saved = SendaFHCharDB.tabs })
 		`,
 	});
 	assert.deepEqual(out, {
@@ -199,8 +199,8 @@ test('autoNextGuide replaces a finished guide within its own tab', () => {
 
 test('nil SavedVariables reopen one suggested tab', () => {
 	const [out] = run({
-		saved: { Polestar: 'PolestarDB = nil; PolestarCharDB = nil' },
-		script: `emit({ ids = ids(), saved = PolestarCharDB.tabs, log = takeLog() })`,
+		saved: { SendaFH: 'SendaFHDB = nil; SendaFHCharDB = nil' },
+		script: `emit({ ids = ids(), saved = SendaFHCharDB.tabs, log = takeLog() })`,
 	});
 	assert.deepEqual(out.ids, { tabs: ['test/lvl'], active: 1 });
 	assert.deepEqual(out.saved, ['test/lvl']);
@@ -231,17 +231,17 @@ test('slash commands list, switch and close tabs; guide state for the picker', (
 		script: `
 			E.OpenTab("test/warrior", false)
 			stub.messages = {}
-			SlashCmdList.POLESTAR("tabs")
+			SlashCmdList.SENDAFH("tabs")
 			local listed = stub.messages
-			SlashCmdList.POLESTAR("tab 2")
+			SlashCmdList.SENDAFH("tab 2")
 			local switched = E.GetGuide().id
-			SlashCmdList.POLESTAR("close")
+			SlashCmdList.SENDAFH("close")
 			local states = { E.GetGuideState("test/lvl"), E.GetGuideState("test/warrior"), E.GetGuideState("test/cook") }
 			emit({ listed = listed, switched = switched, after = ids(), states = states })
 		`,
 	});
 	assert.deepEqual(out.listed, [
-		'|cff4fd1c5Polestar|r: Open guides:',
+		'|cff4fd1c5SendaFH|r: Open guides:',
 		'|cff4fd1c5>|r 1. Northshire  |cff8a8f98step 1 of 2|r',
 		'  2. Warrior skills  |cff8a8f98step 1 of 2|r',
 	]);

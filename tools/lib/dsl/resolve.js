@@ -10,7 +10,7 @@
 
 const SPAWN_CHECK_YARDS = 50;
 // The fix hint for an id that is not in the reference data.
-const FIND_ID_HINT = 'find the id with `polestar find <name>`, or give its name in quotes';
+const FIND_ID_HINT = 'find the id with `sendafh find <name>`, or give its name in quotes';
 
 const { buildCandidates } = require('./candidates');
 const { farmSpots } = require('./farmspots');
@@ -422,7 +422,7 @@ function resolveGuide(ast, data, diag, opts = {}) {
 	setIf(guide, 'cons', h.cons);
 	// A guide without `author` is its pack's author's (opts.author, from
 	// pack.json); ours when no pack author is given.
-	guide.author = h.author || opts.author || 'Polestar';
+	guide.author = h.author || opts.author || 'SendaFH';
 	guide.version = h.version !== undefined ? h.version : 1;
 	guide.steps = [];
 	hidden(guide, '_ast', ast);
@@ -1048,7 +1048,7 @@ function resolveGoal(g, zoneMap, prev, data, err, warn, ctx = { sides: ['Allianc
 				warn(
 					ln,
 					`quest ${g.quest} has ${q.objectives.length} objective(s) in data, not ${oi}${q.objectives.length ? `: ${listed()}` : ''}`,
-					q.objectives.length ? `write \`quest ${g.quest}.<n>\` with one of these (\`polestar find ${g.quest}\` lists them)` : `drop the \`.${oi}\`: write \`quest ${g.quest}\``,
+					q.objectives.length ? `write \`quest ${g.quest}.<n>\` with one of these (\`sendafh find ${g.quest}\` lists them)` : `drop the \`.${oi}\`: write \`quest ${g.quest}\``,
 				);
 			}
 			const kind = v === 'kill' ? 'kill' : v === 'collect' ? 'item' : v === 'interact' ? 'object' : null;
@@ -1219,7 +1219,7 @@ function checkNear(data, kinds, map, x, y, frame, ln, warn) {
 	if (!any) return;
 	if (!onMap && otherFrame) return; // known spawns on this map are in the other frame: not comparable
 	const what = kinds.length === 1 ? `${kinds[0].kind} ${kinds[0].id}` : 'the target';
-	const look = kinds.length === 1 ? `\`polestar find ${kinds[0].id} --kind ${kinds[0].kind}\`` : '`polestar find <id>`';
+	const look = kinds.length === 1 ? `\`sendafh find ${kinds[0].id} --kind ${kinds[0].kind}\`` : '`sendafh find <id>`';
 	const hint = `${look} prints a known spawn: check the coordinates against it, or keep them when the target stands elsewhere in Forever`;
 	if (!onMap) warn(ln, `explicit coordinates ${x},${y}: ${what} has no known spawn on map ${map}`, hint);
 	else warn(ln, `explicit coordinates ${x},${y} are more than ${SPAWN_CHECK_YARDS} yards from every known spawn of ${what}`, hint);

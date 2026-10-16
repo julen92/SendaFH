@@ -1,13 +1,13 @@
 'use strict';
-// node tools/polestar.js codex build|parity|wowhead|attune [options]
+// node tools/sendafh.js codex build|parity|wowhead|attune [options]
 
 const path = require('node:path');
 const { parseArgs } = require('node:util');
 
-const usage = `usage: node tools/polestar.js codex build [options]
-       node tools/polestar.js codex parity [--ours <dir>] [--against <dir>]
-       node tools/polestar.js codex wowhead [--delay <ms>] [--limit <n>] [--max-age <days>] [--dry-run]
-       node tools/polestar.js codex attune [--addons <dir>] [--ours <dir>]
+const usage = `usage: node tools/sendafh.js codex build [options]
+       node tools/sendafh.js codex parity [--ours <dir>] [--against <dir>]
+       node tools/sendafh.js codex wowhead [--delay <ms>] [--limit <n>] [--max-age <days>] [--dry-run]
+       node tools/sendafh.js codex attune [--addons <dir>] [--ours <dir>]
 
 Builds Lookup's Codex: every item, mount, pet, recipe, NPC, rare, quest,
 zone, dungeon and treasure, with where each item comes from, and the
@@ -15,8 +15,8 @@ Dungeons journal. Release-safe inputs only: the data/forever/*.json tables
 (pfQuest, QuestieDB facts, recordings, corrections), the Forever client's
 tables (the newest 1.60+ build wago.tools lists, cached under
 data/sources/wago/; meta.json records it), the installed ForeverLevelingBiS
-(MIT) and Polestar's own guides. Writes data/forever/codex/*.json and the
-load-on-demand pack addon/Polestar_Codex with its LICENSE-DATA.txt; \`pack\`
+(MIT) and SendaFH's own guides. Writes data/forever/codex/*.json and the
+load-on-demand pack addon/SendaFH_Codex with its LICENSE-DATA.txt; \`pack\`
 ships that folder in the release zip.
 
   --addons <dir>     the Forever client's Interface/AddOns (default: detected)
@@ -25,8 +25,8 @@ ships that folder in the release zip.
                      holding every table the Codex reads)
   --out <dir>        JSON output (default data/forever/codex; with
                      --local-extras data/local/codex-extras)
-  --pack <dir>       pack output (default addon/Polestar_Codex; with
-                     --local-extras data/local/codex-extras/Polestar_Codex)
+  --pack <dir>       pack output (default addon/SendaFH_Codex; with
+                     --local-extras data/local/codex-extras/SendaFH_Codex)
   --local-extras     also merge the installed AtlasLoot (GPL-2.0), RareScanner
                      (All Rights Reserved) and data/forever/dungeons.json
                      (DungeonJournal, no licence). For this machine only: the
@@ -89,7 +89,7 @@ async function runBuild(rest) {
 	// A --local-extras build never lands where `pack` and `install` look.
 	if (values['local-extras']) {
 		values.out = values.out || path.join(ROOT, 'data', 'local', 'codex-extras');
-		values.pack = values.pack || path.join(ROOT, 'data', 'local', 'codex-extras', 'Polestar_Codex');
+		values.pack = values.pack || path.join(ROOT, 'data', 'local', 'codex-extras', 'SendaFH_Codex');
 	}
 	const res = await buildCodex({
 		addons: abs(values.addons),
@@ -258,4 +258,4 @@ async function run(argv) {
 	return fail(sub ? `unknown subcommand "${sub}"` : 'missing subcommand');
 }
 
-module.exports = { name: 'codex', summary: "Build Lookup's Codex (data/forever/codex + the Polestar_Codex pack)", usage, run };
+module.exports = { name: 'codex', summary: "Build Lookup's Codex (data/forever/codex + the SendaFH_Codex pack)", usage, run };

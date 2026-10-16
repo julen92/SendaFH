@@ -1,5 +1,5 @@
 'use strict';
-// Polestar.QuestDB at runtime (addon/Polestar/Quests) on a database built by
+// SendaFH.QuestDB at runtime (addon/SendaFH/Quests) on a database built by
 // `questdb build` from tests/fixtures/questdb: load-on-demand, lookups,
 // available-quest filtering (prerequisites, level, race, class, faction,
 // exclusive groups, holidays), objective and turn-in markers through the
@@ -18,7 +18,7 @@ const FIX = path.join(__dirname, 'fixtures', 'questdb');
 let dbFiles;
 
 before(() => {
-	const out = tmpdir('polestar-questdb-');
+	const out = tmpdir('sendafh-questdb-');
 	writeQuestDB(buildQuestDB({ dataDir: FIX }), out);
 	dbFiles = ['MapFrames.lua', 'Quests.lua', 'Npcs.lua', 'Objects.lua', 'Items.lua'].map((f) => path.join(out, f));
 });
@@ -27,10 +27,10 @@ const lua = (s) => JSON.stringify(s);
 
 // The map marker layers are off by default; these tests exercise them, so the
 // default saved profile turns them on.
-const MARKERS_ON = 'PolestarDB = { schema = 1, settings = { qol = { mapObjectives = true, minimapObjectives = true, objectiveAreas = true, turnInMarkers = true, availableQuests = true } } }';
+const MARKERS_ON = 'SendaFHDB = { schema = 1, settings = { qol = { mapObjectives = true, minimapObjectives = true, objectiveAreas = true, turnInMarkers = true, availableQuests = true } } }';
 
 // Loads the full addon with the fake Pins installed, logs in, runs `script`.
-function run(script, { setup = '', saved = { Polestar: MARKERS_ON } } = {}) {
+function run(script, { setup = '', saved = { SendaFH: MARKERS_ON } } = {}) {
 	return runAddon({
 		stubs: ['stub_world.lua', 'stub_quests.lua'],
 		before: `
@@ -40,10 +40,10 @@ w.addMap(1429, { name = "Elwynn Forest", c = 0, left = 1500, right = -1500, top 
 w.moveTo(1429, 48, 40)
 for q, t in pairs({ [7] = "Kobold Camp Cleanup", [18] = "Gathering Wood", [33] = "Wolves Across the Border", [60] = "Kobold Candles" }) do w.titles[q] = t end
 ${setup}`,
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		saved,
 		script: `
-local w, sq, Q = stub.world, stub.quests, Polestar.QuestDB
+local w, sq, Q = stub.world, stub.quests, SendaFH.QuestDB
 sq.installPins()
 stub.login()
 stub.advance(0.3)
@@ -66,7 +66,7 @@ emit(Q.GetNpc(6))
 emit(Q.GetObjectiveMobs(60, 1))
 emit(Q.GetItemDroppers(772))
 emit(Q.GetItem(772))
-emit(Polestar.MapFrames.era[1429])
+emit(SendaFH.MapFrames.era[1429])
 `);
 	assert.deepEqual(loaded, [true, 1]);
 	assert.equal(q7.title, 'Kobold Camp Cleanup');
@@ -91,7 +91,7 @@ test('HandsOver answers from the quest\'s handed-over items; a record without th
 
 test('does not load the database when qol.questDB is off', () => {
 	const [state] = run('local c = {}; for _, call in ipairs(sq.pins.calls) do if call[2]:find("^quests%.") then c[#c + 1] = call end end; emit({ Q.IsLoaded(), sq.loadCalls, Q.IsRunning(), #c })', {
-		saved: { Polestar: 'PolestarDB = { schema = 1, settings = { qol = { questDB = false } } }' },
+		saved: { SendaFH: 'SendaFHDB = { schema = 1, settings = { qol = { questDB = false } } }' },
 	});
 	assert.deepEqual(state, [false, 0, false, 0]);
 });
@@ -105,7 +105,7 @@ emit(Q.GetAvailableQuests())
 w.setLevel(10)                      -- 10 opens up; level <= 4 quests turn grey
 stub.advance(0.3)
 emit(Q.GetAvailableQuests())
-Polestar.Set("qol.lowLevelQuests", true)
+SendaFH.Set("qol.lowLevelQuests", true)
 stub.advance(0.3)
 emit(Q.GetAvailableQuests())
 emit({ Q.WhyUnavailable(5), Q.WhyUnavailable(9), Q.WhyUnavailable(13), Q.WhyUnavailable(12), Q.WhyUnavailable(14), Q.WhyUnavailable(19) })
@@ -170,7 +170,7 @@ test('Horde characters see Horde quests, not Alliance ones', () => {
 // (2^33); 9410 lists only breadcrumbs in `pre`; 9411 needs 783 and 33
 // (preAll); 9412 either (preAny); 9420 is level 9 with no minimum level.
 function extraDb() {
-	const dir = tmpdir('polestar-questdb-extra-');
+	const dir = tmpdir('sendafh-questdb-extra-');
 	for (const f of fs.readdirSync(FIX)) fs.copyFileSync(path.join(FIX, f), path.join(dir, f));
 	const quests = JSON.parse(fs.readFileSync(path.join(FIX, 'quests.json'), 'utf8'));
 	const base = quests[783];
@@ -187,7 +187,7 @@ function extraDb() {
 		9420: q(9420, { level: 9, minLevel: 1 }),
 	});
 	fs.writeFileSync(path.join(dir, 'quests.json'), JSON.stringify(quests));
-	const out = tmpdir('polestar-questdb-');
+	const out = tmpdir('sendafh-questdb-');
 	writeQuestDB(buildQuestDB({ dataDir: dir }), out);
 	return ['MapFrames.lua', 'Quests.lua', 'Npcs.lua', 'Objects.lua', 'Items.lua'].map((f) => path.join(out, f));
 }
@@ -256,7 +256,7 @@ emit({ sq.pins.layers["quests.objectives"] == nil, sq.pins.layers["quests.turnin
 // 9501 needs 6 and 9501, a second NPC also named Kobold Vermin; 9502 the
 // same two, 8 of one and 5 of the other.
 function overlapDb() {
-	const dir = tmpdir('polestar-questdb-overlap-');
+	const dir = tmpdir('sendafh-questdb-overlap-');
 	for (const f of fs.readdirSync(FIX)) fs.copyFileSync(path.join(FIX, f), path.join(dir, f));
 	const quests = JSON.parse(fs.readFileSync(path.join(FIX, 'quests.json'), 'utf8'));
 	const npcs = JSON.parse(fs.readFileSync(path.join(FIX, 'npcs.json'), 'utf8'));
@@ -270,7 +270,7 @@ function overlapDb() {
 	quests[9502] = q(9502, [kill(6, 8, 'Kobold Vermin'), kill(9501, 5, 'Kobold Vermin')]);
 	fs.writeFileSync(path.join(dir, 'quests.json'), JSON.stringify(quests));
 	fs.writeFileSync(path.join(dir, 'npcs.json'), JSON.stringify(npcs));
-	const out = tmpdir('polestar-questdb-');
+	const out = tmpdir('sendafh-questdb-');
 	writeQuestDB(buildQuestDB({ dataDir: dir }), out);
 	return ['MapFrames.lua', 'Quests.lua', 'Npcs.lua', 'Objects.lua', 'Items.lua'].map((f) => path.join(out, f));
 }
@@ -482,9 +482,9 @@ sq.hoverUnit(6)
 GameTooltip.AddDoubleLine = add
 local function same(c, name) local t = Q.Color(name); return c[1] == t.r and c[2] == t.g and c[3] == t.b end
 emit({ same(seen[1][2], "quest"), same(seen[1][3], "success"), same(seen[2][2], "quest"), same(seen[2][3], "textDim") })
-Polestar.Set("qol.questTooltips", false)
+SendaFH.Set("qol.questTooltips", false)
 emit(sq.hoverUnit(6))
-Polestar.Set("qol.questTooltips", true)
+SendaFH.Set("qol.questTooltips", true)
 stub.advance(0.3)
 emit(sq.hoverUnit(6, true))         -- GUID is a secret value (combat): no lines, no error
 `, { setup: 'w.complete({ 783 })' });
@@ -554,7 +554,7 @@ test('a progress count alone rebuilds no marker and calls no Pins; tooltips read
 w.accept(7, { { text = "Kobold Vermin slain: 0/10", type = "monster", required = 10 } })
 stub.advance(0.3)
 local updates = 0
-Polestar.On("QUESTDB_UPDATED", function() updates = updates + 1 end)
+SendaFH.On("QUESTDB_UPDATED", function() updates = updates + 1 end)
 local function snap() return { rebuilds = Q.stats.rebuilds, calls = #sq.pins.calls, pins = #layer("quests.objectives"), updates = updates } end
 emit(snap())
 w.progress(7, 1, 4)
@@ -586,13 +586,13 @@ test('marker settings reach the Pins layers', () => {
 	const [noMinimap, noMap, noAvailable] = run(`
 w.accept(7, { { text = "Kobold Vermin slain: 0/10", type = "monster", required = 10 } })
 stub.advance(0.3)
-Polestar.Set("qol.minimapObjectives", false)
+SendaFH.Set("qol.minimapObjectives", false)
 stub.advance(0.3)
 emit({ sq.pins.layers["quests.objectives"].opts, sq.pins.layers["quests.available"].opts })
-Polestar.Set("qol.mapObjectives", false)
+SendaFH.Set("qol.mapObjectives", false)
 stub.advance(0.3)
 emit(sq.pins.layers["quests.objectives"] == nil)
-Polestar.Set("qol.availableQuests", false)
+SendaFH.Set("qol.availableQuests", false)
 stub.advance(0.3)
 emit({ sq.pins.layers["quests.available"] == nil, #Q.GetAvailableQuests() })
 `, { setup: 'w.complete({ 783 })' });
@@ -603,7 +603,7 @@ emit({ sq.pins.layers["quests.available"] == nil, #Q.GetAvailableQuests() })
 
 test('nameplate icons mark objective mobs until the objective is done', () => {
 	const [shown, secretPlate, done] = run(`
-Polestar.Set("qol.nameplateIcons", true)
+SendaFH.Set("qol.nameplateIcons", true)
 w.accept(7, { { text = "Kobold Vermin slain: 0/10", type = "monster", required = 10 } })
 stub.advance(0.3)
 sq.addPlate("nameplate1", 6)
@@ -622,7 +622,7 @@ emit(Q.NameplateIcons())
 
 test('nameplate icons sit beside the health bar the player sees, above the frame that draws it', () => {
 	const [eui, out] = run(`
-Polestar.Set("qol.nameplateIcons", true)
+SendaFH.Set("qol.nameplateIcons", true)
 w.accept(7, { { text = "Kobold Vermin slain: 0/10", type = "monster", required = 10 } })
 stub.advance(0.3)
 local function frame(kind, parent, label, level, wd, ht)
@@ -691,7 +691,7 @@ test('turning the database off clears every layer', () => {
 	const [layers] = run(`
 w.accept(7, { { text = "Kobold Vermin slain: 0/10", type = "monster", required = 10 } })
 stub.advance(0.3)
-Polestar.Set("qol.questDB", false)
+SendaFH.Set("qol.questDB", false)
 local n = 0
 for name in pairs(sq.pins.layers) do if name:find("^quests%.") then n = n + 1 end end
 emit({ n, Q.IsRunning(), Q.ObjectivesForNpc(6) == nil })
@@ -707,10 +707,10 @@ test('registers its settings on the Questing page and its markers on the Map pag
 local keys = { "questDB", "mapObjectives", "minimapObjectives", "objectiveAreas", "turnInMarkers", "availableQuests",
 	"lowLevelQuests", "questLevelWindow", "questTooltips", "nameplateIcons", "questLevels", "guideHighlight", "guideDim" }
 local d, mine = {}, {}
-for _, k in ipairs(keys) do d[k] = Polestar.GetDefault("qol." .. k); mine["qol." .. k] = true end
+for _, k in ipairs(keys) do d[k] = SendaFH.GetDefault("qol." .. k); mine["qol." .. k] = true end
 emit(d)
 local out, other = { Questing = {}, Map = {} }, {}
-local reg = Polestar.Widgets and Polestar.Widgets.OptionsRegistry or {}
+local reg = SendaFH.Widgets and SendaFH.Widgets.OptionsRegistry or {}
 if #reg == 0 then reg = Q.OPTIONS end
 for _, spec in ipairs(reg) do
 	for _, c in ipairs(spec.controls) do
@@ -741,8 +741,8 @@ emit(other)
 	assert.deepEqual(elsewhere, {}, 'no quest setting on another page');
 });
 
-test('with the shipped database and the real Pins service, quest 7 gets objective markers', { skip: !fs.existsSync(path.join(__dirname, '..', 'addon', 'Polestar_QuestDB', 'Quests.lua')) && 'not generated' }, () => {
-	const shipped = path.join(__dirname, '..', 'addon', 'Polestar_QuestDB');
+test('with the shipped database and the real Pins service, quest 7 gets objective markers', { skip: !fs.existsSync(path.join(__dirname, '..', 'addon', 'SendaFH_QuestDB', 'Quests.lua')) && 'not generated' }, () => {
+	const shipped = path.join(__dirname, '..', 'addon', 'SendaFH_QuestDB');
 	const files = ['MapFrames.lua', 'Quests.lua', 'Npcs.lua', 'Objects.lua', 'Items.lua'].map((f) => path.join(shipped, f));
 	const [result] = runAddon({
 		stubs: ['stub_world.lua', 'stub_quests.lua'],
@@ -751,17 +751,17 @@ local w = stub.world
 w.addMap(1429, { name = "Elwynn Forest", c = 0, left = 1500, right = -1500, top = 500, bottom = -1500 })
 w.moveTo(1429, 48, 40)
 w.complete({ 783 })`,
-		addons: ['Polestar'],
-		saved: { Polestar: MARKERS_ON },
+		addons: ['SendaFH'],
+		saved: { SendaFH: MARKERS_ON },
 		login: true,
 		script: `
-local w, Q = stub.world, Polestar.QuestDB
+local w, Q = stub.world, SendaFH.QuestDB
 stub.advance(0.3)
 local avail = #Q.GetAvailableQuests()
 w.accept(7, { { text = "Kobold Vermin slain: 0/10", type = "monster", required = 10 } }, "Kobold Camp Cleanup")
 stub.advance(0.3)
-local pins = Polestar.Pins.GetLayer("quests.objectives") or {}
-emit({ avail = avail, pins = #pins, header = pins[1] and pins[1].header, era = Polestar.MapFrames.era[1429] ~= nil, avail7 = Q.IsAvailable(7) })`,
+local pins = SendaFH.Pins.GetLayer("quests.objectives") or {}
+emit({ avail = avail, pins = #pins, header = pins[1] and pins[1].header, era = SendaFH.MapFrames.era[1429] ~= nil, avail7 = Q.IsAvailable(7) })`,
 	}).emitted;
 	assert.ok(result.avail > 0, 'a fresh level-1 Human has quests to take');
 	assert.ok(result.pins > 0);
@@ -795,11 +795,11 @@ test('level window: quests more than N levels above yours are hidden ("high"); 1
 	const why = 'emit({ Q.WhyUnavailable(9420) or "ok", Q.WhyUnavailable(60) or "ok", Q.WhyUnavailable(16) or "ok", Q.WhyUnavailable(33) or "ok" })';
 	const [byDefault, plusOne, own, any, markers] = run(`
 ${why}
-Polestar.Set("qol.questLevelWindow", 1); stub.advance(0.3)
+SendaFH.Set("qol.questLevelWindow", 1); stub.advance(0.3)
 ${why}
-Polestar.Set("qol.questLevelWindow", 0); stub.advance(0.3)
+SendaFH.Set("qol.questLevelWindow", 0); stub.advance(0.3)
 ${why}
-Polestar.Set("qol.questLevelWindow", 10); stub.advance(0.3)
+SendaFH.Set("qol.questLevelWindow", 10); stub.advance(0.3)
 ${why}
 local n = 0
 for _, p in ipairs(layer("quests.available")) do for _, q in ipairs(p.refs) do if q == 9420 then n = n + 1 end end end
@@ -844,21 +844,21 @@ local function look(name)
 	return out
 end
 emit(look("quests.objectives"))
-Polestar.Set("qol.objectiveAreas", false); stub.advance(0.3)
+SendaFH.Set("qol.objectiveAreas", false); stub.advance(0.3)
 emit(look("quests.objectives"))
-Polestar.Set("qol.objectiveAreas", true)
+SendaFH.Set("qol.objectiveAreas", true)
 -- a guide whose current step kills for quest 7
-local E = Polestar.Engine
+local E = SendaFH.Engine
 E.GetGuide = function() return { id = "test", steps = { { goals = { { t = "kill", quest = 7, target = "Kobold Vermin" } } } } } end
 E.GetStepIndex = function() return 1 end
-Polestar.Fire("STEP_CHANGED", 1); stub.advance(0.3)
+SendaFH.Fire("STEP_CHANGED", 1); stub.advance(0.3)
 emit({ look("quests.objectives"), look("quests.turnin"), look("quests.available") })
-Polestar.Set("qol.guideDim", true); stub.advance(0.3)
+SendaFH.Set("qol.guideDim", true); stub.advance(0.3)
 emit({ look("quests.objectives"), look("quests.turnin"), look("quests.available") })
 E.GetGuide = function() return nil end
-Polestar.Fire("GUIDE_CHANGED", nil); stub.advance(0.3)
+SendaFH.Fire("GUIDE_CHANGED", nil); stub.advance(0.3)
 emit({ look("quests.objectives"), look("quests.available") })
-Polestar.Set("qol.turnInMarkers", false); stub.advance(0.3)
+SendaFH.Set("qol.turnInMarkers", false); stub.advance(0.3)
 emit(sq.pins.layers["quests.turnin"] == nil)
 `, { setup: 'w.complete({ 783 })' });
 	const S = { kill: 16, killMini: 14, turnin: 18, available: 16 };
@@ -888,10 +888,10 @@ test('the database loads on demand: not while every quest feature is off, at onc
 	const allOff = '{ questDB = true, mapObjectives = false, minimapObjectives = false, availableQuests = false, turnInMarkers = false, questTooltips = false, nameplateIcons = false }';
 	const [before, after] = run(`
 emit({ Q.IsLoaded(), sq.loadCalls, Q.IsRunning() })
-Polestar.Set("qol.questTooltips", true)
+SendaFH.Set("qol.questTooltips", true)
 stub.advance(0.3)
 emit({ Q.IsLoaded(), sq.loadCalls, Q.IsRunning() })
-`, { saved: { Polestar: `PolestarDB = { schema = 1, settings = { qol = ${allOff} } }` } });
+`, { saved: { SendaFH: `SendaFHDB = { schema = 1, settings = { qol = ${allOff} } }` } });
 	assert.deepEqual(before, [false, 0, false]);
 	assert.deepEqual(after, [true, 1, true]);
 });

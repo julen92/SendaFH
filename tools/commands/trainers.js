@@ -1,7 +1,7 @@
 'use strict';
 // trainers build: data/forever/trainers.json, the class trainers `train class`
 // chooses from (see tools/lib/dsl/trainers.js for the sources), and
-// addon/Polestar/Core/ClassTrainers.lua, the same trainers placed on the map
+// addon/SendaFH/Core/ClassTrainers.lua, the same trainers placed on the map
 // (one per town and class) for the Engine's class-training reminder, plus
 // every trainer's id by class for Engine.IsClassTrainer.
 
@@ -14,14 +14,14 @@ const { buildTrainers } = require('../lib/dsl/trainers');
 const { buildCandidates } = require('../lib/dsl/candidates');
 const { emitClassTrainers } = require('../lib/dsl/emit');
 
-const usage = `usage: node tools/polestar.js trainers build [options]
+const usage = `usage: node tools/sendafh.js trainers build [options]
 
 Builds data/forever/trainers.json, the class trainers \`train class\` picks from:
 every \`train <npcId> only <Class>\` goal under guides/, recorded trainer visits
-in data/recordings (by the recording character's class), and Polestar's curated
+in data/recordings (by the recording character's class), and SendaFH's curated
 list of capital and starting-town trainers, each verified by name and map
 against npcs.json. Without the file, compile uses the curated list alone.
-Also writes addon/Polestar/Core/ClassTrainers.lua: one trainer per town and
+Also writes addon/SendaFH/Core/ClassTrainers.lua: one trainer per town and
 class, with positions and map frames, for the class-training reminder, and
 every class trainer's npc id by class, for Engine.IsClassTrainer.
 
@@ -30,7 +30,7 @@ options:
   --data <dir>        reference data, also the output folder (default data/forever/)
   --recordings <dir>  normalized recordings (default data/recordings/)
   --out <file>        output file (default <data>/trainers.json)
-  --lua <file>        Lua output (default addon/Polestar/Core/ClassTrainers.lua)`;
+  --lua <file>        Lua output (default addon/SendaFH/Core/ClassTrainers.lua)`;
 
 function writeAtomic(file, text) {
 	fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -68,7 +68,7 @@ async function run(argv) {
 	}
 	const dataDir = resolvePath(opts.data, 'data/forever', ROOT);
 	if (!fs.existsSync(path.join(dataDir, 'npcs.json'))) {
-		console.error(`no npcs.json in ${dataDir} (run \`node tools/polestar.js data build\` first)`);
+		console.error(`no npcs.json in ${dataDir} (run \`node tools/sendafh.js data build\` first)`);
 		return 1;
 	}
 	const data = loadData(dataDir);
@@ -83,7 +83,7 @@ async function run(argv) {
 	console.log(
 		`wrote ${out}: ${Object.keys(trainers).length} class trainers (curated ${report.curated}, from guides ${report.guide} goals, from recordings ${report.record} npcs)`,
 	);
-	const luaFile = opts.lua ? path.resolve(opts.lua) : path.join(ROOT, 'addon', 'Polestar', 'Core', 'ClassTrainers.lua');
+	const luaFile = opts.lua ? path.resolve(opts.lua) : path.join(ROOT, 'addon', 'SendaFH', 'Core', 'ClassTrainers.lua');
 	const { lua, count, ids } = classTrainersLua(data, trainers);
 	writeAtomic(luaFile, lua);
 	console.log(`wrote ${luaFile}: ${count} trainer positions, ${ids} class trainer ids`);

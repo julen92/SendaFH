@@ -1,6 +1,6 @@
 'use strict';
-// i18n: Polestar's interface translations (docs/TRANSLATING.md), the files
-// addon/Polestar/Locales/<locale>.lua. Adapted from Ding! by Yendi
+// i18n: SendaFH's interface translations (docs/TRANSLATING.md), the files
+// addon/SendaFH/Locales/<locale>.lua. Adapted from Ding! by Yendi
 // (@moust4ki), GPL-3.0: https://github.com/moust4ki/DingGuideWoWForever
 
 const fs = require('node:fs');
@@ -10,12 +10,12 @@ const { ROOT } = require('../lib/paths');
 const { LOCALES, LOCALE_CODES, checkLocale } = require('../lib/i18n/locales');
 const { localeState, syncFiles, rel } = require('../lib/i18n/project');
 
-const ADDON = path.join(ROOT, 'addon', 'Polestar');
+const ADDON = path.join(ROOT, 'addon', 'SendaFH');
 
-const usage = `usage: node tools/polestar.js i18n <status|check|sync|keys|import|names> [options]
+const usage = `usage: node tools/sendafh.js i18n <status|check|sync|keys|import|names> [options]
 
-Polestar's interface translations (docs/TRANSLATING.md): one file per
-locale, addon/Polestar/Locales/<locale>.lua. Locales: ${LOCALE_CODES.join(', ')}.
+SendaFH's interface translations (docs/TRANSLATING.md): one file per
+locale, addon/SendaFH/Locales/<locale>.lua. Locales: ${LOCALE_CODES.join(', ')}.
 
   i18n status                per locale: its language, status (reviewed or
                              ai), translators, and how many keys it
@@ -42,7 +42,7 @@ locale, addon/Polestar/Locales/<locale>.lua. Locales: ${LOCALE_CODES.join(', ')}
                              the locale's file: only into keys not translated
                              yet; a broken format is refused; keys the code
                              lacks go to the commented block at the end.
-  i18n names [<locale>...]   builds the names addons addon/Polestar_Names_<locale>:
+  i18n names [<locale>...]   builds the names addons addon/SendaFH_Names_<locale>:
                              the quest, NPC, object and item names in each
                              language, from DingDB (pinned commit and sha256s,
                              cloned into data/sources/ding), then pfQuest's
@@ -59,8 +59,8 @@ options:
   --offline         names: use the cached DingDB and pfQuest clones as they are
   --ding <dir>      names: this DingDB checkout (default data/sources/ding)
   --pfquest <dir>   names: this pfQuest checkout (default data/sources/pfQuest)
-  --guides <file>   names: the compiled guides (default addon/Polestar_Guides/Guides.lua)
-  --questdb <dir>   names: the built quest database (default addon/Polestar_QuestDB)
+  --guides <file>   names: the compiled guides (default addon/SendaFH_Guides/Guides.lua)
+  --questdb <dir>   names: the built quest database (default addon/SendaFH_QuestDB)
   --codex <dir>     names: the Codex's data (default data/forever/codex)
   --out <dir>       names: where the addon folders go (default addon/)`;
 
@@ -119,14 +119,14 @@ function runCheck(opts, positional) {
 		failures++;
 		if (!opts.json) console.error(`error: ${msg}`);
 	};
-	if (!positional.length) for (const f of strayFiles()) fail(`${rel(f)}: not a locale Polestar ships (tools/lib/i18n/locales.js)`);
+	if (!positional.length) for (const f of strayFiles()) fail(`${rel(f)}: not a locale SendaFH ships (tools/lib/i18n/locales.js)`);
 	for (const locale of list) {
 		const s = st.locales[locale];
 		const file = rel(s.file);
 		const r = { file, exists: s.exists, translated: count(s.translated), missing: s.missing.length, stale: Object.keys(s.stale), problems: s.problems, warnings: s.warnings, error: s.error };
 		report.locales[locale] = r;
 		if (!s.exists) {
-			if (!opts.json) console.log(`${locale}: no file yet (\`node tools/polestar.js i18n sync ${locale}\` starts one)`);
+			if (!opts.json) console.log(`${locale}: no file yet (\`node tools/sendafh.js i18n sync ${locale}\` starts one)`);
 			continue;
 		}
 		if (s.error) fail(`${file}: ${s.error}`);
@@ -285,7 +285,7 @@ function runNames(opts, positional) {
 		return 0;
 	}
 	const idLine = (c) => names.NAME_KINDS.map((k) => plural(c[k], KIND_WORDS[k])).join(', ');
-	console.log(`ids Polestar's data names: ${idLine(Object.fromEntries(names.NAME_KINDS.map((k) => [k, ids[k].size])))}`);
+	console.log(`ids SendaFH's data names: ${idLine(Object.fromEntries(names.NAME_KINDS.map((k) => [k, ids[k].size])))}`);
 	for (const [src, c] of Object.entries(ids.counts)) console.log(`  ${src}: ${idLine(c)}`);
 	console.log(ding ? `DingDB ${ding.pin.version} (${ding.pin.commit.slice(0, 7)}): every pinned file matches its sha256` : 'DingDB left out (--no-questie)');
 	console.log(`pfQuest ${pfInfo.revision ? pfInfo.revision.slice(0, 7) : '(revision unknown)'}`);

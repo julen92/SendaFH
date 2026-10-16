@@ -241,7 +241,7 @@ const round = (v, k) => Math.round(v * k) / k;
 async function navRoute(ws, a) {
 	const nav = ws.navRoutes();
 	const info = nav ? nav.info() : null;
-	if (!info || !info.available) throw new PlannerError('no navigation grid: run node tools/polestar.js nav build', 'not_found');
+	if (!info || !info.available) throw new PlannerError('no navigation grid: run node tools/sendafh.js nav build', 'not_found');
 	const end = (p, name) => {
 		if (p.c !== undefined && p.wx !== undefined && p.wy !== undefined) return { c: p.c, wx: p.wx, wy: p.wy };
 		if (p.map !== undefined && p.x !== undefined && p.y !== undefined) {
@@ -458,14 +458,14 @@ const COMMANDS = [
 	},
 	{
 		name: 'pack_compile',
-		description: 'Compile a pack into its addon folder like `polestar compile` (ours -> addon/Polestar_Guides, another pack -> <pack>/dist/<folder>); nothing is written when there are errors. Returns { ok, errors, warnings (counts), outDir, guides, diagnostics }.',
+		description: 'Compile a pack into its addon folder like `sendafh compile` (ours -> addon/SendaFH_Guides, another pack -> <pack>/dist/<folder>); nothing is written when there are errors. Returns { ok, errors, warnings (counts), outDir, guides, diagnostics }.',
 		input: { type: 'object', properties: { pack: PACK }, additionalProperties: false },
 		mutates: true,
 		handler: (ws, a) => ws.compilePack(a.pack),
 	},
 	{
 		name: 'find',
-		description: 'Look up quests, NPCs, objects, items, inns, flight points and guides in the reference data by id or name (`polestar find`). Each result has a `line`: a guide goal line ready to paste. race (file) / cls (file) / faction keep what such a character can use.',
+		description: 'Look up quests, NPCs, objects, items, inns, flight points and guides in the reference data by id or name (`sendafh find`). Each result has a `line`: a guide goal line ready to paste. race (file) / cls (file) / faction keep what such a character can use.',
 		input: {
 			type: 'object',
 			required: ['text'],

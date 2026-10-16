@@ -1,5 +1,5 @@
 'use strict';
-// /polestar where (addon/Polestar/Core/Commands.lua): the player's map and
+// /sendafh where (addon/SendaFH/Core/Commands.lua): the player's map and
 // position as two guide lines, `zone map <uiMapID>` and `goto <x>,<y> live`
 // (the compiler's two decimals; the client's coordinates are the live
 // frame), printed with the `@x,y live` form for other goals, and shown in a
@@ -14,22 +14,22 @@ const { Diagnostics } = require('../tools/lib/dsl/diag');
 function where(setup, after = '') {
 	return runAddon({
 		stubs: ['stub_world.lua'],
-		addons: ['Polestar'],
+		addons: ['SendaFH'],
 		script: `
 			stub.login()
 			${setup}
 			local before = #stub.messages
-			SlashCmdList.POLESTAR("where")
+			SlashCmdList.SENDAFH("where")
 			local printed = {}
 			for i = before + 1, #stub.messages do printed[#printed + 1] = stub.messages[i] end
-			local box = PolestarCopy and PolestarCopy:IsShown() and PolestarCopy.Box:GetText() or false
-			local out = { printed = printed, box = box, focused = box and stub.focus == PolestarCopy.Box or false }
+			local box = SendaFHCopy and SendaFHCopy:IsShown() and SendaFHCopy.Box:GetText() or false
+			local out = { printed = printed, box = box, focused = box and stub.focus == SendaFHCopy.Box or false }
 			${after}
 			emit(out)`,
 	}).emitted[0];
 }
 
-test('/polestar where prints the map and a goto line at the position, with a hint for other goals, and opens them in a box to copy', () => {
+test('/sendafh where prints the map and a goto line at the position, with a hint for other goals, and opens them in a box to copy', () => {
 	const out = where('stub.world.moveTo(1429, 45.12, 62.34)');
 	assert.equal(out.printed.length, 3, out.printed.join('\n'));
 	assert.ok(out.printed[0].endsWith('zone map 1429'), out.printed.join('\n'));
@@ -52,7 +52,7 @@ test('the copied lines paste into a guide step: the zone, then a goto at the pos
 		{ verb: 'goto', map: 1429, x: 45.12, y: 62.34, frame: 'live' });
 });
 
-test('/polestar where keeps two decimals and says so when the client gives no position', () => {
+test('/sendafh where keeps two decimals and says so when the client gives no position', () => {
 	assert.equal(where('stub.world.moveTo(1429, 7.006, 60)').box, 'zone map 1429\ngoto 7.01,60.00 live');
 	const none = where('stub.world.moveTo(nil, nil, nil)');
 	assert.equal(none.box, false);
@@ -62,14 +62,14 @@ test('/polestar where keeps two decimals and says so when the client gives no po
 
 test('the copy box is read-only: typing puts the text back; Escape closes the window', () => {
 	const out = where('stub.world.moveTo(1429, 45.12, 62.34)', `
-		local b = PolestarCopy.Box
+		local b = SendaFHCopy.Box
 		b:SetText("zone map 1429\\ngoto 45.12,62.34 livex")
 		stub.RunScript(b, "OnTextChanged", true)
 		out.typed = b:GetText()
 		stub.RunScript(b, "OnEscapePressed")
-		out.closed = not PolestarCopy:IsShown()
+		out.closed = not SendaFHCopy:IsShown()
 		out.special = false
-		for _, name in ipairs(UISpecialFrames) do if name == "PolestarCopy" then out.special = true end end`);
+		for _, name in ipairs(UISpecialFrames) do if name == "SendaFHCopy" then out.special = true end end`);
 	assert.equal(out.typed, 'zone map 1429\ngoto 45.12,62.34 live');
 	assert.equal(out.closed, true);
 	assert.equal(out.special, true, 'the window closes with Escape from anywhere');

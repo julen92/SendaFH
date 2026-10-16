@@ -1,7 +1,7 @@
 'use strict';
-// Hand-off to Shortest Path Forever (addon/Polestar/Nav/Handoff.lua): with it
-// installed, Polestar's target goes to it through its public API and every
-// guidance surface of Polestar's steps aside, so the two never guide at once.
+// Hand-off to Shortest Path Forever (addon/SendaFH/Nav/Handoff.lua): with it
+// installed, SendaFH's target goes to it through its public API and every
+// guidance surface of SendaFH's steps aside, so the two never guide at once.
 // A fake ShortestPathForever.API, written to its docs/api.md (v1.16.0:
 // version 1, minor 1 with Subscribe, false in combat, with Journeys off or for
 // invalid input, Ended's reasons, Subscribe's next-frame callbacks), stands in
@@ -28,7 +28,7 @@ do
 	local load = loadfile
 	function loadfile(file)
 		local chunk, err = load(file)
-		if not chunk or not file:match("[/\\\\]Polestar[/\\\\]Core[/\\\\]Init%.lua$") then return chunk, err end
+		if not chunk or not file:match("[/\\\\]SendaFH[/\\\\]Core[/\\\\]Init%.lua$") then return chunk, err end
 		return function(name, ns)
 			chunk(name, ns)
 			ns.Compat = stub.nav.Compat
@@ -37,7 +37,7 @@ do
 	end
 end
 finds = 0
-Polestar_NavEngine = {
+SendaFH_NavEngine = {
 	Find = function(map, from, to, callback) finds = finds + 1; return {} end,
 	Cancel = function() end,
 	Busy = function() return false end,
@@ -166,9 +166,9 @@ ShortestPathForever.API.Subscribe = nil
 `;
 
 const PRELUDE = `
-local N, nav = Polestar.Nav, stub.nav
+local N, nav = SendaFH.Nav, stub.nav
 local H = N.handoff
-local JP = Polestar.UI.JourneyPanel
+local JP = SendaFH.UI.JourneyPanel
 local floor = math.floor
 nav.useTravelWorld()
 -- The player at Testshire Docks; Farland (map 9001) lies over the sea: the boat.
@@ -180,24 +180,24 @@ local function legs() local l = N.GetRoute(); return l and #l or 0 end
 local function sent() return spf and spf.routes() or 0 end
 local function stop() local c = spf.last(); return c and c.stops[1] end
 local function r4(v) return v and floor(v * 10000 + 0.5) / 10000 end
--- Polestar's own guidance, surface by surface.
+-- SendaFH's own guidance, surface by surface.
 local function surfaces()
 	stub.advance(0.3)
-	local trail = Polestar.Pins.GetTrail()
+	local trail = SendaFH.Pins.GetTrail()
 	return {
 		arrow = arrowShown(),
 		route = legs(),
-		lines = #Polestar.RouteLines.GetPaths(),
+		lines = #SendaFH.RouteLines.GetPaths(),
 		journey = JP.Route() ~= nil,
 		trail = trail ~= nil,
 		walk = finds > 0,
-		pack = (function() for _, n in ipairs(loads) do if n == "Polestar_Nav" then return true end end return false end)(),
-		way = SLASH_POLESTARWAY1 == "/way",
+		pack = (function() for _, n in ipairs(loads) do if n == "SendaFH_Nav" then return true end end return false end)(),
+		way = SLASH_SENDAFHWAY1 == "/way",
 		shim = TomTom ~= nil and TomTom == N.tomtomShim,
 	}
 end
 local function option()
-	for _, spec in ipairs(Polestar.Widgets.OptionsRegistry) do
+	for _, spec in ipairs(SendaFH.Widgets.OptionsRegistry) do
 		for _, c in ipairs(spec.controls) do if c.key == "nav.spfHandoff" then return c end end
 	end
 end
@@ -205,20 +205,20 @@ end
 
 // The TomTom stand-in ("Let other addons set waypoints") is off by default;
 // it is on here so its stepping aside is seen.
-const SAVED = 'PolestarDB = { schema = 1, settings = { nav = { answerTomTom = true } } }';
+const SAVED = 'SendaFHDB = { schema = 1, settings = { nav = { answerTomTom = true } } }';
 
 function run(script, { spf = SPF, files = FILES } = {}) {
 	return runAddon({
 		stubs: ['stub_nav.lua'],
 		before: EARLY + (spf || ''),
-		addons: [{ name: 'Polestar', files }],
-		saved: { Polestar: SAVED },
+		addons: [{ name: 'SendaFH', files }],
+		saved: { SendaFH: SAVED },
 		login: true,
 		script: PRELUDE + script,
 	}).emitted;
 }
 
-test('without Shortest Path Forever nothing changes: Polestar guides, plans, walks and answers TomTom and /way, and the option is hidden', () => {
+test('without Shortest Path Forever nothing changes: SendaFH guides, plans, walks and answers TomTom and /way, and the option is hidden', () => {
 	const [out] = run(`
 		nav.setWaypoint(copy(FARLAND))
 		local s = surfaces()
@@ -226,7 +226,7 @@ test('without Shortest Path Forever nothing changes: Polestar guides, plans, wal
 		s.option = option() ~= nil
 		s.shown = option().needs()
 		s.alert = (function()
-			Polestar.Transit = { Now = function() return 0 end, Riding = function() return { kind = "boat", dock = "Farland Pier", arriveIn = 18, route = "r" } end }
+			SendaFH.Transit = { Now = function() return 0 end, Riding = function() return { kind = "boat", dock = "Farland Pier", arriveIn = 18, route = "r" } end }
 			return N.alerts.Check()
 		end)()
 		emit(s)
@@ -237,7 +237,7 @@ test('without Shortest Path Forever nothing changes: Polestar guides, plans, wal
 	});
 });
 
-test('H3 (NAV_QA): with it installed the target goes as one stop, and every Polestar guidance surface steps aside', () => {
+test('H3 (NAV_QA): with it installed the target goes as one stop, and every SendaFH guidance surface steps aside', () => {
 	const [out] = run(`
 		nav.setWaypoint(copy(FARLAND))
 		local s = surfaces()
@@ -248,7 +248,7 @@ test('H3 (NAV_QA): with it installed the target goes as one stop, and every Pole
 		s.stops = #c.stops
 		s.stop = { map = c.stops[1].map, x = r4(c.stops[1].x), y = r4(c.stops[1].y), title = c.stops[1].title, kind = c.stops[1].kind or false, hold = c.stops[1].hold or false }
 		s.sent = sent()
-		Polestar.Transit = { Now = function() return 0 end, Riding = function() return { kind = "boat", dock = "Farland Pier", arriveIn = 18, route = "r" } end }
+		SendaFH.Transit = { Now = function() return 0 end, Riding = function() return { kind = "boat", dock = "Farland Pier", arriveIn = 18, route = "r" } end }
 		s.alert = N.alerts.Check()
 		s.prompt = N.prompts and N.prompts.Wanted and N.prompts.Wanted() or false
 		-- A Shift-click on the world map plans nothing: Shortest Path Forever takes it.
@@ -261,7 +261,7 @@ test('H3 (NAV_QA): with it installed the target goes as one stop, and every Pole
 	`);
 	assert.deepEqual(out, {
 		arrow: false, route: 0, lines: 0, journey: false, trail: false, walk: false, pack: false, way: false, shim: false,
-		handedOff: true, shown: true, owner: 'Polestar', stops: 1,
+		handedOff: true, shown: true, owner: 'SendaFH', stops: 1,
 		stop: { map: 9001, x: 0.5, y: 0.2, title: 'Farland camp', kind: false, hold: false },
 		sent: 1, alert: false, prompt: false, click: false, target: 'Farland camp',
 	});
@@ -270,14 +270,14 @@ test('H3 (NAV_QA): with it installed the target goes as one stop, and every Pole
 test('mirrors stay out while handing off: no waypoint in its TomTom stand-in, no Blizzard waypoint', () => {
 	const [out] = run(`
 		nav.withTomTom()
-		Polestar.Set("nav.blizzardWaypoint", true)
+		SendaFH.Set("nav.blizzardWaypoint", true)
 		nav.userWaypoints = {}
 		nav.setWaypoint(copy(FARLAND))
 		local adds = 0
 		for _, c in ipairs(TomTom.calls) do if c.op == "add" then adds = adds + 1 end end
 		local sets = 0
 		for _, w in ipairs(nav.userWaypoints) do if w[1] == "set" then sets = sets + 1 end end
-		Polestar.Set("nav.spfHandoff", false)
+		SendaFH.Set("nav.spfHandoff", false)
 		local after = 0
 		for _, c in ipairs(TomTom.calls) do if c.op == "add" then after = after + 1 end end
 		emit({ adds = adds, sets = sets, after = after, sent = sent() })
@@ -376,7 +376,7 @@ test('no churn: the same stop is sent once, whatever re-announces it; a moved ta
 		N.Refresh()
 		stub.advance(3)
 		local again = sent()
-		Polestar.Set("nav.arrowScale", 1.2)
+		SendaFH.Set("nav.arrowScale", 1.2)
 		local settings = sent()
 		local moved = copy(FARLAND)
 		moved.x = 55
@@ -410,22 +410,22 @@ test('combat: nothing is sent in a fight, and a stop refused because one began g
 		emit({ inFight = inFight, arrow = arrow, after = after, refused = refused, retried = { sent() - base, r4(stop().x), spf.owner } })
 	`);
 	assert.equal(out.inFight, 0, 'no call in combat');
-	assert.equal(out.arrow, false, 'and Polestar\'s arrow stays out');
+	assert.equal(out.arrow, false, 'and SendaFH\'s arrow stays out');
 	assert.deepEqual(out.after, [1, 0.6]);
 	assert.deepEqual(out.refused, [2, true], 'refused in combat: still handed off, waiting');
-	assert.deepEqual(out.retried, [3, 0.65, 'Polestar']);
+	assert.deepEqual(out.retried, [3, 0.65, 'SendaFH']);
 });
 
 test('no target: the journey is cancelled', () => {
 	const [out] = run(`
 		nav.setWaypoint(copy(FARLAND))
 		nav.setWaypoint(nil)
-		emit({ cancels = spf.cancels(), owner = spf.owner or false, ended = spf.ended.Polestar })
+		emit({ cancels = spf.cancels(), owner = spf.owner or false, ended = spf.ended.SendaFH })
 	`);
 	assert.deepEqual(out, { cancels: 1, owner: false, ended: 'cancelled' });
 });
 
-test('the player\'s clear, another addon\'s journey and an arrival stand until Polestar\'s target changes', () => {
+test('the player\'s clear, another addon\'s journey and an arrival stand until SendaFH\'s target changes', () => {
 	const [out] = run(`
 		nav.setWaypoint(copy(FARLAND))
 		local base = sent()
@@ -456,7 +456,7 @@ test('the player\'s clear, another addon\'s journey and an arrival stand until P
 		emit(r)
 	`);
 	assert.deepEqual(out.cleared, [0, false], 'cleared: the same target is not sent again');
-	assert.deepEqual(out.changed, [1, 'Polestar'], 'a new target is');
+	assert.deepEqual(out.changed, [1, 'SendaFH'], 'a new target is');
 	assert.deepEqual(out.replaced, [1, 'Questie']);
 	assert.equal(out.cancels, 0);
 	assert.deepEqual(out.arrived, [2, false]);
@@ -491,12 +491,12 @@ test('a corpse run is never sent; alive again, the same target is not sent twice
 		nav.setWaypoint(moved)
 		emit({ dead = dead, alive = alive, after = sent() - base })
 	`);
-	assert.deepEqual(out.dead, [0, 0, false], 'no hand-off call while dead, and no Polestar arrow');
+	assert.deepEqual(out.dead, [0, 0, false], 'no hand-off call while dead, and no SendaFH arrow');
 	assert.deepEqual(out.alive, [0, 0, 'Farland camp']);
 	assert.equal(out.after, 1);
 });
 
-test('refused (Journeys off in Shortest Path Forever): Polestar guides that target itself, and hands back once a stop is taken', () => {
+test('refused (Journeys off in Shortest Path Forever): SendaFH guides that target itself, and hands back once a stop is taken', () => {
 	const [out] = run(`
 		spf.journeys = false
 		nav.setWaypoint(copy(FARLAND))
@@ -510,22 +510,22 @@ test('refused (Journeys off in Shortest Path Forever): Polestar guides that targ
 		back[5] = arrowShown()
 		emit({ off = off, back = back })
 	`);
-	assert.deepEqual(out.off, [false, true, 3, 1, 1], 'Polestar guides; the refused stop is not offered on every tick');
-	assert.deepEqual(out.back, [true, 2, 0, 'Polestar', false]);
+	assert.deepEqual(out.off, [false, true, 3, 1, 1], 'SendaFH guides; the refused stop is not offered on every tick');
+	assert.deepEqual(out.back, [true, 2, 0, 'SendaFH', false]);
 });
 
-test('the hand-off off: Polestar guides again and its journey is cancelled; on again: the stop goes back', () => {
+test('the hand-off off: SendaFH guides again and its journey is cancelled; on again: the stop goes back', () => {
 	const [out] = run(`
 		nav.setWaypoint(copy(FARLAND))
-		Polestar.Set("nav.spfHandoff", false)
+		SendaFH.Set("nav.spfHandoff", false)
 		local off = surfaces()
 		off.cancels = spf.cancels()
 		off.owner = spf.owner or false
-		Polestar.Set("nav.spfHandoff", true)
+		SendaFH.Set("nav.spfHandoff", true)
 		local on = { N.HandedOff(), sent(), spf.owner, legs() }
 		stub.advance(0.3)
 		on[5] = arrowShown()
-		-- Polestar_Nav loaded while it was off: still no search for a new target,
+		-- SendaFH_Nav loaded while it was off: still no search for a new target,
 		-- even when its distance is asked (the target pin's tooltip).
 		finds = 0
 		local m, x, y = nav.mapPoint(-850, -300)
@@ -539,7 +539,7 @@ test('the hand-off off: Polestar guides again and its journey is cancelled; on a
 		arrow: true, route: 3, lines: 3, journey: true, trail: false, walk: true, pack: true, way: true, shim: true,
 		cancels: 1, owner: false,
 	});
-	assert.deepEqual(out.on, [true, 2, 'Polestar', 0, false, 0]);
+	assert.deepEqual(out.on, [true, 2, 'SendaFH', 0, false, 0]);
 });
 
 // The guidance options that do nothing while it guides, by settings key.
@@ -548,13 +548,13 @@ const GREYED = ['nav.arrow', 'nav.arrowEta', 'nav.arrivalSound', 'nav.travel', '
 	'nav.arrowAlpha', 'nav.trailDots', 'nav.mapPlan', 'nav.answerTomTom', 'nav.alerts', 'nav.alertBanner',
 	'nav.alertSound', 'nav.alertFlash', 'nav.castPrompt', 'nav.journeySteps'];
 const OPTIONS = `
-Polestar.Set("nav.routeLines", false) -- trailDots' own condition out of the way
-Polestar.Set("nav.tomtom", true)
+SendaFH.Set("nav.routeLines", false) -- trailDots' own condition out of the way
+SendaFH.Set("nav.tomtom", true)
 -- The options window's own widgets, every page that holds a nav option.
-local O, W = Polestar.UI.Options, Polestar.Widgets
+local O, W = SendaFH.UI.Options, SendaFH.Widgets
 local function controls()
 	local out = {}
-	Polestar.UI.ShowOptions("guide")
+	SendaFH.UI.ShowOptions("guide")
 	for _, at in ipairs({ { "guide", "Arrow & routes" }, { "appearance", "Arrow" }, { "map", "Guide & quests" } }) do
 		O.Select(at[1], at[2])
 		for key, w in pairs(O.Controls(at[1], at[2])) do out[key] = w end
@@ -575,7 +575,7 @@ local function said(text)
 end
 local function command(line)
 	stub.messages = {}
-	SlashCmdList.POLESTAR(line)
+	SlashCmdList.SENDAFH(line)
 	return said("Shortest Path Forever is guiding.")
 end
 `;
@@ -604,15 +604,15 @@ test('while it guides, the options that do nothing there are greyed out and say 
 	assert.deepEqual(without.kept, on.kept);
 });
 
-test('while it guides, commands that would show Polestar\'s arrow or route say why in one line instead', () => {
+test('while it guides, commands that would show SendaFH\'s arrow or route say why in one line instead', () => {
 	const script = `${OPTIONS}
 		nav.setWaypoint(copy(FARLAND))
-		Polestar.Set("nav.arrow", false)
+		SendaFH.Set("nav.arrow", false)
 		local r = {}
 		r.show = command("arrow show")
-		r.showSet = Polestar.Get("nav.arrow")
+		r.showSet = SendaFH.Get("nav.arrow")
 		r.toggle = command("arrow")
-		r.toggleSet = Polestar.Get("nav.arrow")
+		r.toggleSet = SendaFH.Get("nav.arrow")
 		r.route = command("route")
 		r.skip = command("skipleg")
 		r.hide = command("arrow hide")
@@ -623,7 +623,7 @@ test('while it guides, commands that would show Polestar\'s arrow or route say w
 	assert.deepEqual(without, { show: false, showSet: true, toggle: false, toggleSet: false, route: false, skip: false, hide: false });
 });
 
-test('no arrival chime from Polestar while it guides (its own arrival says so); without it the chime plays', () => {
+test('no arrival chime from SendaFH while it guides (its own arrival says so); without it the chime plays', () => {
 	const script = `
 		local m, x, y = nav.mapPoint(-850, 5)
 		stub.sounds = {}

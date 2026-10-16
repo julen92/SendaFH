@@ -1,5 +1,5 @@
 'use strict';
-// SavedVariables (PolestarRecorderDB) -> data/recordings/<session>.json.
+// SavedVariables (SendaFHRecorderDB) -> data/recordings/<session>.json.
 //
 //   const { findSavedVariables, importFile } = require('./recording/import');
 //   for (const sv of findSavedVariables({})) importFile(sv, { outDir });
@@ -22,7 +22,7 @@ const { detectAddonsDirs, wowDirs } = require('../addons');
 
 const { ROOT } = require('../paths');
 const DEFAULT_OUT = path.join(ROOT, 'data', 'recordings');
-const SV_FILE = 'Polestar_Recorder.lua';
+const SV_FILE = 'SendaFH_Recorder.lua';
 
 // Client folders Forever has used, newest first: "_forever_" after launch,
 // "_classic_beta_" during the beta; then older Classic folders.
@@ -33,7 +33,7 @@ const FLAVORS = [
 	[null, '_classic_ptr_'],
 ];
 
-// WTF folders to search, best first: $POLESTAR_WTF; then for each client
+// WTF folders to search, best first: $SENDAFH_WTF; then for each client
 // folder above, the detected clients of that kind (tools/lib/addons.js: any
 // Wine/Proton/Faugus/Lutris/Bottles prefix or the native install), then that
 // folder in every World of Warcraft folder there (a client without a
@@ -45,7 +45,7 @@ function defaultWtfDirs(home = os.homedir(), native = {}) {
 	const add = (d) => {
 		if (!dirs.includes(d)) dirs.push(d);
 	};
-	if (process.env.POLESTAR_WTF) add(process.env.POLESTAR_WTF);
+	if (process.env.SENDAFH_WTF) add(process.env.SENDAFH_WTF);
 	const detected = detectAddonsDirs(home, native);
 	const installs = wowDirs(home, native);
 	for (const [kind, folder] of FLAVORS) {
@@ -55,7 +55,7 @@ function defaultWtfDirs(home = os.homedir(), native = {}) {
 	return dirs;
 }
 
-// All WTF/Account/*/SavedVariables/Polestar_Recorder.lua files. `sv` paths
+// All WTF/Account/*/SavedVariables/SendaFH_Recorder.lua files. `sv` paths
 // win outright; otherwise `wtf` (one dir) or the default install locations.
 function findSavedVariables({ sv = [], wtf = null, home, native = {} } = {}) {
 	if (sv.length) return sv.map((p) => path.resolve(p));
@@ -117,7 +117,7 @@ function archiveRaw(svPath, outDir, now = new Date()) {
 }
 
 function readDb(svPath) {
-	return luaToJson({ files: [svPath], expr: 'return PolestarRecorderDB' });
+	return luaToJson({ files: [svPath], expr: 'return SendaFHRecorderDB' });
 }
 
 // Lua tables come back as arrays (1..n), {} (empty) or objects with numeric
@@ -168,7 +168,7 @@ function sortedMaps(maps) {
 	return out;
 }
 
-// One session of PolestarRecorderDB -> the schema of docs/ARCHITECTURE.md
+// One session of SendaFHRecorderDB -> the schema of docs/ARCHITECTURE.md
 // "Recordings". `dbMaps` (from /psrec maps) fill in maps the session touched
 // and their parents.
 function normalizeSession(key, raw, dbMaps = {}) {

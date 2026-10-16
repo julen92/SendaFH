@@ -1,5 +1,5 @@
 'use strict';
-// The planner's icons: Polestar's glyphs rendered at any size
+// The planner's icons: SendaFH's glyphs rendered at any size
 // (tools/planner/glyphs.js), the game's icons resolved from client tables and
 // paths to PNGs with a fake wago.tools and CASC (tools/planner/icons.js), and
 // the server routes that serve both, with their key checks.
@@ -148,7 +148,7 @@ test('keys are checked per kind and named canonically', () => {
 });
 
 test('item -> Item.csv -> fdid -> the cropped 64 px PNG, cached; misses cached too', async () => {
-	const tmp = tmpdir('polestar-icons-');
+	const tmp = tmpdir('sendafh-icons-');
 	const f = fakes();
 	const icons = openIcons({ sourcesDir: path.join(tmp, 'sources'), outDir: path.join(tmp, 'icons'), fetchImpl: f.fetchImpl, casc: f.casc });
 	const png = await icons.icon('item', '750');
@@ -178,7 +178,7 @@ test('item -> Item.csv -> fdid -> the cropped 64 px PNG, cached; misses cached t
 });
 
 test('ui keys resolve client paths through the file search, kept in paths.json; UI textures keep their frame', async () => {
-	const tmp = tmpdir('polestar-icons-');
+	const tmp = tmpdir('sendafh-icons-');
 	const f = fakes();
 	const icons = openIcons({ sourcesDir: path.join(tmp, 'sources'), outDir: path.join(tmp, 'icons'), fetchImpl: f.fetchImpl, casc: f.casc });
 	const { w, h, rgba } = decodePng(await icons.icon('ui', 'flightmaster'));
@@ -202,7 +202,7 @@ test('ui keys resolve client paths through the file search, kept in paths.json; 
 });
 
 test('server: glyph, emblem, band, font, media and icon routes, with strict keys', async (t) => {
-	const tmp = tmpdir('polestar-icons-');
+	const tmp = tmpdir('sendafh-icons-');
 	const dir = path.join(tmp, 'mini');
 	fs.cpSync(MINI, dir, { recursive: true });
 	const f = fakes();

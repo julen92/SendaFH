@@ -1,7 +1,7 @@
 'use strict';
 // The location of `sethome`, `hearth`, `fly` and `getfp` against the places
 // the game can report, matched the way the addon matches it
-// (addon/Polestar/Core/Engine.lua, goalDone), ignoring case:
+// (addon/SendaFH/Core/Engine.lua, goalDone), ignoring case:
 //   sethome  GetBindLocation() equals it: an inn's bind location
 //   hearth   the zone or subzone text equals it on arrival: an inn's area or
 //            the zone an inn stands in
@@ -103,7 +103,7 @@ function checkLocation(data, verb, location) {
 	if (!places || typeof location !== 'string' || places.accepts(location.toLowerCase())) return null;
 	const [why, kind] = WHAT[verb];
 	const near = closest(location, places.names);
-	const lookUp = `\`polestar find --kind ${kind}\` lists every ${kind === 'inn' ? 'inn' : 'flight point'}`;
+	const lookUp = `\`sendafh find --kind ${kind}\` lists every ${kind === 'inn' ? 'inn' : 'flight point'}`;
 	return {
 		message: `${verb} "${location}": ${why}; the game never reports that name, so the goal never checks off by itself`,
 		hint: near.length ? `did you mean ${near.map((n) => `"${n}"`).join(' or ')}? (${lookUp})` : lookUp,

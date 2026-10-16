@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const { runAddon } = require('./helpers/lua');
 const { TEST_PACK } = require('./helpers/packs');
 
-const CORE = { name: 'Polestar', files: ['Core/Core.xml'] };
+const CORE = { name: 'SendaFH', files: ['Core/Core.xml'] };
 
 const WORLD = `
 local w = stub.world
@@ -21,19 +21,19 @@ const STEPS = 'steps = { { goals = { { t = "level", level = 50 } } }, { goals = 
 const TEST_GUIDES = `
 ${TEST_PACK}
 for i = 1, 8 do
-	Polestar.RegisterGuide({ id = "test/" .. i, pack = "test", title = "T" .. i, category = "Exploration", ${STEPS} })
+	SendaFH.RegisterGuide({ id = "test/" .. i, pack = "test", title = "T" .. i, category = "Exploration", ${STEPS} })
 end
-Polestar.RegisterGuide({ id = "test/x", pack = "test", title = "X", category = "Exploration", ${STEPS} })
+SendaFH.RegisterGuide({ id = "test/x", pack = "test", title = "X", category = "Exploration", ${STEPS} })
 `;
 
 const JOE = `
-Polestar.RegisterPack({ addon = "JoeAddon", id = "joe", format = 1, title = "Joe", author = "Joe", version = "1", license = "MIT" })
-Polestar.RegisterGuide({ id = "joe/a", pack = "joe", title = "A", category = "Exploration", ${STEPS} })
-Polestar.RegisterGuide({ id = "joe/b", pack = "joe", title = "B", category = "Exploration", ${STEPS} })
+SendaFH.RegisterPack({ addon = "JoeAddon", id = "joe", format = 1, title = "Joe", author = "Joe", version = "1", license = "MIT" })
+SendaFH.RegisterGuide({ id = "joe/a", pack = "joe", title = "A", category = "Exploration", ${STEPS} })
+SendaFH.RegisterGuide({ id = "joe/b", pack = "joe", title = "B", category = "Exploration", ${STEPS} })
 `;
 
 const HELPERS = `
-E = Polestar.Engine
+E = SendaFH.Engine
 function flush() stub.advance(0.25) end
 function ids()
 	local list, active = E.GetTabs()
@@ -65,12 +65,12 @@ function run({ joe = true, saved, script }) {
 		stubs: ['stub_world.lua'],
 		before: WORLD,
 		addons: [CORE],
-		saved: saved ? { Polestar: saved } : undefined,
+		saved: saved ? { SendaFH: saved } : undefined,
 		script: `${TEST_GUIDES}\n${joe ? JOE : ''}\n${HELPERS}\nstub.login(); flush()\n${script}`,
 	}).emitted;
 }
 
-const SAVED = 'PolestarCharDB = { schema = 1, tabs = { "joe/a", "test/x" }, activeTab = 1, pins = { ["joe/a"] = { step = 3, done = false }, ["test/x"] = { step = 2, done = false } } }';
+const SAVED = 'SendaFHCharDB = { schema = 1, tabs = { "joe/a", "test/x" }, activeTab = 1, pins = { ["joe/a"] = { step = 3, done = false }, ["test/x"] = { step = 2, done = false } } }';
 
 test('a missing pack\'s tab stays saved with its pin and comes back in its old place at its step', () => {
 	const [first] = run({
@@ -79,9 +79,9 @@ test('a missing pack\'s tab stays saved with its pin and comes back in its old p
 		script: `
 			local r = { login = ids(), step = stepOf("test/x") }
 			E.OpenTab("test/1", false); flush()
-			r.saved = PolestarCharDB.tabs
-			r.pin = PolestarCharDB.pins["joe/a"] or false
-			r.state = dump(PolestarCharDB)
+			r.saved = SendaFHCharDB.tabs
+			r.pin = SendaFHCharDB.pins["joe/a"] or false
+			r.state = dump(SendaFHCharDB)
 			emit(r)
 		`,
 	});
@@ -91,8 +91,8 @@ test('a missing pack\'s tab stays saved with its pin and comes back in its old p
 	assert.deepEqual(first.pin, { step: 3, done: false });
 
 	const [second] = run({
-		saved: `PolestarCharDB = ${first.state}`,
-		script: 'emit({ ids = ids(), step = stepOf("joe/a"), saved = PolestarCharDB.tabs })',
+		saved: `SendaFHCharDB = ${first.state}`,
+		script: 'emit({ ids = ids(), step = stepOf("joe/a"), saved = SendaFHCharDB.tabs })',
 	});
 	assert.deepEqual(second.ids.tabs, ['joe/a', 'test/x', 'test/1']);
 	assert.equal(second.step, 3);
@@ -105,15 +105,15 @@ test('switching a pack off closes its tabs and keeps them saved; on again, they 
 			E.OpenTab("test/x"); E.OpenTab("joe/a"); E.OpenTab("test/1"); E.OpenTab("joe/b")
 			E.SelectTab(2); E.Goto(3); flush()
 			local r = { before = ids() }
-			Polestar.Guides.SetPackShown("joe", false); flush()
+			SendaFH.Guides.SetPackShown("joe", false); flush()
 			r.hidden = ids()
 			r.guide = E.GetGuide().id
-			r.saved = PolestarCharDB.tabs
-			r.pin = PolestarCharDB.pins["joe/a"] or false
-			Polestar.Guides.SetPackShown("joe", true); flush()
+			r.saved = SendaFHCharDB.tabs
+			r.pin = SendaFHCharDB.pins["joe/a"] or false
+			SendaFH.Guides.SetPackShown("joe", true); flush()
 			r.back = ids()
 			r.step = stepOf("joe/a")
-			r.savedBack = PolestarCharDB.tabs
+			r.savedBack = SendaFHCharDB.tabs
 			emit(r)
 		`,
 	});
@@ -130,12 +130,12 @@ test('switching a pack off closes its tabs and keeps them saved; on again, they 
 test('saved absent tabs never take an open tab\'s place, and at most MAX_TABS of them are kept, newest first', () => {
 	const [out] = run({
 		joe: false,
-		saved: 'PolestarCharDB = { schema = 1, tabs = { "test/1", "test/2", "test/3", "test/4", "test/5", "gone/1", "gone/2" }, activeTab = 1 }',
+		saved: 'SendaFHCharDB = { schema = 1, tabs = { "test/1", "test/2", "test/3", "test/4", "test/5", "gone/1", "gone/2" }, activeTab = 1 }',
 		script: `
 			local r = { max = E.MAX_TABS, login = ids().tabs }
 			r.sixth = E.OpenTab("test/6") or false
 			r.seventh = E.OpenTab("test/7") or false
-			r.saved = PolestarCharDB.tabs
+			r.saved = SendaFHCharDB.tabs
 			emit(r)
 		`,
 	});
@@ -148,8 +148,8 @@ test('saved absent tabs never take an open tab\'s place, and at most MAX_TABS of
 	const many = Array.from({ length: 9 }, (_, i) => `"gone/${i + 1}"`).join(', ');
 	const [kept] = run({
 		joe: false,
-		saved: `PolestarCharDB = { schema = 1, tabs = { "test/1", ${many} }, activeTab = 1 }`,
-		script: 'E.OpenTab("test/2", false); emit(PolestarCharDB.tabs)',
+		saved: `SendaFHCharDB = { schema = 1, tabs = { "test/1", ${many} }, activeTab = 1 }`,
+		script: 'E.OpenTab("test/2", false); emit(SendaFHCharDB.tabs)',
 	});
 	assert.deepEqual(kept, ['test/1', 'test/2', 'gone/4', 'gone/5', 'gone/6', 'gone/7', 'gone/8', 'gone/9']);
 });
@@ -157,22 +157,22 @@ test('saved absent tabs never take an open tab\'s place, and at most MAX_TABS of
 test('an absent guide put into a tab by SetGuide is no longer absent: closed, it stays closed', () => {
 	const [out] = run({
 		script: `
-			Polestar.RegisterPack({ addon = "ZedAddon", id = "zed", format = 1, title = "Zed", author = "Z", version = "1", license = "MIT" })
-			Polestar.RegisterGuide({ id = "zed/a", pack = "zed", title = "Z", category = "Exploration", ${STEPS} })
-			local G = Polestar.Guides
+			SendaFH.RegisterPack({ addon = "ZedAddon", id = "zed", format = 1, title = "Zed", author = "Z", version = "1", license = "MIT" })
+			SendaFH.RegisterGuide({ id = "zed/a", pack = "zed", title = "Z", category = "Exploration", ${STEPS} })
+			local G = SendaFH.Guides
 			E.OpenTab("joe/a"); for i = 1, 5 do E.OpenTab("test/" .. i) end
 			G.SetPackShown("joe", false); flush()
 			E.OpenTab("test/6"); flush()
 			G.SetPackShown("joe", true); flush()
-			local r = { full = ids().tabs, savedFull = PolestarCharDB.tabs }
+			local r = { full = ids().tabs, savedFull = SendaFHCharDB.tabs }
 			E.SetGuide("joe/a"); flush()
 			r.set = ids().tabs
-			r.savedSet = PolestarCharDB.tabs
+			r.savedSet = SendaFHCharDB.tabs
 			E.CloseTab(ids().active); flush()
-			r.closed = PolestarCharDB.tabs
+			r.closed = SendaFHCharDB.tabs
 			G.SetPackShown("zed", false); flush()
 			r.afterZed = ids().tabs
-			r.savedAfterZed = PolestarCharDB.tabs
+			r.savedAfterZed = SendaFHCharDB.tabs
 			emit(r)
 		`,
 	});
@@ -188,23 +188,23 @@ test('an absent guide put into a tab by SetGuide is no longer absent: closed, it
 test('a tab reopened after its pack returns is no longer absent: closed, it stays closed', () => {
 	const [out] = run({
 		script: `
-			local G = Polestar.Guides
+			local G = SendaFH.Guides
 			local function close(id) for i, t in ipairs(ids().tabs) do if t == id then E.CloseTab(i) end end; flush() end
 			E.OpenTab("test/x"); E.OpenTab("joe/a"); E.OpenTab("joe/b"); flush()
 			G.SetPackShown("joe", false); flush()
 			G.SetPackShown("joe", true); flush()
 			local r = { back = ids().tabs }
 			close("joe/a")
-			r.closed = PolestarCharDB.tabs
+			r.closed = SendaFHCharDB.tabs
 			G.SetPackShown("joe", false); flush()
-			r.hidden = PolestarCharDB.tabs
+			r.hidden = SendaFHCharDB.tabs
 			G.SetPackShown("joe", true); flush()
 			r.reopened = ids().tabs
 			close("joe/b")
 			G.SetPackShown("joe", false); flush()
 			G.SetPackShown("joe", true); flush()
 			r.again = ids().tabs
-			r.saved = PolestarCharDB.tabs
+			r.saved = SendaFHCharDB.tabs
 			emit(r)
 		`,
 	});

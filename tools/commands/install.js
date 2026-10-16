@@ -1,6 +1,6 @@
 'use strict';
-// install: copy (or symlink) the Polestar addon folders into the Forever
-// client's Interface/AddOns. Only the Polestar folders being installed are
+// install: copy (or symlink) the SendaFH addon folders into the Forever
+// client's Interface/AddOns. Only the SendaFH folders being installed are
 // touched; each is replaced by a rename so the game never sees a half copy.
 // Given a guide pack (a folder argument, --pack, or the nearest pack.json) it
 // builds that pack and installs its folder instead.
@@ -16,14 +16,14 @@ const { PACK_OPTIONS, PACK_USAGE, otherPack, noDataConflict, noDataCache, buildP
 
 // Data addons built locally from inputs that may not be redistributed
 // (docs/SUITE.md, "In-game packs"): installed when built, never packaged.
-const LOCAL_DATA_ADDONS = ['Polestar_Travel'];
+const LOCAL_DATA_ADDONS = ['SendaFH_Travel'];
 
-const usage = `usage: node tools/polestar.js install [<dir>] [options]
+const usage = `usage: node tools/sendafh.js install [<dir>] [options]
 
-Installs addon/Polestar, addon/Polestar_Guides and addon/Polestar_Nav, plus
-the data addons Polestar_QuestDB, Polestar_ItemDB, Polestar_Codex and the
-names addons Polestar_Names_<locale> when they have been built (and with
---recorder, addon/Polestar_Recorder) into World of Warcraft: Forever's AddOns
+Installs addon/SendaFH, addon/SendaFH_Guides and addon/SendaFH_Nav, plus
+the data addons SendaFH_QuestDB, SendaFH_ItemDB, SendaFH_Codex and the
+names addons SendaFH_Names_<locale> when they have been built (and with
+--recorder, addon/SendaFH_Recorder) into World of Warcraft: Forever's AddOns
 folder.
 
 Given another guide pack (<dir>, --pack, or run inside one) it lints and
@@ -44,7 +44,7 @@ Destination, first match wins:
 
 options:
   --link        symlink the folders instead of copying (edit, then /reload)
-  --recorder    also install Polestar_Recorder
+  --recorder    also install SendaFH_Recorder
   --dry-run     print what would happen, change nothing
   --addons <dir>  source folder holding the addons (default addon/)
   --no-data     a guide pack only: build it without reference data (every
@@ -125,8 +125,8 @@ const generatedPack = (packId) => (target) => {
 
 function installOne(src, dest, name, link) {
 	const target = path.join(dest, name);
-	const tmp = path.join(dest, `${name}.polestar-new-${process.pid}`);
-	const old = path.join(dest, `${name}.polestar-old-${process.pid}`);
+	const tmp = path.join(dest, `${name}.sendafh-new-${process.pid}`);
+	const old = path.join(dest, `${name}.sendafh-old-${process.pid}`);
 	if (exists(tmp)) removePath(tmp);
 	if (link) fs.symlinkSync(src, tmp, 'dir');
 	else fs.cpSync(src, tmp, { recursive: true, filter: (s) => !path.basename(s).startsWith('.') || s === src });
@@ -193,7 +193,7 @@ function installFolders(folders, opts, ctx, prepare = null) {
 // Another pack: lint and build it into <pack>/dist/<folder>/, then install that folder.
 function installPack(other, opts, ctx) {
 	if (opts.recorder || opts.addons) {
-		console.error(`${opts.recorder ? '--recorder' : '--addons'} installs Polestar itself; run it outside the pack, without a pack folder\n\n${usage}`);
+		console.error(`${opts.recorder ? '--recorder' : '--addons'} installs SendaFH itself; run it outside the pack, without a pack folder\n\n${usage}`);
 		return 2;
 	}
 	const built = buildPack(other, { dataDir: resolvePath(opts.data, 'data/forever', ROOT), cache: opts.noData ? noDataCache() : null, noDataFlag: true });
@@ -252,15 +252,15 @@ async function run(argv, env = process.env, native = {}) {
 	const local = LOCAL_DATA_ADDONS.filter((n) => fs.existsSync(path.join(source, n, `${n}.toc`)));
 	const skipped = [...release.skipped, ...LOCAL_DATA_ADDONS.filter((n) => !local.includes(n))];
 	for (const n of skipped) console.log(`note: ${n} not built (no ${n}/${n}.toc); skipping it`);
-	const names = [...release.names, ...local, ...(opts.recorder ? ['Polestar_Recorder'] : [])];
+	const names = [...release.names, ...local, ...(opts.recorder ? ['SendaFH_Recorder'] : [])];
 	for (const name of names) {
 		if (!fs.existsSync(path.join(source, name, `${name}.toc`))) {
 			console.error(`missing ${path.join(source, name, `${name}.toc`)}`);
 			return 1;
 		}
 	}
-	if (!hasCompiledGuides(path.join(source, 'Polestar_Guides'))) {
-		console.warn('warning: Polestar_Guides has no compiled guides; run `node tools/polestar.js compile` first');
+	if (!hasCompiledGuides(path.join(source, 'SendaFH_Guides'))) {
+		console.warn('warning: SendaFH_Guides has no compiled guides; run `node tools/sendafh.js compile` first');
 	}
 	return installFolders(names.map((name) => ({ src: path.join(source, name), name })), opts, ctx);
 }

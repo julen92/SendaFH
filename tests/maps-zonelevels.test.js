@@ -1,5 +1,5 @@
 'use strict';
-// Zone level ranges (tools/lib/maps/zonelevels.js -> addon/Polestar/Maps/ZoneLevels.lua):
+// Zone level ranges (tools/lib/maps/zonelevels.js -> addon/SendaFH/Maps/ZoneLevels.lua):
 // the heuristic on fixture data, the generated Lua, and the addon reading it.
 
 const { test } = require('node:test');
@@ -77,16 +77,16 @@ test('Forever-only zones pass on the sparse thresholds; the rest keep the strict
 test('the generated Lua registers the ranges and the addon colours them for the player', () => {
 	const lua = emitLua(zoneLevels(NPCS, ZONES, { critterGap: 10 }));
 	assert.match(lua, /\[1\] = \{ 10, 19, [\d.]+, [\d.]+ \}, -- Greenvale/);
-	const file = path.join(require('node:os').tmpdir(), `polestar-zonelevels-${process.pid}.lua`);
+	const file = path.join(require('node:os').tmpdir(), `sendafh-zonelevels-${process.pid}.lua`);
 	fs.writeFileSync(file, lua);
 	try {
 		const [out] = runAddon({
 			stubs: ['stub_world.lua'],
-			addons: [{ name: 'Polestar', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Maps/Maps.lua', 'Maps/WorldMap.lua'] }],
+			addons: [{ name: 'SendaFH', files: ['Core/Core.xml', 'Theme/Theme.xml', 'Nav/Nav.xml', 'Maps/Maps.lua', 'Maps/WorldMap.lua'] }],
 			login: true,
 			script: `
-				assert(loadfile(${JSON.stringify(file)}))("Polestar", Polestar)
-				local M = Polestar.Maps
+				assert(loadfile(${JSON.stringify(file)}))("SendaFH", SendaFH)
+				local M = SendaFH.Maps
 				local lo, hi = M.GetZoneLevels(1)
 				emit({ lo = lo, hi = hi, none = M.GetZoneLevels(2) or false, text = M.FormatLevels(lo, hi),
 					colors = { M.LevelColor(lo, hi, 5), M.LevelColor(lo, hi, 9), M.LevelColor(lo, hi, 12),
@@ -103,8 +103,8 @@ test('the generated Lua registers the ranges and the addon colours them for the 
 
 test('ZoneLevels.lua is up to date with data/forever', { skip: needs('npcs.json', 'zones.json') }, () => {
 	const { lua, levels } = buildZoneLevels({ dataDir: DATA });
-	const committed = fs.readFileSync(path.join(ROOT, 'addon', 'Polestar', 'Maps', 'ZoneLevels.lua'), 'utf8');
-	assert.equal(committed, lua, 'run: node tools/polestar.js maps build');
+	const committed = fs.readFileSync(path.join(ROOT, 'addon', 'SendaFH', 'Maps', 'ZoneLevels.lua'), 'utf8');
+	assert.equal(committed, lua, 'run: node tools/sendafh.js maps build');
 	// Sanity against the ranges players know.
 	assert.deepEqual([levels[1429].min, levels[1429].max], [1, 10]); // Elwynn Forest
 	assert.ok(levels[1436].min >= 9 && levels[1436].max <= 20); // Westfall
