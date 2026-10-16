@@ -1,6 +1,7 @@
 # Ayuda y reportes de SendaFH
 
-Para dudas de instalación y de uso, entra en el [Discord de Forever Hispano](https://discord.gg/qkW5Y8yzk6).
+Para dudas y reportes rápidos, usa [🧭・sendafh-feedback](https://discord.com/channels/1560465332907417712/1560472232990351391) en el [Discord de Forever Hispano](https://discord.gg/qkW5Y8yzk6).
+Para participar en las pruebas, consulta el [plan de la beta](PRUEBAS-BETA.md).
 Para que podamos seguir un fallo hasta resolverlo, abre un [reporte en GitHub](https://github.com/julen92/SendaFH/issues/new/choose).
 
 ## Qué necesitamos

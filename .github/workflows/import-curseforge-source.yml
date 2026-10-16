@@ -1,0 +1,42 @@
+name: Import submitted SendaFH sources
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: sendafh-source-import
+  cancel-in-progress: false
+jobs:
+  import:
+    if: github.repository == 'julen92/SendaFH' && github.ref == 'refs/heads/sendafh'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: sendafh
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Import verified archive and retain community documentation
+        run: python .github/scripts/import-curseforge-source.py
+      - name: Install Lua 5.1
+        run: sudo apt-get update -q && sudo apt-get install -y -q lua5.1
+      - name: Check modules and translations
+        run: node --test tests/i18n.test.js tests/engine-l10n.test.js tests/names.test.js tests/sendafh-modules.test.js
+      - name: Check Spanish layout
+        env:
+          SENDA_TEST_LOCALE: esES
+        run: node --test tests/text-fit.test.js
+      - name: Check generated data
+        run: |
+          node tools/senda-locale-audit.js
+          node tools/senda-guide-audit.js
+          node tools/sendafh.js nav check
+      - name: Publish source commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git commit -m 'Publish SendaFH source for submitted 0.5.0-beta.1'
+          git push origin HEAD:sendafh

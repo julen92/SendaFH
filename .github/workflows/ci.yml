@@ -1,54 +1,34 @@
-name: CI
-
+name: SendaFH checks
 on:
-  push:
-    branches: [main, next]
+  workflow_dispatch:
   pull_request:
-
 permissions:
   contents: read
-
 concurrency:
-  group: ci-${{ github.ref }}
+  group: sendafh-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   test:
-    name: Tests
+    name: Spanish locales, modules and guides
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-
       - name: Install Lua 5.1
         run: sudo apt-get update -q && sudo apt-get install -y -q lua5.1
+      - name: Translation and module tests
+        run: node --test tests/i18n.test.js tests/engine-l10n.test.js tests/names.test.js tests/sendafh-modules.test.js
+      - name: Spanish layout tests
+        env:
+          SENDA_TEST_LOCALE: esES
+        run: node --test tests/text-fit.test.js
+      - name: Locale coverage
+        run: node tools/senda-locale-audit.js
+      - name: Guide coverage
+        run: node tools/senda-guide-audit.js
+      - name: Navigation integrity
+        run: node tools/sendafh.js nav check
 
-      # No npm dependencies. A fresh clone has no built data (it needs the game
-      # client and local sources), so the tests that read it skip with a reason.
-      - name: Test
-        run: npm test
-
-      # The interface translations: every locale file loads, no stale key, no
-      # broken format; glossary drift only warns. npm test checks the same;
-      # this step prints each language's counts and warnings on their own.
-      - name: Translations
-        run: npm run i18n:check
-
-      # The textures are generated from code alone, so CI can rebuild them and
-      # fail when the committed ones are stale.
-      - name: Textures are up to date
-        run: node tools/polestar.js media && git diff --exit-code -- addon/Polestar/Media
-
-      # So are the UI renders: the addon's Lua over sample data and fixtures
-      # (frozen guides, not the shipped ones), PNGs from a deflate of their own.
-      # A render missing from the commit counts too (intent-to-add puts new
-      # files in the diff).
-      - name: Previews are up to date
-        run: |
-          node tools/polestar.js preview
-          git add --intent-to-add -- docs/preview
-          git diff --exit-code --stat -- docs/preview
